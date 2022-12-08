@@ -53,5 +53,5 @@ jobs:
         with:
           app-name: 'pointerstar'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0727C00D16FB4DE696091456ECEB9BCE }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           package: .
