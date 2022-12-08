@@ -17,6 +17,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{C3F9C421-ED11-4345-8580-E90C15F4D002}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\main_pointerstar.yml = .github\workflows\main_pointerstar.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,6 +43,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C3F9C421-ED11-4345-8580-E90C15F4D002} = {2EAFC20C-739A-4CC0-AB81-5DEEB7C407BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FBEB6B9F-F8F5-42C1-9734-668FA9C44687}
