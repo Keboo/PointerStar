@@ -1,18 +1,14 @@
-﻿@page "/counter"
+﻿@using PointerStar.Client.Components;
+@using PointerStar.Client.ViewModels;
+
+@inherits ComponentBase<CounterViewModel>
+
+@page "/counter"
 
 <PageTitle>Counter</PageTitle>
 
 <h1>Counter</h1>
 
-<p role="status">Current count: @currentCount</p>
+<p role="status">Current count: @ViewModel.CurrentCount</p>
 
-<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
-
-@code {
-    private int currentCount = 0;
-
-    private void IncrementCount()
-    {
-        currentCount++;
-    }
-}
+<button class="btn btn-primary" @onclick="ViewModel.IncrementCount">Click me</button>

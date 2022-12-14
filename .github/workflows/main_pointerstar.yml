@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '7.x'
-          include-prerelease: true
 
       - name: dotnet build
         run: dotnet build --configuration Release
