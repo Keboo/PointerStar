@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject NavigationManager Navigation;
+@inject HttpClient Http;
 
 <PageTitle>Pointer*</PageTitle>
 
@@ -15,9 +16,9 @@
 
 @*<SurveyPrompt Title="How is Blazor working for you?" />*@
 @code {
-    private void NavigateToRoom()
+    private async Task NavigateToRoom()
     {
-        //TODO Randomly generate room id
-        Navigation.NavigateTo($"room/123");
+        string roomId = await Http.GetStringAsync("/api/room/generate");
+        Navigation.NavigateTo($"room/{roomId}");
     }
 }
