@@ -1,10 +1,26 @@
 ﻿@using PointerStar.Client.Components;
 @using PointerStar.Client.ViewModels;
 
-@*@inherits ComponentBase<CounterViewModel>*@
+@inherits ComponentBase<RoomViewModel>
 
-@page "/room"
+@page "/room/{RoomId}"
 
-<PageTitle>Pointer</PageTitle>
+<PageTitle>Pointer*</PageTitle>
 
 <h1>Room</h1>
+
+@code {
+    [Parameter]
+    public string? RoomId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Name")]
+    public string? Name { get; set; }
+
+
+    protected override void OnInitialized()
+    {
+        ViewModel.RoomId = RoomId;
+        ViewModel.Name = Name;
+    }
+}
