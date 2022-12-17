@@ -1,5 +1,7 @@
-
+using System.Text.Json.Serialization;
 using HashidsNet;
+using PointerStar.Server.Hubs;
+using PointerStar.Server.Room;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,7 +10,25 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
+//TODO: Make these configurable settings
+builder.Services.AddSignalR(hubOptions => hubOptions.EnableDetailedErrors = true)
+                .AddJsonProtocol(
+                    options =>
+                    {
+                        options.PayloadSerializerOptions.PropertyNamingPolicy =
+                            System.Text.Json.JsonNamingPolicy.CamelCase;
+                        options.PayloadSerializerOptions.ReferenceHandler =
+                            ReferenceHandler.IgnoreCycles;
+                    })
+                .AddHubOptions<RoomHub>(
+                    options =>
+                    {
+                        options.KeepAliveInterval = TimeSpan.FromSeconds(15);
+                        options.ClientTimeoutInterval = TimeSpan.FromMinutes(1);
+                    });
+
 builder.Services.AddScoped(_ => new Hashids("TODO: Environment Salt"));
+builder.Services.AddSingleton<IRoomManager, InMemoryRoomManager>();
 
 var app = builder.Build();
 
@@ -34,6 +54,9 @@ app.UseRouting();
 
 app.MapRazorPages();
 app.MapControllers();
+
+app.MapHub<RoomHub>($"/{nameof(RoomHub)}");
+
 app.MapFallbackToFile("index.html");
 
 app.Run();
