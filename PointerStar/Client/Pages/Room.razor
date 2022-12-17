@@ -1,5 +1,6 @@
 ﻿@using PointerStar.Client.Components;
 @using PointerStar.Client.ViewModels;
+@using PointerStar.Shared;
 
 @inherits ComponentBase<RoomViewModel>
 
@@ -9,6 +10,19 @@
 
 <h1>Room</h1>
 
+<ul>
+    @foreach(var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
+    {
+        <li>
+            @user.Name - @user.Vote&nbsp;
+            @if (user.Id == ViewModel.CurrentUserId)
+            {
+                <button @onclick="ViewModel.SubmitVoteAsync">Random Vote</button>
+            }
+        </li>
+    }
+</ul>
+
 @code {
     [Parameter]
     public string? RoomId { get; set; }
@@ -17,10 +31,13 @@
     [SupplyParameterFromQuery(Name = "Name")]
     public string? Name { get; set; }
 
-
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        ViewModel.RoomId = RoomId;
-        ViewModel.Name = Name;
+        await base.OnInitializedAsync();
+        if (RoomId is { } roomId)
+        {
+            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}", null);
+            await ViewModel.JoinRoomAsync(roomId, user);
+        }
     }
 }
