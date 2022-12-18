@@ -26,6 +26,29 @@ public class InMemoryRoomManager : IRoomManager
             });
         return Task.FromResult(rv);
     }
+
+    public Task<RoomState?> DisconnectAsync(string connectionId)
+    {
+        if (ConnectionsToRoom.TryRemove(connectionId, out string? roomId) &&
+            ConnectionsToUserId.TryRemove(connectionId, out Guid userId))
+        {
+            RoomState rv = Rooms.AddOrUpdate(
+                roomId,
+                new RoomState(roomId, Array.Empty<User>()),
+                (_, roomState) =>
+                {
+                    return roomState with { Users = roomState.Users.Where(x => x.Id != userId).ToArray() };
+                });
+            if (rv.Users.Length == 0)
+            {
+                Rooms.TryRemove(roomId, out _);
+                return Task.FromResult<RoomState?>(null);
+            }
+            return Task.FromResult<RoomState?>(rv);
+        }
+        return Task.FromResult<RoomState?>(null);
+    }
+
     public Task<RoomState?> SubmitVoteAsync(string vote, string connectionId)
     {
         if (ConnectionsToRoom.TryGetValue(connectionId, out string? roomId) &&
@@ -43,22 +66,4 @@ public class InMemoryRoomManager : IRoomManager
         }
         return Task.FromResult<RoomState?>(null);
     }
-
-    public Task<RoomState?> DisconnectAsync(string connectionId)
-    {
-        if (ConnectionsToRoom.TryRemove(connectionId, out string? roomId) &&
-            ConnectionsToUserId.TryRemove(connectionId, out Guid userId))
-        {
-            RoomState rv = Rooms.AddOrUpdate(
-                roomId,
-                new RoomState(roomId, Array.Empty<User>()),
-                (_, roomState) =>
-                {
-                    return roomState with { Users = roomState.Users.Where(x => x.Id != userId).ToArray() };
-                });
-            return Task.FromResult<RoomState?>(rv);
-        }
-        return Task.FromResult<RoomState?>(null);
-    }
-
 }

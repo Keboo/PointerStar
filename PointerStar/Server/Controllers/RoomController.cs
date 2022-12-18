@@ -7,12 +7,12 @@ namespace PointerStar.Server.Controllers;
 [Route("api/[controller]")]
 public class RoomController : ControllerBase
 {
-    private static Random Random = new();
+    private static readonly Random Random = new();
     private Hashids Hashids { get; }
     
     public RoomController(Hashids hashids)
     {
-        Hashids = hashids;
+        Hashids = hashids ?? throw new ArgumentNullException(nameof(hashids));
     }
 
 
