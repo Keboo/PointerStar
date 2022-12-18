@@ -36,7 +36,7 @@
         await base.OnInitializedAsync();
         if (RoomId is { } roomId)
         {
-            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}", null);
+            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}");
             await ViewModel.JoinRoomAsync(roomId, user);
         }
     }

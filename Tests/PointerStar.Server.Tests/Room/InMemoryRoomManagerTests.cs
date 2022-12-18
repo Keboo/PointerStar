@@ -7,20 +7,21 @@ namespace PointerStar.Server.Tests.Room;
 public partial class InMemoryRoomManagerTests
 {
     [Fact]
-    public async Task AddUserToRoomAsync_WithUser_CreatesNewRoom()
+    public async Task AddUserToRoomAsync_WithNewRoom_CreatesNewRoom()
     {
         AutoMocker mocker = new();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
-        User user = new(Guid.NewGuid(), "User 1", null);
+        User user = new(Guid.NewGuid(), "User 1");
         InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
 
         RoomState roomState = await sut.AddUserToRoomAsync(roomId, user, connectionId);
 
         Assert.Equal(roomId, roomState.RoomId);
         Assert.Single(roomState.Users);
-        Assert.Equal(user, roomState.Users.Single());
+        //First user is the room is made the facilitator
+        Assert.Equal(user with { Role = Role.Facilitator }, roomState.Users[0]);
     }
 
     [Fact]
@@ -29,18 +30,17 @@ public partial class InMemoryRoomManagerTests
         AutoMocker mocker = new();
 
         string roomId = Guid.NewGuid().ToString();
-        User user1 = new(Guid.NewGuid(), "User 1", null);
-        User user2 = new(Guid.NewGuid(), "User 1", null);
-        
+        User user1 = new(Guid.NewGuid(), "User 1");
+        User user2 = new(Guid.NewGuid(), "User 1");
+
         InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user1, Guid.NewGuid().ToString());
         RoomState roomState = await sut.AddUserToRoomAsync(roomId, user2, Guid.NewGuid().ToString());
         
-        
         Assert.Equal(roomId, roomState.RoomId);
         Assert.Equal(2, roomState.Users.Length);
-        Assert.Equal(user1, roomState.Users[0]);
+        Assert.Equal(user1 with { Role = Role.Facilitator }, roomState.Users[0]);
         Assert.Equal(user2, roomState.Users[1]);
     }
 
@@ -52,8 +52,8 @@ public partial class InMemoryRoomManagerTests
         string roomId = Guid.NewGuid().ToString();
         string connectionId1 = Guid.NewGuid().ToString();
         string connectionId2 = Guid.NewGuid().ToString();
-        User user1 = new(Guid.NewGuid(), "User 1", null);
-        User user2 = new(Guid.NewGuid(), "User 2", null);
+        User user1 = new(Guid.NewGuid(), "User 1");
+        User user2 = new(Guid.NewGuid(), "User 2");
         InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user1, connectionId1);
@@ -72,7 +72,7 @@ public partial class InMemoryRoomManagerTests
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
-        User user = new(Guid.NewGuid(), "User 1", null);
+        User user = new(Guid.NewGuid(), "User 1");
         InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
@@ -101,7 +101,7 @@ public partial class InMemoryRoomManagerTests
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
-        User user = new(Guid.NewGuid(), "User 1", null);
+        User user = new(Guid.NewGuid(), "User 1");
         InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);

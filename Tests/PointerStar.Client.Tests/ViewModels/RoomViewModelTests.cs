@@ -1,5 +1,4 @@
-﻿using Moq;
-using PointerStar.Client.ViewModels;
+﻿using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
 namespace PointerStar.Client.Tests.ViewModels;
@@ -54,7 +53,7 @@ public partial class RoomViewModelTests
         Guid userId = Guid.NewGuid();
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         
-        await viewModel.JoinRoomAsync("RoomId", new User(userId, "Name", null));
+        await viewModel.JoinRoomAsync("RoomId", new User(userId, "Name"));
 
         Assert.Equal(userId, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync(It.IsAny<string>(), It.IsAny<User>()), Times.Once);
@@ -68,7 +67,7 @@ public partial class RoomViewModelTests
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
-        await viewModel.JoinRoomAsync("RoomId", new User(Guid.NewGuid(), "Name", null));
+        await viewModel.JoinRoomAsync("RoomId", new User(Guid.NewGuid(), "Name"));
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync(It.IsAny<string>(), It.IsAny<User>()), Times.Never);
     }
