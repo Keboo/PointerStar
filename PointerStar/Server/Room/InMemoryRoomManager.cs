@@ -14,7 +14,7 @@ public class InMemoryRoomManager : IRoomManager
 
         RoomState rv = Rooms.AddOrUpdate(
             roomId,
-            new RoomState(roomId, new[] { user }),
+            new RoomState(roomId, new[] { user with { Role = Role.Facilitator } }),
             (_, roomState) =>
             {
                 return roomState with
@@ -56,7 +56,7 @@ public class InMemoryRoomManager : IRoomManager
         {
             RoomState? rv = Rooms.AddOrUpdate(
                 roomId,
-                new RoomState(roomId, new[] { new User(userId, "", vote) }),
+                new RoomState(roomId, new[] { new User(userId, "") { Vote = vote } }),
                 (_, roomState) =>
                 {
                     User[] users = roomState.Users.Select(u => u.Id == userId ? u with { Vote = vote } : u).ToArray();
