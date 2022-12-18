@@ -3,7 +3,7 @@ using Polly;
 
 namespace PointerStar.Shared;
 
-public class RoomHubConnection
+public class RoomHubConnection : IRoomHubConnection
 {
     public const string JoinRoomMethodName = "JoinRoom";
     public const string SubmitVoteMethodName = "SubmitVote";

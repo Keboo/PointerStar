@@ -1,6 +1,9 @@
-﻿namespace PointerStar.Server.Tests.Controllers;
+﻿using PointerStar.Server.Controllers;
 
-public class RoomControllerTests : IClassFixture<WebApplicationFactory>
+namespace PointerStar.Server.Tests.Controllers;
+
+[ConstructorTests(typeof(RoomController))]
+public partial class RoomControllerTests : IClassFixture<WebApplicationFactory>
 {
     private WebApplicationFactory Factory { get; }
 

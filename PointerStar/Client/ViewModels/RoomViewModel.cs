@@ -1,13 +1,10 @@
-﻿using PointerStar.Client.Pages;
-using PointerStar.Shared;
+﻿using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
 
 public partial class RoomViewModel : ViewModelBase
 {
-    private RoomHubConnection RoomHubConnection { get; }
-    
-    public string? RoomId { get; set; }
+    private IRoomHubConnection RoomHubConnection { get; }
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -15,7 +12,7 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid _currentUserId;
 
-    public RoomViewModel(RoomHubConnection roomHubConnection)
+    public RoomViewModel(IRoomHubConnection roomHubConnection)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
@@ -49,6 +46,5 @@ public partial class RoomViewModel : ViewModelBase
     {
         await base.OnInitializedAsync();
         await RoomHubConnection.OpenAsync();
-        
     }
 }
