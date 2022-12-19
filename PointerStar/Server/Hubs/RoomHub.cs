@@ -45,4 +45,14 @@ public class RoomHub : Hub
             await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
+
+    [HubMethodName(RoomHubConnection.ShowVotesMethodName)]
+    public async Task ShowVotesAsync(bool areVotesShown)
+    {
+        RoomState? roomState = await RoomManager.ShowVotesAsync(areVotesShown, Context.ConnectionId);
+        if (roomState?.RoomId is { } roomId)
+        {
+            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        }
+    }
 }

@@ -1,6 +1,9 @@
 ﻿namespace PointerStar.Shared;
 
-public record class RoomState(string RoomId, User[] Users);
+public record class RoomState(string RoomId, User[] Users)
+{
+    public bool VotesShown { get; init; }
+}
 
 public record class User(Guid Id, string Name)
 {
