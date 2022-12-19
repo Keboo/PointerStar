@@ -20,13 +20,25 @@
                 <button @onclick="ViewModel.SubmitVoteAsync">Random Vote</button>
             }
         </li>
-    }
+    }    
 </ul>
+
+<form method="post" na'UserNameForm'>
+    <fieldset>
+        <legend>Join Room</legend>
+        <div>
+            <label for="UserName">Name: </label>
+            <input type="text" name="UserName" value="" />
+            <input type="submit" value="Join" class="submit" />
+        </div>
+    </fieldset>
+</form>
 
 @code {
     [Parameter]
     public string? RoomId { get; set; }
 
+    
     [Parameter]
     [SupplyParameterFromQuery(Name = "Name")]
     public string? Name { get; set; }
@@ -39,5 +51,20 @@
             User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}", null);
             await ViewModel.JoinRoomAsync(roomId, user);
         }
+    }
+
+    public void OnPost()
+    {
+      //  var email = Context.Request.Form["emailaddress"];
+      //  Console.WriteLine(email);
+    }
+    //{this.user
+    //    var emailAddress = this.form["emailaddress"];
+    //     do something with emailAddress
+   // }
+
+    public void OnPostSubmit()
+    {
+        //this.Name = string.Format("Name: {0} {1}", person.FirstName, person.LastName);
     }
 }
