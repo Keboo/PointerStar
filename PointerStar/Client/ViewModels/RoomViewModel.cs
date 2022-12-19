@@ -12,6 +12,20 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid _currentUserId;
 
+    [ObservableProperty]
+    private bool _isFacilitator;
+
+    [ObservableProperty]
+    private bool _votesShown;
+
+    async partial void OnVotesShownChanged(bool value)
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.ShowVotesAsync(value);
+        }
+    }
+
     public RoomViewModel(IRoomHubConnection roomHubConnection)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
@@ -21,6 +35,9 @@ public partial class RoomViewModel : ViewModelBase
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
         RoomState = roomState;
+        VotesShown = roomState.VotesShown;
+        User? currentUser = roomState.Users.FirstOrDefault(u => u.Id == CurrentUserId);
+        IsFacilitator = currentUser?.Role == Role.Facilitator;
     }
 
     public async Task SubmitVoteAsync()
@@ -37,8 +54,8 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected)
         {
-            await RoomHubConnection.JoinRoomAsync(roomId, user);
             CurrentUserId = user.Id;
+            await RoomHubConnection.JoinRoomAsync(roomId, user);
         }
     }
 

@@ -7,6 +7,7 @@ public class RoomHubConnection : IRoomHubConnection
 {
     public const string JoinRoomMethodName = "JoinRoom";
     public const string SubmitVoteMethodName = "SubmitVote";
+    public const string ShowVotesMethodName = "ShowVotes";
     public const string RoomUpdatedMethodName = "RoomUpdated";
 
     public event EventHandler<RoomState>? RoomStateUpdated;
@@ -61,12 +62,11 @@ public class RoomHubConnection : IRoomHubConnection
     }
 
     public Task JoinRoomAsync(string roomId, User user)
-    {
-        return HubConnection.InvokeAsync(JoinRoomMethodName, roomId, user);
-    }
+        => HubConnection.InvokeAsync(JoinRoomMethodName, roomId, user);
 
     public Task SubmitVoteAsync(string vote)
-    {
-        return HubConnection.InvokeAsync(SubmitVoteMethodName, vote);
-    }
+        => HubConnection.InvokeAsync(SubmitVoteMethodName, vote);
+
+    public Task ShowVotesAsync(bool areVotesShown)
+        => HubConnection.InvokeAsync(ShowVotesMethodName, areVotesShown);
 }

@@ -124,4 +124,45 @@ public partial class InMemoryRoomManagerTests
 
         Assert.Null(roomState);
     }
+    
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShowVotesAsync_WithExistingFacilitator_ShowsVotes(bool votesShown)
+    {
+        AutoMocker mocker = new();
+
+        string roomId = Guid.NewGuid().ToString();
+        string connectionId = Guid.NewGuid().ToString();
+        User user = new(Guid.NewGuid(), "User 1");
+        InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
+
+        _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
+        RoomState? roomState = await sut.ShowVotesAsync(votesShown, connectionId);
+        
+        Assert.Equal(votesShown, roomState?.VotesShown);
+
+        roomState = await sut.ShowVotesAsync(!votesShown, connectionId);
+        Assert.Equal(!votesShown, roomState?.VotesShown);
+    }
+
+    [Fact]
+    public async Task ShowVotesAsync_WithTeamMemberUser_DoesNotShowVotes()
+    {
+        AutoMocker mocker = new();
+
+        string roomId = Guid.NewGuid().ToString();
+        string connectionId1 = Guid.NewGuid().ToString();
+        string connectionId2 = Guid.NewGuid().ToString();
+        User facilitator = new(Guid.NewGuid(), "User 1");
+        User teamMember = new(Guid.NewGuid(), "User 2");
+        InMemoryRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
+
+        _ = await sut.AddUserToRoomAsync(roomId, facilitator, connectionId1);
+        _ = await sut.AddUserToRoomAsync(roomId, teamMember, connectionId2);
+        
+        RoomState? roomState = await sut.ShowVotesAsync(true, connectionId2);
+        
+        Assert.False(roomState?.VotesShown);
+    }
 }
