@@ -95,4 +95,30 @@ public partial class RoomViewModelTests
 
         mocker.Verify<IRoomHubConnection>(x => x.ShowVotesAsync(true), Times.Once);
     }
+
+    [Fact]
+    public async Task ResetVotes_WithHubConnection_InvokesHub()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.ResetVotesAsync();
+
+        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetVotes_WithoutHubConnection_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.ResetVotesAsync();
+
+        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Never);
+    }
 }

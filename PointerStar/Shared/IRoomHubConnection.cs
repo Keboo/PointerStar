@@ -10,4 +10,5 @@ public interface IRoomHubConnection
     Task JoinRoomAsync(string roomId, User user);
     Task SubmitVoteAsync(string vote);
     Task ShowVotesAsync(bool areVotesShown);
+    Task ResetVotesAsync();
 }

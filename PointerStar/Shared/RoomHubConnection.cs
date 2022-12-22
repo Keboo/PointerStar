@@ -8,6 +8,7 @@ public class RoomHubConnection : IRoomHubConnection
     public const string JoinRoomMethodName = "JoinRoom";
     public const string SubmitVoteMethodName = "SubmitVote";
     public const string ShowVotesMethodName = "ShowVotes";
+    public const string ResetVotesMethodName = "ResetVotes";
     public const string RoomUpdatedMethodName = "RoomUpdated";
 
     public event EventHandler<RoomState>? RoomStateUpdated;
@@ -69,4 +70,7 @@ public class RoomHubConnection : IRoomHubConnection
 
     public Task ShowVotesAsync(bool areVotesShown)
         => HubConnection.InvokeAsync(ShowVotesMethodName, areVotesShown);
+
+    public Task ResetVotesAsync()
+        => HubConnection.InvokeAsync(ResetVotesMethodName);
 }

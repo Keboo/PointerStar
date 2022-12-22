@@ -64,6 +64,14 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
+    public async Task ResetVotesAsync()
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.ResetVotesAsync();
+        }
+    }
+
     public override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
