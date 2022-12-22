@@ -3,6 +3,22 @@
 public record class RoomState(string RoomId, User[] Users)
 {
     public bool VotesShown { get; init; }
+
+    public string[] VoteOptions { get; init; } = new[]
+    {
+        "1",
+        "2",
+        "3",
+        "5",
+        "8",
+        "13",
+        "21",
+        "34",
+        "55",
+        "89",
+        "Abstain",
+        "?"
+    };
 }
 
 public record class User(Guid Id, string Name)
