@@ -14,9 +14,15 @@
 {
     <h2 class="heading">Facilitate</h2>
     <div class="d-flex justify-content-between">
-        <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
-            <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+        <div class="d-flex justify-content-start">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+            </div>
+            <div class="form-check form-switch" style="margin-left:10px">
+                <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+            </div>
         </div>
         <div>
             <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
@@ -36,7 +42,6 @@ else if (ViewModel.IsTeamMember)
                     <button class="col-3 col-sm-2 btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
                 }
                 <div class="w-100"></div>
-
             </div>
         }
     </div>
@@ -49,10 +54,13 @@ else if (ViewModel.IsTeamMember)
         {
             <p>
                 @user.Name
-                @if (ViewModel.VotesShown &&
-               !string.IsNullOrWhiteSpace(user.Vote))
+                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
                 {
                     <span> - @user.Vote</span>
+                }
+                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
+                {
+                    <span class="vote-preview"> - @user.Vote</span>
                 }
                 else
                 {
