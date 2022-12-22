@@ -8,27 +8,55 @@
 
 <PageTitle>Pointer*</PageTitle>
 
-<h1>Room</h1>
+<h1>Room @ViewModel.RoomState?.RoomId</h1>
 
 @if (ViewModel.IsFacilitator)
 {
-<div class="form-check form-switch">
-    <input class="form-check-input" type="checkbox" @bind-value="ViewModel.VotesShown">
-    <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
-</div>
+    <h2 class="heading">Facilitate</h2>
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" @bind-value="ViewModel.VotesShown">
+        <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+    </div>
 }
-<ul>
-    @foreach(var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
-    {
-        <li>
-            @user.Name - @user.Vote&nbsp;
-            @if (user.Id == ViewModel.CurrentUserId)
-            {
-                <button @onclick="ViewModel.SubmitVoteAsync">Random Vote</button>
-            }
-        </li>
-    }
-</ul>
+else if (ViewModel.IsTeamMember)
+{
+    <h2 class="heading">Vote</h2>
+    <div class="container text-center">
+        @foreach (string[] rowOptions in (ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>()).Chunk(4))
+        {
+            <div class="row">
+                @foreach (string option in rowOptions)
+                {
+                    string buttonClass = option == ViewModel.CurrentVote ? "btn-success" : "btn-info";
+                    <button class="col-3 col-sm-2 btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
+                }
+                <div class="w-100"></div>
+
+            </div>
+        }
+    </div>
+}
+
+<div class="card border-info mb-3 user-card">
+  <div class="card-header">Team Members</div>
+  <div class="card-body">
+        @foreach (var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
+        {
+            <p>
+                @user.Name
+                @if (ViewModel.VotesShown &&
+               !string.IsNullOrWhiteSpace(user.Vote))
+                {
+                    <span> - @user.Vote</span>
+                }
+                else
+                {
+                    <span> - ??</span>
+                }
+            </p>
+        }
+  </div>
+</div>
 
 @code {
     [Parameter]

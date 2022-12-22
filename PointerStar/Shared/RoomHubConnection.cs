@@ -13,11 +13,11 @@ public class RoomHubConnection : IRoomHubConnection
     public event EventHandler<RoomState>? RoomStateUpdated;
 
     private HubConnection HubConnection { get; }
-    private string HubUrl { get; }
+    private Uri HubUrl { get; }
 
     public bool IsConnected => HubConnection.State == HubConnectionState.Connected;
 
-    public RoomHubConnection(string url)
+    public RoomHubConnection(Uri url)
     {
         HubUrl = url;
         HubConnection = new HubConnectionBuilder()

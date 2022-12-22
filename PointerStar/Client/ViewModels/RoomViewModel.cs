@@ -12,8 +12,17 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid _currentUserId;
 
-    [ObservableProperty]
-    private bool _isFacilitator;
+    public bool IsFacilitator
+        => CurrentUser?.Role == Role.Facilitator;
+
+    public bool IsTeamMember
+        => CurrentUser?.Role == Role.TeamMember;
+
+    public User? CurrentUser
+        => RoomState?.Users.FirstOrDefault(u => u.Id == CurrentUserId);
+
+    public string? CurrentVote
+        => CurrentUser?.Vote;
 
     [ObservableProperty]
     private bool _votesShown;
@@ -36,17 +45,13 @@ public partial class RoomViewModel : ViewModelBase
     {
         RoomState = roomState;
         VotesShown = roomState.VotesShown;
-        User? currentUser = roomState.Users.FirstOrDefault(u => u.Id == CurrentUserId);
-        IsFacilitator = currentUser?.Role == Role.Facilitator;
     }
 
-    public async Task SubmitVoteAsync()
+    public async Task SubmitVoteAsync(string vote)
     {
-        //TODO: Actually pass vote in
         if (RoomHubConnection.IsConnected)
         {
-            Random r = new();
-            await RoomHubConnection.SubmitVoteAsync(r.Next(1, 10).ToString());
+            await RoomHubConnection.SubmitVoteAsync(vote);
         }
     }
 
