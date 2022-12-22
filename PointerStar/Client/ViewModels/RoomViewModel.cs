@@ -27,6 +27,9 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private bool _votesShown;
 
+    [ObservableProperty]
+    private bool _previewVotes;
+
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
