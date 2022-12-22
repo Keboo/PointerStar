@@ -13,9 +13,14 @@
 @if (ViewModel.IsFacilitator)
 {
     <h2 class="heading">Facilitate</h2>
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" @bind-value="ViewModel.VotesShown">
-        <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+    <div class="d-flex justify-content-between">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+        </div>
+        <div>
+            <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
+        </div>
     </div>
 }
 else if (ViewModel.IsTeamMember)
@@ -38,8 +43,8 @@ else if (ViewModel.IsTeamMember)
 }
 
 <div class="card border-info mb-3 user-card">
-  <div class="card-header">Team Members</div>
-  <div class="card-body">
+    <div class="card-header">Team Members</div>
+    <div class="card-body">
         @foreach (var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
         {
             <p>
@@ -55,7 +60,7 @@ else if (ViewModel.IsTeamMember)
                 }
             </p>
         }
-  </div>
+    </div>
 </div>
 
 @code {

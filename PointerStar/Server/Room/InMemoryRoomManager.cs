@@ -33,50 +33,66 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> DisconnectAsync(string connectionId)
     {
-        if (ConnectionsToRoom.TryRemove(connectionId, out string? roomId) &&
-            ConnectionsToUser.TryRemove(connectionId, out User? user))
+        return WithConnection(connectionId, (room, userId) =>
         {
-            return WithExistingRoom(roomId, room =>
+            User[] users = room.Users.Where(x => x.Id != userId).ToArray();
+            if (users.Any())
             {
-                User[] users = room.Users.Where(x => x.Id != user.Id).ToArray();
-                if (users.Any())
-                {
-                    return room with { Users = users };
-                }
-                return null;
-            });
-        }
-        return Task.FromResult<RoomState?>(null);
+                return room with { Users = users };
+            }
+            return null;
+        });
     }
 
     public Task<RoomState?> ShowVotesAsync(bool areVotesShown, string connectionId)
     {
-        if (ConnectionsToRoom.TryGetValue(connectionId, out string? roomId) &&
-            ConnectionsToUser.TryGetValue(connectionId, out User? user))
+        return WithConnection(connectionId, (room, userId) =>
         {
-            return WithExistingRoom(roomId, room =>
+            //Only allow facilitators to change the votes
+            if (room.Users.FirstOrDefault(x => x.Id == userId)?.Role == Role.Facilitator)
             {
-                //Only allow facilitators to change the votes
-                if (room.Users.FirstOrDefault(x => x.Id == user.Id)?.Role == Role.Facilitator)
-                {
-                    return room with { VotesShown = areVotesShown };
-                }
-                return room;
-            });
-        }
-        return Task.FromResult<RoomState?>(null);
+                return room with { VotesShown = areVotesShown };
+            }
+            return room;
+        });
     }
 
     public Task<RoomState?> SubmitVoteAsync(string vote, string connectionId)
     {
+        return WithConnection(connectionId, (room, userId) =>
+        {
+            return room with
+            {
+                Users = room.Users.Select(u => u.Id == userId ? u with { Vote = vote } : u).ToArray()
+            };
+        });
+    }
+
+    public Task<RoomState?> ResetVotesAsync(string connectionId)
+    {
+        return WithConnection(connectionId, (room, userId) =>
+        {
+            User? currentUser = room.Users.FirstOrDefault(x => x.Id == userId);
+            if (currentUser is null) return null;
+            if (currentUser.Role == Role.Facilitator)
+            {
+                User[] users = room.Users.Select(u => u with { Vote = null }).ToArray();
+                return room with
+                {
+                    Users = users,
+                    VotesShown = false
+                };
+            }
+            return room;
+        });
+    }
+
+    private Task<RoomState?> WithConnection(string connectionId, Func<RoomState, Guid, RoomState?> updateRoom)
+    {
         if (ConnectionsToRoom.TryGetValue(connectionId, out string? roomId) &&
             ConnectionsToUser.TryGetValue(connectionId, out User? user))
         {
-            return WithExistingRoom(roomId, room =>
-            {
-                User[] users = room.Users.Select(u => u.Id == user.Id ? u with { Vote = vote } : u).ToArray();
-                return room with { Users = users };
-            });
+            return WithExistingRoom(roomId, room => updateRoom(room, user.Id));
         }
         return Task.FromResult<RoomState?>(null);
     }

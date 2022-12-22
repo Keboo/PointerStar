@@ -8,4 +8,5 @@ public interface IRoomManager
     Task<RoomState?> DisconnectAsync(string connectionId);
     Task<RoomState?> ShowVotesAsync(bool areVotesShown, string connectionId);
     Task<RoomState?> SubmitVoteAsync(string vote, string connectionId);
+    Task<RoomState?> ResetVotesAsync(string connectionId);
 }
