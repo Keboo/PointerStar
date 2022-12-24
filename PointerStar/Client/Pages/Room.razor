@@ -47,29 +47,68 @@ else if (ViewModel.IsTeamMember)
     </div>
 }
 
+@{
+    var teamMembers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.TeamMember) ?? Enumerable.Empty<User>();
+    var facilitators = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Facilitator) ?? Enumerable.Empty<User>();
+    var observers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Observer) ?? Enumerable.Empty<User>();
+}
 <div class="card border-info mb-3 user-card">
     <div class="card-header">Team Members</div>
     <div class="card-body">
-        @foreach (var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
+        @if (teamMembers.Any())
         {
-            <p>
-                @user.Name
-                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
-                {
-                    <span> - @user.Vote</span>
-                }
-                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
-                {
-                    <span class="vote-preview"> - @user.Vote</span>
-                }
-                else
-                {
-                    <span> - ??</span>
-                }
-            </p>
+            @foreach (var user in teamMembers)
+            {
+                <p>
+                    @user.Name
+                    @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                    {
+                        <span> - @user.Vote</span>
+                    }
+                    else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
+                    {
+                        <span class="vote-preview"> - @user.Vote</span>
+                    }
+                    else
+                    {
+                        <span> - ??</span>
+                    }
+                </p>
+            }
+        }
+        else
+        {
+            <span>Waiting for team members to join...</span>
         }
     </div>
 </div>
+
+
+@if (facilitators.Any())
+{
+    <div class="card border-secondary mb-3 user-card">
+        <div class="card-header">Facilitators</div>
+        <div class="card-body">
+            @foreach (var user in facilitators)
+            {
+                <p>@user.Name</p>
+            }
+        </div>
+    </div>
+}
+@if (observers.Any())
+{
+    <div class="card border-dark mb-3 user-card">
+        <div class="card-header">Observers</div>
+        <div class="card-body">
+            @foreach (var user in observers)
+            {
+                <p>@user.Name</p>
+            }
+        </div>
+    </div>
+}
+
 
 @code {
     [Parameter]
