@@ -1,5 +1,4 @@
-﻿using Moq;
-using PointerStar.Client.ViewModels;
+﻿using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
 namespace PointerStar.Client.Tests.ViewModels;
@@ -28,9 +27,9 @@ public partial class RoomViewModelTests
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         
-        await viewModel.SubmitVoteAsync();
+        await viewModel.SubmitVoteAsync("42");
         
-        mocker.Verify<IRoomHubConnection>(x => x.SubmitVoteAsync(It.IsAny<string>()), Times.Once);
+        mocker.Verify<IRoomHubConnection>(x => x.SubmitVoteAsync("42"), Times.Once);
     }
 
     [Fact]
@@ -41,9 +40,9 @@ public partial class RoomViewModelTests
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
-        await viewModel.SubmitVoteAsync();
+        await viewModel.SubmitVoteAsync("42");
 
-        mocker.Verify<IRoomHubConnection>(x => x.SubmitVoteAsync(It.IsAny<string>()), Times.Never);
+        mocker.Verify<IRoomHubConnection>(x => x.SubmitVoteAsync("42"), Times.Never);
     }
 
     [Fact]
@@ -54,10 +53,10 @@ public partial class RoomViewModelTests
         Guid userId = Guid.NewGuid();
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         
-        await viewModel.JoinRoomAsync("RoomId", new User(userId, "Name", null));
+        await viewModel.JoinRoomAsync("RoomId", new User(userId, "Name"));
 
         Assert.Equal(userId, viewModel.CurrentUserId);
-        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync(It.IsAny<string>(), It.IsAny<User>()), Times.Once);
+        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.IsAny<User>()), Times.Once);
     }
 
     [Fact]
@@ -68,9 +67,9 @@ public partial class RoomViewModelTests
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
-        await viewModel.JoinRoomAsync("RoomId", new User(Guid.NewGuid(), "Name", null));
+        await viewModel.JoinRoomAsync("RoomId", new User(Guid.NewGuid(), "Name"));
 
-        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync(It.IsAny<string>(), It.IsAny<User>()), Times.Never);
+        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
@@ -82,5 +81,44 @@ public partial class RoomViewModelTests
         await viewModel.OnInitializedAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.OpenAsync(), Times.Once);
+    }
+
+    [Fact]
+    public void VotesShown_OnChanged_InvokesHub()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        viewModel.VotesShown = true;
+
+        mocker.Verify<IRoomHubConnection>(x => x.ShowVotesAsync(true), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetVotes_WithHubConnection_InvokesHub()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.ResetVotesAsync();
+
+        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task ResetVotes_WithoutHubConnection_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.ResetVotesAsync();
+
+        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Never);
     }
 }

@@ -8,20 +8,68 @@
 
 <PageTitle>Pointer*</PageTitle>
 
-<h1>Room</h1>
+<h1>Room @ViewModel.RoomState?.RoomId</h1>
 
-<ul>
-    @foreach(var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
-    {
-        <li>
-            @user.Name - @user.Vote&nbsp;
-            @if (user.Id == ViewModel.CurrentUserId)
-            {
-                <button @onclick="ViewModel.SubmitVoteAsync">Random Vote</button>
-            }
-        </li>
-    }    
-</ul>
+@if (ViewModel.IsFacilitator)
+{
+    <h2 class="heading">Facilitate</h2>
+    <div class="d-flex justify-content-between">
+        <div class="d-flex justify-content-start">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+            </div>
+            <div class="form-check form-switch" style="margin-left:10px">
+                <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
+        </div>
+    </div>
+}
+else if (ViewModel.IsTeamMember)
+{
+    <h2 class="heading">Vote</h2>
+    <div class="container text-center">
+        @foreach (string[] rowOptions in (ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>()).Chunk(4))
+        {
+            <div class="row">
+                @foreach (string option in rowOptions)
+                {
+                    string buttonClass = option == ViewModel.CurrentVote ? "btn-success" : "btn-info";
+                    <button class="col-3 col-sm-2 btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
+                }
+                <div class="w-100"></div>
+            </div>
+        }
+    </div>
+}
+
+<div class="card border-info mb-3 user-card">
+    <div class="card-header">Team Members</div>
+    <div class="card-body">
+        @foreach (var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
+        {
+            <p>
+                @user.Name
+                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                {
+                    <span> - @user.Vote</span>
+                }
+                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
+                {
+                    <span class="vote-preview"> - @user.Vote</span>
+                }
+                else
+                {
+                    <span> - ??</span>
+                }
+            </p>
+        }
+    </div>
+</div>
 
 <form method="post" na'UserNameForm'>
     <fieldset>
@@ -48,7 +96,7 @@
         await base.OnInitializedAsync();
         if (RoomId is { } roomId)
         {
-            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}", null);
+            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}");
             await ViewModel.JoinRoomAsync(roomId, user);
         }
     }

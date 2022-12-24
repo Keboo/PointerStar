@@ -12,6 +12,32 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid _currentUserId;
 
+    public bool IsFacilitator
+        => CurrentUser?.Role == Role.Facilitator;
+
+    public bool IsTeamMember
+        => CurrentUser?.Role == Role.TeamMember;
+
+    public User? CurrentUser
+        => RoomState?.Users.FirstOrDefault(u => u.Id == CurrentUserId);
+
+    public string? CurrentVote
+        => CurrentUser?.Vote;
+
+    [ObservableProperty]
+    private bool _votesShown;
+
+    [ObservableProperty]
+    private bool _previewVotes;
+
+    async partial void OnVotesShownChanged(bool value)
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.ShowVotesAsync(value);
+        }
+    }
+
     public RoomViewModel(IRoomHubConnection roomHubConnection)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
@@ -21,15 +47,14 @@ public partial class RoomViewModel : ViewModelBase
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
         RoomState = roomState;
+        VotesShown = roomState.VotesShown;
     }
 
-    public async Task SubmitVoteAsync()
+    public async Task SubmitVoteAsync(string vote)
     {
-        //TODO: Actually pass vote in
         if (RoomHubConnection.IsConnected)
         {
-            Random r = new();
-            await RoomHubConnection.SubmitVoteAsync(r.Next(1, 10).ToString());
+            await RoomHubConnection.SubmitVoteAsync(vote);
         }
     }
 
@@ -37,8 +62,16 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected)
         {
-            await RoomHubConnection.JoinRoomAsync(roomId, user);
             CurrentUserId = user.Id;
+            await RoomHubConnection.JoinRoomAsync(roomId, user);
+        }
+    }
+
+    public async Task ResetVotesAsync()
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.ResetVotesAsync();
         }
     }
 

@@ -23,6 +23,14 @@ indent_size = 2
 indent_style = space
 tab_width = 2
 
+##### JSON files #####
+[*.{json}]
+
+# Indentation and spacing
+indent_size = 2
+indent_style = space
+tab_width = 2
+
 # The following rules were initially inferred by Visual Studio IntelliCode from the C:\Users\bushc\Source\Repos\MaterialDesignInXamlToolkit codebase based on best match to current usage at 8/14/2018
 # You can modify the rules from these initially generated values to suit your own policies
 # You can learn more about editorconfig here: https://docs.microsoft.com/en-us/visualstudio/ide/editorconfig-code-style-settings-reference
