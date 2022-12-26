@@ -157,31 +157,40 @@
         }
     </div>
 
-    <div class="modal @modalClass" tabindex="-1" role="dialog" style="display:@modalDisplay; overflow-y: auto;">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">@Title</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form>
-                    <div class="form-group">                        
-                        <input type="text" class="form-control" id="nameInput" placeholder="Enter your name" @bind="Name">
+    @{
+        string dialogDisplay;
+        if (ViewModel.IsNameModalOpen)
+        {
+            dialogDisplay = "block";
+        }
+        else
+        {
+            dialogDisplay = "none";
+        }
+    }
+    <div class="modal" tabindex="-1" role="dialog" style="display:@dialogDisplay; overflow-y: auto;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Please Enter Your Name</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Enter your name" @onkeypress="OnKeyPress" @bind="ViewModel.Name"
+                               @bind:event="oninput">
                     </div>
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="JoinRoom">Join</button>
-                </form>
-            </div>
-            <div class="modal-footer">
-                    @Footer
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal"
+                            @onclick="JoinRoom">
+                        Join Room
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-    @if (showBackdrop)
+    @if (ViewModel.IsNameModalOpen)
     {
         <div class="modal-backdrop fade show"></div>
     }
@@ -189,37 +198,6 @@
 </div>
 
 @code {
-
-    [Parameter]
-    public RenderFragment? Title { get; set; } = new RenderFragment(builder => builder.AddContent(0, "Please Enter Your Name"));
-
-    [Parameter]
-    public RenderFragment? Body { get; set; }
-
-    [Parameter]
-    public RenderFragment? Footer { get; set; }
-
-    private string modalDisplay = "none;";
-    private string modalClass = "";
-    private bool showBackdrop = false;
-
-    public void Open()
-    {
-        IsModalOpen = true;
-        modalDisplay = "block;";
-        modalClass = "show";
-        showBackdrop = true;
-    }
-
-    public void Close()
-    {
-        IsModalOpen = false;
-        modalDisplay = "none";
-        modalClass = "";
-        showBackdrop = false;
-    }
-
-    private bool IsModalOpen { get; set; }
 
     [Parameter]
     public string? RoomId { get; set; }
@@ -230,31 +208,23 @@
 
     protected override async Task OnInitializedAsync()
     {
+        ViewModel.Name = Name;
         await base.OnInitializedAsync();
-        if (RoomId is { } roomId)
+    }
+
+    private async void OnKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
         {
-            if (string.IsNullOrEmpty(Name))
-            {
-                Open();
-            }
-            else
-            {
-                await JoinRoom();
-            }
+            await JoinRoom();
         }
     }
 
     private async Task JoinRoom()
     {
-        if (IsModalOpen)
-        {
-            Close();
-        }
-
-        User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}");
         if (RoomId is { } roomId)
         {
-            await ViewModel.JoinRoomAsync(roomId, user);
+            await ViewModel.JoinRoomAsync(roomId);
         }
     }
 }

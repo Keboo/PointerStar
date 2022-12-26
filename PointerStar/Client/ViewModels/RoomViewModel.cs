@@ -12,6 +12,12 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid _currentUserId;
 
+    [ObservableProperty]
+    private string? _name;
+
+    [ObservableProperty]
+    private bool _isNameModalOpen;
+
     public bool IsFacilitator
         => CurrentUser?.Role == Role.Facilitator;
 
@@ -58,10 +64,12 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public async Task JoinRoomAsync(string roomId, User user)
+    public async Task JoinRoomAsync(string roomId)
     {
         if (RoomHubConnection.IsConnected)
         {
+            IsNameModalOpen = false;
+            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}");
             CurrentUserId = user.Id;
             await RoomHubConnection.JoinRoomAsync(roomId, user);
         }
@@ -78,6 +86,7 @@ public partial class RoomViewModel : ViewModelBase
     public override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
+        IsNameModalOpen = true;
         await RoomHubConnection.OpenAsync();
     }
 }
