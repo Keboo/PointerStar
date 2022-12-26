@@ -5,6 +5,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Majorsoft.Blazor.Components.Modal" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\PointerStar\Client\PointerStar.Client.csproj" />
     <ProjectReference Include="..\..\PointerStar\Shared\PointerStar.Shared.csproj" />
   </ItemGroup>

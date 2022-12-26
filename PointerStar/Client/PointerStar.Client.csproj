@@ -7,8 +7,13 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
+    <PackageReference Include="Majorsoft.Blazor.Components.Modal" Version="1.5.0" />
+    <PackageReference Include="Microsoft.AspNet.Razor" Version="3.2.9" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="7.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="7.0.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Runtime" Version="2.2.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Razor" Version="6.0.12" />
+    <PackageReference Include="RazorEngine" Version="3.10.0" />
   </ItemGroup>
 
   <ItemGroup>

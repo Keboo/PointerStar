@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Net.NetworkInformation;
 using Microsoft.AspNetCore.Components;
 using PointerStar.Client.ViewModels;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace PointerStar.Client.Components;
 
