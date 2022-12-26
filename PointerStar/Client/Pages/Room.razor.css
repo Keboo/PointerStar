@@ -9,6 +9,10 @@
     height: 100px;
 }
 
+.vote-button-row {
+    max-width: 700px;
+}
+
 .heading {
     margin: 20px, 0px, 10px, 0px;
     border-top-style: solid;
@@ -17,7 +21,12 @@
 }
 
 .user-card {
-    max-width: 80%;
+    /*max-width: 80%;*/
+    margin: 10px 0px;
+}
+
+.votes-card {
+    /*max-width: 80%;*/
     margin: 10px 0px;
 }
 
