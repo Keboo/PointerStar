@@ -71,7 +71,7 @@ else if (ViewModel.IsTeamMember)
                     }
                     else
                     {
-                        <span> - ??</span>
+                        <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
                     }
                 </p>
             }
