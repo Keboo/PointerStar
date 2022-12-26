@@ -10,65 +10,154 @@
 
 <h1>Room @ViewModel.RoomState?.RoomId</h1>
 
-@if (ViewModel.IsFacilitator)
-{
-    <h2 class="heading">Facilitate</h2>
-    <div class="d-flex justify-content-between">
-        <div class="d-flex justify-content-start">
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
-            </div>
-            <div class="form-check form-switch" style="margin-left:10px">
-                <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
-            </div>
-        </div>
-        <div>
-            <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
-        </div>
-    </div>
-}
-else if (ViewModel.IsTeamMember)
-{
-    <h2 class="heading">Vote</h2>
-    <div class="container text-center">
-        @foreach (string[] rowOptions in (ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>()).Chunk(4))
+<div class="container">
+    <div class="row">
+        @if (ViewModel.IsFacilitator)
         {
+            <h2 class="heading">Facilitate</h2>
+            <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-start">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+                    </div>
+                    <div class="form-check form-switch" style="margin-left:10px">
+                        <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
+                </div>
+            </div>
+        }
+        else if (ViewModel.IsTeamMember)
+        {
+            <h2 class="heading">Vote</h2>
             <div class="row">
-                @foreach (string option in rowOptions)
-                {
-                    string buttonClass = option == ViewModel.CurrentVote ? "btn-success" : "btn-info";
-                    <button class="col-3 col-sm-2 btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
-                }
-                <div class="w-100"></div>
+                <div class="d-flex justify-content-start flex-wrap vote-button-row">
+                    @foreach (string[] rowOptions in (ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>()).Chunk(4))
+                    {
+                        @foreach (string option in rowOptions)
+                        {
+                            <div>
+                                @{
+                                    string buttonClass = option == ViewModel.CurrentVote ? "btn-success" : "btn-info";
+                                }
+                                <button class="btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
+                            </div>
+                        }
+                    }
+                </div>
             </div>
         }
     </div>
-}
 
-<div class="card border-info mb-3 user-card">
-    <div class="card-header">Team Members</div>
-    <div class="card-body">
-        @foreach (var user in ViewModel.RoomState?.Users ?? Enumerable.Empty<User>())
+    @{
+        var teamMembers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.TeamMember) ?? Enumerable.Empty<User>();
+        var facilitators = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Facilitator) ?? Enumerable.Empty<User>();
+        var observers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Observer) ?? Enumerable.Empty<User>();
+    }
+    <div class="row">
+        <div class="col-7">
+            <div class="card border-info mb-3 user-card">
+                <div class="card-header">Team Members</div>
+                <div class="card-body">
+                    @if (teamMembers.Any())
+                    {
+                        @foreach (var user in teamMembers)
+                        {
+                            <p>
+                                @user.Name
+                                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                                {
+                                    <span> - @user.Vote</span>
+                                }
+                                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
+                                {
+                                    <span class="vote-preview"> - @user.Vote</span>
+                                }
+                                else
+                                {
+                                    <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
+                                }
+                            </p>
+                        }
+                    }
+                    else
+                    {
+                        <span>Waiting for team members to join...</span>
+                    }
+                </div>
+            </div>
+
+            @if (facilitators.Any())
+            {
+                <div class="card border-secondary mb-3 user-card">
+                    <div class="card-header">Facilitators</div>
+                    <div class="card-body">
+                        @foreach (var user in facilitators)
+                        {
+                            <p>@user.Name</p>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (observers.Any())
+            {
+                <div class="card border-dark mb-3 user-card">
+                    <div class="card-header">Observers</div>
+                    <div class="card-body">
+                        @foreach (var user in observers)
+                        {
+                            <p>@user.Name</p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        @if (ViewModel.VotesShown && ViewModel.RoomState is { } roomState)
         {
-            <p>
-                @user.Name
-                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
-                {
-                    <span> - @user.Vote</span>
-                }
-                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
-                {
-                    <span class="vote-preview"> - @user.Vote</span>
-                }
-                else
-                {
-                    <span> - ??</span>
-                }
-            </p>
+            <div class="col-5">
+                <div class="card border-primary votes-card">
+                    <div class="card-header">Votes</div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Vote</th>
+                                    <th scope="col">Count</th>
+                                    <th scope="col">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
+                                    var groupedVotes = votes.GroupBy(x => x).OrderBy(x => Array.IndexOf(roomState.VoteOptions, x.Key)).ToArray();
+                                    var maxVote = groupedVotes.Select(x => x.Count()).Max();
+                                    foreach (var group in groupedVotes)
+                                    {
+                                        var count = group.Count();
+                                        var rowStyle = count == maxVote ? "table-dark" : "table-active";
+                                        <tr class="@rowStyle">
+                                            <th scope="row">@(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)</th>
+                                            <td>@count</td>
+                                            <td>
+                                                @(string.Format("{0:P0}", count / (double)votes.Length))
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         }
     </div>
+
+
 </div>
 
 <div class="modal @modalClass" tabindex="-1" role="dialog" style="display:@modalDisplay; overflow-y: auto;">
