@@ -71,7 +71,12 @@
                                 @user.Name
                                 @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
                                 {
-                                    <span> - @user.Vote</span>
+                                    <span> - </span>
+                                    if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
+                                    {
+                                        <span class="original-vote-value">(@user.OriginalVote) </span>
+                                    }
+                                    <span class="vote-value">@user.Vote</span>
                                 }
                                 else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
                                 {

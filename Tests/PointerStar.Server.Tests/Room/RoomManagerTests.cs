@@ -105,13 +105,38 @@ public abstract class RoomManagerTests<TRoomManager>
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
+        
         RoomState? roomState = await sut.SubmitVoteAsync("1", connectionId);
 
         Assert.NotNull(roomState);
         Assert.Single(roomState.Users);
         Assert.Equal("1", roomState.Users.Single().Vote);
+        Assert.Equal("1", roomState.Users.Single().OriginalVote);
     }
 
+    [Fact]
+    public async Task SubmitVoteAsync_AfterVotesShown_UpdatesVote()
+    {
+        AutoMocker mocker = new();
+
+        string roomId = Guid.NewGuid().ToString();
+        string connectionId = Guid.NewGuid().ToString();
+        User user = new(Guid.NewGuid(), "User 1");
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+
+        _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
+
+        _ = await sut.SubmitVoteAsync("1", connectionId);
+        _ = await sut.ShowVotesAsync(true, connectionId);
+        RoomState? roomState = await sut.SubmitVoteAsync("2", connectionId);
+
+
+        Assert.NotNull(roomState);
+        Assert.Single(roomState.Users);
+        Assert.Equal("2", roomState.Users.Single().Vote);
+        Assert.Equal("1", roomState.Users.Single().OriginalVote);
+    }
+    
     [Fact]
     public async Task SubmitVoteAsync_WithDisconnectedUser_ReturnsNull()
     {
