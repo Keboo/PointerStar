@@ -127,7 +127,7 @@ public abstract class RoomManagerTests<TRoomManager>
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
 
         _ = await sut.SubmitVoteAsync("1", connectionId);
-        _ = await sut.ShowVotesAsync(true, connectionId);
+        _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, connectionId);
         RoomState? roomState = await sut.SubmitVoteAsync("2", connectionId);
 
 
@@ -136,7 +136,26 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Equal("2", roomState.Users.Single().Vote);
         Assert.Equal("1", roomState.Users.Single().OriginalVote);
     }
-    
+
+    [Fact]
+    public async Task SubmitVoteAsync_WithAutoShowVotes_ShowsVotesWhenAllTeamMemebersHaveVoted()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember1 = Guid.NewGuid().ToString();
+        string teamMember2 = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator, teamMember1, teamMember2);
+
+        _ = await sut.UpdateRoomAsync(new RoomOptions { AutoShowVotes = true }, facilitator);
+
+        RoomState? roomState = await sut.SubmitVoteAsync("1", teamMember1);
+        Assert.False(roomState?.VotesShown);
+        
+        roomState = await sut.SubmitVoteAsync("1", teamMember2);
+        Assert.True(roomState?.VotesShown);
+    }
+
     [Fact]
     public async Task SubmitVoteAsync_WithDisconnectedUser_ReturnsNull()
     {
@@ -151,9 +170,11 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task ShowVotesAsync_WithExistingFacilitator_ShowsVotes(bool votesShown)
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    [InlineData(false, true)]
+    public async Task UpdateRoomAsync_WithExistingFacilitator_UpdatesRoom(bool votesShown, bool autoShowVotes)
     {
         AutoMocker mocker = new();
 
@@ -163,16 +184,19 @@ public abstract class RoomManagerTests<TRoomManager>
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
-        RoomState? roomState = await sut.ShowVotesAsync(votesShown, connectionId);
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VotesShown = votesShown,
+            AutoShowVotes = autoShowVotes
+        }, connectionId);
 
-        Assert.Equal(votesShown, roomState?.VotesShown);
-
-        roomState = await sut.ShowVotesAsync(!votesShown, connectionId);
-        Assert.Equal(!votesShown, roomState?.VotesShown);
+        Assert.NotNull(roomState);
+        Assert.Equal(votesShown, roomState.VotesShown);
+        Assert.Equal(autoShowVotes, roomState.AutoShowVotes);
     }
 
     [Fact]
-    public async Task ShowVotesAsync_WithTeamMemberUser_DoesNotShowVotes()
+    public async Task UpateRoomAsync_WithTeamMemberUser_DoesNotUpdateRoom()
     {
         AutoMocker mocker = new();
 
@@ -186,9 +210,14 @@ public abstract class RoomManagerTests<TRoomManager>
         _ = await sut.AddUserToRoomAsync(roomId, facilitator, connectionId1);
         _ = await sut.AddUserToRoomAsync(roomId, teamMember, connectionId2);
 
-        RoomState? roomState = await sut.ShowVotesAsync(true, connectionId2);
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VotesShown = true,
+            AutoShowVotes = true
+        }, connectionId2);
 
         Assert.False(roomState?.VotesShown);
+        Assert.False(roomState!.AutoShowVotes);
     }
 
     [Fact]
@@ -206,7 +235,7 @@ public abstract class RoomManagerTests<TRoomManager>
         _ = await sut.AddUserToRoomAsync(roomId, facilitator, connectionId1);
         RoomState room = await sut.AddUserToRoomAsync(roomId, teamMember, connectionId2);
         _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), connectionId2);
-        _ = await sut.ShowVotesAsync(true, connectionId1);
+        _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, connectionId1);
 
         RoomState? roomState = await sut.ResetVotesAsync(connectionId1);
 
@@ -230,12 +259,23 @@ public abstract class RoomManagerTests<TRoomManager>
         _ = await sut.AddUserToRoomAsync(roomId, facilitator, connectionId1);
         RoomState room = await sut.AddUserToRoomAsync(roomId, teamMember, connectionId2);
         _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), connectionId2);
-        _ = await sut.ShowVotesAsync(true, connectionId1);
+        _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, connectionId1);
 
         RoomState? roomState = await sut.ResetVotesAsync(connectionId2);
 
         Assert.True(roomState?.VotesShown);
         Assert.Null(roomState!.Users[0].Vote);
         Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
+    }
+
+    protected async Task CreateRoom(IRoomManager sut, params string[] connectionIds)
+    {
+        string roomId = Guid.NewGuid().ToString();
+
+        for (int i = 0; i < connectionIds.Length; i++)
+        {
+            User user = new(Guid.NewGuid(), i == 0 ? $"Facilitator" : $"Team Memeber {i}");
+            _ = await sut.AddUserToRoomAsync(roomId, user, connectionIds[i]);
+        }
     }
 }

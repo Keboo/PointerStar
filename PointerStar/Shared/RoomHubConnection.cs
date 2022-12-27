@@ -7,7 +7,7 @@ public class RoomHubConnection : IRoomHubConnection
 {
     public const string JoinRoomMethodName = "JoinRoom";
     public const string SubmitVoteMethodName = "SubmitVote";
-    public const string ShowVotesMethodName = "ShowVotes";
+    public const string UpdateRoomMethodName = "UpdateRoom";
     public const string ResetVotesMethodName = "ResetVotes";
     public const string RoomUpdatedMethodName = "RoomUpdated";
 
@@ -68,8 +68,8 @@ public class RoomHubConnection : IRoomHubConnection
     public Task SubmitVoteAsync(string vote)
         => HubConnection.InvokeAsync(SubmitVoteMethodName, vote);
 
-    public Task ShowVotesAsync(bool areVotesShown)
-        => HubConnection.InvokeAsync(ShowVotesMethodName, areVotesShown);
+    public Task UpdateRoomAsync(RoomOptions roomOptions)
+        => HubConnection.InvokeAsync(UpdateRoomMethodName, roomOptions);
 
     public Task ResetVotesAsync()
         => HubConnection.InvokeAsync(ResetVotesMethodName);

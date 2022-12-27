@@ -21,6 +21,12 @@
                         <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
                         <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
                     </div>
+                    <div class="form-check" style="margin: 0px 10px;">
+                        <input class="form-check-input" type="checkbox" value="" id="autoRevealVotesCheckbox" @bind="ViewModel.AutoShowVotes">
+                        <label class="form-check-label" for="autoRevealVotesCheckbox">
+                            Automatically reveal votes
+                        </label>
+                    </div>
                     <div class="form-check form-switch" style="margin-left:10px">
                         <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
                         <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
@@ -140,7 +146,7 @@
                                 @{
                                     var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
                                     var groupedVotes = votes.GroupBy(x => x).OrderBy(x => Array.IndexOf(roomState.VoteOptions, x.Key)).ToArray();
-                                    var maxVote = groupedVotes.Select(x => x.Count()).Max();
+                                    int? maxVote = groupedVotes.Any() ? groupedVotes.Select(x => x.Count()).Max() : null;
                                     foreach (var group in groupedVotes)
                                     {
                                         var count = group.Count();

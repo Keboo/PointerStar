@@ -38,11 +38,28 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private bool _previewVotes;
 
+    [ObservableProperty]
+    private bool _autoShowVotes;
+
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
         {
-            await RoomHubConnection.ShowVotesAsync(value);
+            await RoomHubConnection.UpdateRoomAsync(new RoomOptions
+            {
+                VotesShown = value
+            });
+        }
+    }
+
+    async partial void OnAutoShowVotesChanged(bool value)
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.UpdateRoomAsync(new RoomOptions
+            {
+                AutoShowVotes = value
+            });
         }
     }
 
@@ -57,6 +74,7 @@ public partial class RoomViewModel : ViewModelBase
     {
         RoomState = roomState;
         VotesShown = roomState.VotesShown;
+        AutoShowVotes = roomState.AutoShowVotes;
     }
 
     public async Task SubmitVoteAsync(string vote)
