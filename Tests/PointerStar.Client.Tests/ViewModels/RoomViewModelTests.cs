@@ -1,4 +1,5 @@
-﻿using PointerStar.Client.ViewModels;
+﻿using PointerStar.Client.Cookies;
+using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
 namespace PointerStar.Client.Tests.ViewModels;
@@ -58,6 +59,7 @@ public partial class RoomViewModelTests
 
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
+        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("name", "Foo", null), Times.Once);
         Assert.False(viewModel.IsNameModalOpen);
     }
 
@@ -84,6 +86,19 @@ public partial class RoomViewModelTests
 
         mocker.Verify<IRoomHubConnection>(x => x.OpenAsync(), Times.Once);
         Assert.True(viewModel.IsNameModalOpen);
+    }
+
+    [Fact]
+    public async Task OnInitializedAsync_WithCachedName_LoadsCachedName()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("name", ""))
+            .ReturnsAsync("cached");
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.OnInitializedAsync();
+
+        Assert.Equal("cached", viewModel.Name);
     }
 
     [Fact]

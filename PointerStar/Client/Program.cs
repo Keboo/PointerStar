@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PointerStar.Client;
+using PointerStar.Client.Cookies;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
@@ -16,5 +17,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddScoped<CounterViewModel>();
 builder.Services.AddScoped<RoomViewModel>();
+builder.Services.AddScoped<ICookie, Cookie>();
 
 await builder.Build().RunAsync();
