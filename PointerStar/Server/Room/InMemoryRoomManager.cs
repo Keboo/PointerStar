@@ -63,7 +63,11 @@ public class InMemoryRoomManager : IRoomManager
         {
             return room with
             {
-                Users = room.Users.Select(u => u.Id == userId ? u with { Vote = vote } : u).ToArray()
+                Users = room.Users.Select(u => u.Id == userId ? u with
+                {
+                    OriginalVote = room.VotesShown ? u.OriginalVote : vote,
+                    Vote = vote
+                } : u).ToArray()
             };
         });
     }

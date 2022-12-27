@@ -23,6 +23,7 @@ public record class RoomState(string RoomId, User[] Users)
 
 public record class User(Guid Id, string Name)
 {
+    public string? OriginalVote { get; init; }
     public string? Vote { get; init; }
     public Role Role { get; init; } = Role.TeamMember;
 }
