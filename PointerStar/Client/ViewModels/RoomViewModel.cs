@@ -1,10 +1,12 @@
-﻿using PointerStar.Shared;
+﻿using PointerStar.Client.Cookies;
+using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
 
 public partial class RoomViewModel : ViewModelBase
 {
     private IRoomHubConnection RoomHubConnection { get; }
+    private ICookie Cookie { get; }
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -44,9 +46,10 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection)
+    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
+        Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -69,8 +72,13 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             IsNameModalOpen = false;
-            User user = new(Guid.NewGuid(), Name ?? $"User {new Random().Next()}");
+            string name = string.IsNullOrWhiteSpace(Name) ? $"User {new Random().Next()}" : Name;
+            User user = new(Guid.NewGuid(), name);
             CurrentUserId = user.Id;
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                await Cookie.SetValueAsync("name", Name);
+            }
             await RoomHubConnection.JoinRoomAsync(roomId, user);
         }
     }
@@ -85,6 +93,7 @@ public partial class RoomViewModel : ViewModelBase
 
     public override async Task OnInitializedAsync()
     {
+        Name = await Cookie.GetValueAsync("name");
         await base.OnInitializedAsync();
         IsNameModalOpen = true;
         await RoomHubConnection.OpenAsync();
