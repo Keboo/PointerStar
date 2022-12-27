@@ -111,7 +111,20 @@ public partial class RoomViewModelTests
 
         viewModel.VotesShown = true;
 
-        mocker.Verify<IRoomHubConnection>(x => x.ShowVotesAsync(true), Times.Once);
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateRoomAsync(It.Is<RoomOptions>(o => o.VotesShown == true)), Times.Once);
+    }
+
+    [Fact]
+    public void AutoShowVotes_OnChanged_InvokesHub()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        viewModel.AutoShowVotes = true;
+
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateRoomAsync(It.Is<RoomOptions>(o => o.AutoShowVotes == true)), Times.Once);
     }
 
     [Fact]

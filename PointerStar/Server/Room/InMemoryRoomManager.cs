@@ -44,14 +44,22 @@ public class InMemoryRoomManager : IRoomManager
         });
     }
 
-    public Task<RoomState?> ShowVotesAsync(bool areVotesShown, string connectionId)
+    public Task<RoomState?> UpdateRoomAsync(RoomOptions roomOptions, string connectionId)
     {
         return WithConnection(connectionId, (room, userId) =>
         {
-            //Only allow facilitators to change the votes
+            //Only allow facilitators to change the room options
             if (room.Users.FirstOrDefault(x => x.Id == userId)?.Role == Role.Facilitator)
             {
-                return room with { VotesShown = areVotesShown };
+                if (roomOptions.VotesShown is { } votesShown)
+                {
+                    room = room with { VotesShown = votesShown };
+                }
+                if (roomOptions.AutoShowVotes is { } autoShowVotes)
+                {
+                    room = room with { AutoShowVotes = autoShowVotes };
+                }
+                return room;
             }
             return room;
         });
@@ -61,7 +69,7 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, userId) =>
         {
-            return room with
+            var rv = room with
             {
                 Users = room.Users.Select(u => u.Id == userId ? u with
                 {
@@ -69,6 +77,16 @@ public class InMemoryRoomManager : IRoomManager
                     Vote = vote
                 } : u).ToArray()
             };
+
+            if (rv.AutoShowVotes && rv.Users.Where(x => x.Role == Role.TeamMember).All(x => x.Vote != null))
+            {
+                rv = rv with
+                {
+                    VotesShown = true
+                };
+            }
+
+            return rv;
         });
     }
 

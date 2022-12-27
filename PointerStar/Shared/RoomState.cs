@@ -3,7 +3,8 @@
 public record class RoomState(string RoomId, User[] Users)
 {
     public bool VotesShown { get; init; }
-
+    public bool AutoShowVotes { get; init; }
+    
     public string[] VoteOptions { get; init; } = new[]
     {
         "1",
