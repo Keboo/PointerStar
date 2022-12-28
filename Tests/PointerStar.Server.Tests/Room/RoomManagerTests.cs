@@ -1,4 +1,5 @@
-﻿using PointerStar.Server.Room;
+﻿using System.ComponentModel;
+using PointerStar.Server.Room;
 using PointerStar.Shared;
 
 namespace PointerStar.Server.Tests.Room;
@@ -218,6 +219,25 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.False(roomState?.VotesShown);
         Assert.False(roomState!.AutoShowVotes);
+    }
+
+    [Fact]
+    [Description("Issue 69")]
+    public async Task UpdateRoom_WithAutoShowVotesAfterAllVotesCast_RevealsVotes()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember1 = Guid.NewGuid().ToString();
+        string teamMember2 = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator, teamMember1, teamMember2);
+
+        _ = await sut.SubmitVoteAsync("1", teamMember1);
+        _ = await sut.SubmitVoteAsync("1", teamMember2);
+
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions { AutoShowVotes = true }, facilitator);
+        
+        Assert.True(roomState?.VotesShown);
     }
 
     [Fact]
