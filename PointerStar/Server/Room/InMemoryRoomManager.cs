@@ -55,9 +55,14 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     room = room with { VotesShown = votesShown };
                 }
+                
                 if (roomOptions.AutoShowVotes is { } autoShowVotes)
                 {
                     room = room with { AutoShowVotes = autoShowVotes };
+                }
+                if (ShouldShowVotes(room))
+                {
+                    room = room with { VotesShown = true };
                 }
                 return room;
             }
@@ -78,7 +83,7 @@ public class InMemoryRoomManager : IRoomManager
                 } : u).ToArray()
             };
 
-            if (rv.AutoShowVotes && rv.Users.Where(x => x.Role == Role.TeamMember).All(x => x.Vote != null))
+            if (ShouldShowVotes(rv))
             {
                 rv = rv with
                 {
@@ -160,5 +165,18 @@ public class InMemoryRoomManager : IRoomManager
         {
             roomLock.Release();
         }
+    }
+
+    private static bool ShouldShowVotes(RoomState roomState)
+    {
+        if (roomState.AutoShowVotes)
+        {
+            var teamMemebers = roomState.Users.Where(x => x.Role == Role.TeamMember).ToArray();
+            if (teamMemebers.Any() && teamMemebers.All(x => x.Vote is not null))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
