@@ -45,7 +45,6 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _selectedRoleId;
     
-
     public string? RoomId { get; set; }
 
     async partial void OnVotesShownChanged(bool value)
@@ -93,24 +92,38 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public async Task JoinRoomAsync()
+    public async Task SubmitDialogAsync()
     {
         if (RoomHubConnection.IsConnected && !string.IsNullOrWhiteSpace(RoomId))
         {
             IsNameModalOpen = false;
-            string name = string.IsNullOrWhiteSpace(Name) ? $"User {new Random().Next()}" : Name;
-            User user = new(Guid.NewGuid(), name);
-            if (SelectedRoleId is { } id && Role.FromId(id) is { } role)
+            if (RoomState is null)
             {
-                user = user with { Role = role };
+                //No room state, so the user needs to join the room
+                string name = string.IsNullOrWhiteSpace(Name) ? $"User {new Random().Next()}" : Name;
+                User user = new(Guid.NewGuid(), name);
+                if (SelectedRoleId is { } id && Role.FromId(id) is { } role)
+                {
+                    user = user with { Role = role };
+                }
+                CurrentUserId = user.Id;
+                if (!string.IsNullOrWhiteSpace(Name))
+                {
+                    await Cookie.SetValueAsync("name", Name);
+                }
+                await RoomHubConnection.JoinRoomAsync(RoomId, user);
             }
-            CurrentUserId = user.Id;
-            if (!string.IsNullOrWhiteSpace(Name))
+            else
             {
-                await Cookie.SetValueAsync("name", Name);
+                //We have room state so the user should update thier information
+                await RoomHubConnection.UpdateUserAsync(new UserOptions
+                {
+                    Name = Name,
+                    Role = SelectedRoleId is not null ? Role.FromId(SelectedRoleId.Value) : null
+                });
             }
-            await RoomHubConnection.JoinRoomAsync(RoomId, user);
         }
+        
     }
 
     public async Task ResetVotesAsync()
