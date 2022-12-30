@@ -16,7 +16,7 @@ public class InMemoryRoomManager : IRoomManager
         return WithRoomLock(roomId, () =>
         {
             RoomState rv = Rooms.AddOrUpdate(roomId,
-                new RoomState(roomId, new[] { user with { Role = Role.Facilitator } }),
+                new RoomState(roomId, new[] { user }),
             (_, roomState) =>
             {
                 return roomState with
@@ -55,7 +55,7 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     room = room with { VotesShown = votesShown };
                 }
-                
+
                 if (roomOptions.AutoShowVotes is { } autoShowVotes)
                 {
                     room = room with { AutoShowVotes = autoShowVotes };
@@ -67,6 +67,29 @@ public class InMemoryRoomManager : IRoomManager
                 return room;
             }
             return room;
+        });
+    }
+
+    public Task<RoomState?> UpdateUserAsync(UserOptions userOptions, string connectionId)
+    {
+        return WithConnection(connectionId, (room, userId) =>
+        {
+            User[] users = room.Users.Select(x =>
+            {
+                if (x.Id == userId)
+                {
+                    if (userOptions.Name is { } name)
+                    {
+                        x = x with { Name = name };
+                    }
+                    if (userOptions.Role is { } role)
+                    {
+                        x = x with { Role = role };
+                    }
+                }
+                return x;
+            }).ToArray();
+            return room with { Users = users };
         });
     }
 
@@ -111,6 +134,19 @@ public class InMemoryRoomManager : IRoomManager
                 };
             }
             return room;
+        });
+    }
+
+    public Task<Role> GetNewUserRoleAsync(string roomId)
+    {
+        return WithRoomLock(roomId, () =>
+        {
+            if (Rooms.TryGetValue(roomId, out RoomState? room) &&
+                room.Users.Any(x => x.Role == Role.Facilitator))
+            {
+                return Task.FromResult(Role.TeamMember);
+            }
+            return Task.FromResult(Role.Facilitator);
         });
     }
 
@@ -171,7 +207,7 @@ public class InMemoryRoomManager : IRoomManager
     {
         if (roomState.AutoShowVotes)
         {
-            var teamMemebers = roomState.Users.Where(x => x.Role == Role.TeamMember).ToArray();
+            var teamMemebers = roomState.TeamMemebers;
             if (teamMemebers.Any() && teamMemebers.All(x => x.Vote is not null))
             {
                 return true;
@@ -179,4 +215,5 @@ public class InMemoryRoomManager : IRoomManager
         }
         return false;
     }
+
 }

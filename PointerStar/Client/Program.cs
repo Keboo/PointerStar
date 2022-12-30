@@ -15,7 +15,6 @@ builder.Services.AddSingleton<IRoomHubConnection>(x => new RoomHubConnection(x.G
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-builder.Services.AddScoped<CounterViewModel>();
 builder.Services.AddScoped<RoomViewModel>();
 builder.Services.AddScoped<ICookie, Cookie>();
 

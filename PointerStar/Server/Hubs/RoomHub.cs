@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using PointerStar.Server.Room;
 using PointerStar.Shared;
 
@@ -23,11 +23,6 @@ public class RoomHub : Hub
         await base.OnDisconnectedAsync(exception);
     }
 
-    //public override Task OnConnectedAsync()
-    //{
-    //    return base.OnConnectedAsync();
-    //}
-
     [HubMethodName(RoomHubConnection.JoinRoomMethodName)]
     public async Task JoinRoomAsync(string roomId, User user)
     {
@@ -50,6 +45,16 @@ public class RoomHub : Hub
     public async Task UpdateRoomAsync(RoomOptions roomOptions)
     {
         RoomState? roomState = await RoomManager.UpdateRoomAsync(roomOptions, Context.ConnectionId);
+        if (roomState?.RoomId is { } roomId)
+        {
+            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        }
+    }
+
+    [HubMethodName(RoomHubConnection.UpdateUserMethodName)]
+    public async Task UpdateUserAsync(UserOptions userOptions)
+    {
+        RoomState? roomState = await RoomManager.UpdateUserAsync(userOptions, Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
             await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);

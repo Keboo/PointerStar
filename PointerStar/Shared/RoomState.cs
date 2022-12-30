@@ -2,6 +2,15 @@
 
 public record class RoomState(string RoomId, User[] Users)
 {
+    public IReadOnlyList<User> TeamMemebers
+        => Users.Where(u => u.Role == Role.TeamMember).ToList();
+
+    public IReadOnlyList<User> Facilitators
+        => Users.Where(u => u.Role == Role.Facilitator).ToList();
+
+    public IReadOnlyList<User> Observers
+        => Users.Where(u => u.Role == Role.Observer).ToList();
+
     public bool VotesShown { get; init; }
     public bool AutoShowVotes { get; init; }
     
@@ -38,5 +47,25 @@ public record class Role(Guid Id, string Name)
     public static Role Facilitator { get; } = new(FacilitatorId, "Facilitator");
     public static Role TeamMember { get; } = new(TeamMemberId, "Team Member");
     public static Role Observer { get; } = new(ObserverId, "Observer");
+
+    public static Role? FromId(Guid roleId)
+    {
+        if (roleId == FacilitatorId)
+        {
+            return Facilitator;
+        }
+
+        if (roleId == TeamMemberId)
+        {
+            return TeamMember;
+        }
+
+        if (roleId == ObserverId)
+        {
+            return Observer;
+        }
+
+        return null;
+    }
 }
 
