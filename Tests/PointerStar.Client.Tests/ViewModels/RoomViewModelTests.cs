@@ -47,7 +47,7 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public async Task JoinRoomAsync_WithHubConnection_JoinsRoom()
+    public async Task SubmitDialogAsync_WithHubConnection_JoinsRoom()
     {
         AutoMocker mocker = new();
         mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
@@ -58,7 +58,7 @@ public partial class RoomViewModelTests
         await viewModel.OnInitializedAsync();
         viewModel.Name = "Foo";
 
-        await viewModel.JoinRoomAsync();
+        await viewModel.SubmitDialogAsync();
 
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
@@ -67,7 +67,7 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public async Task JoinRoomAsync_WithoutHubConnection_DoesNothing()
+    public async Task SubmitDialogAsync_WithoutHubConnection_DoesNothing()
     {
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
@@ -75,9 +75,31 @@ public partial class RoomViewModelTests
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         viewModel.RoomId = "RoomId";
         
-        await viewModel.JoinRoomAsync();
+        await viewModel.SubmitDialogAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.IsAny<User>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task SubmitDialogAsync_WithExistingRoomState_UpdatesUser()
+    {
+        AutoMocker mocker = new();
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
+        await viewModel.OnInitializedAsync();
+        viewModel.Name = "Foo";
+        var roomState = new RoomState("roomId", new[] { new User(Guid.NewGuid(), "Test") });
+        mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null, roomState);
+
+        viewModel.Name = "New Name";
+        viewModel.SelectedRoleId = Role.Observer.Id;
+        await viewModel.SubmitDialogAsync();
+        
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateUserAsync(It.Is<UserOptions>(u => u.Name == "New Name"&& u.Role == Role.Observer)), Times.Once);
+        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]

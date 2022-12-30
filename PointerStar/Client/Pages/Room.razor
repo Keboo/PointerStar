@@ -8,8 +8,12 @@
 
 <PageTitle>Pointer*</PageTitle>
 
-<h1>Room @ViewModel.RoomState?.RoomId</h1>
-
+<h2>Room @ViewModel.RoomState?.RoomId</h2>
+<h3>
+    <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
+        @ViewModel.CurrentUser?.Name
+    </button>
+</h3>
 <div class="container">
     <div class="row">
         @if (ViewModel.IsFacilitator)
@@ -205,8 +209,15 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="JoinRoom">
-                        Join Room
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
+                        @if(ViewModel.RoomState is null)
+                        {
+                            <span>Join Room</span>
+                        }
+                        else
+                        {
+                            <span>Update</span>
+                        }
                     </button>
                 </div>
             </div>
@@ -240,12 +251,7 @@
     {
         if (args.Key == "Enter")
         {
-            await JoinRoom();
+            await ViewModel.SubmitDialogAsync();
         }
-    }
-
-    private async Task JoinRoom()
-    {
-        await ViewModel.JoinRoomAsync();
     }
 }
