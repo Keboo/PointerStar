@@ -8,6 +8,7 @@ public class RoomHubConnection : IRoomHubConnection
     public const string JoinRoomMethodName = "JoinRoom";
     public const string SubmitVoteMethodName = "SubmitVote";
     public const string UpdateRoomMethodName = "UpdateRoom";
+    public const string UpdateUserMethodName = "UpdateUser";
     public const string ResetVotesMethodName = "ResetVotes";
     public const string RoomUpdatedMethodName = "RoomUpdated";
 
@@ -23,16 +24,12 @@ public class RoomHubConnection : IRoomHubConnection
         HubUrl = url;
         HubConnection = new HubConnectionBuilder()
             .WithUrl(HubUrl, options => { })
+            .WithAutomaticReconnect()
             .Build();
 
         HubConnection.On<RoomState>(RoomUpdatedMethodName,
            (roomState) => RoomStateUpdated?.Invoke(this, roomState)
         );
-
-        HubConnection.Closed += async (error) =>
-        {
-            await OpenAsync();
-        };
     }
 
     public async Task OpenAsync()
@@ -52,14 +49,9 @@ public class RoomHubConnection : IRoomHubConnection
         await retryPolicy.ExecuteAsync(
             async () =>
             {
-                await TryOpen();
+                await HubConnection.StartAsync();
             }
         );
-        async Task<bool> TryOpen()
-        {
-            await HubConnection.StartAsync();
-            return true;
-        }
     }
 
     public Task JoinRoomAsync(string roomId, User user)
@@ -70,6 +62,9 @@ public class RoomHubConnection : IRoomHubConnection
 
     public Task UpdateRoomAsync(RoomOptions roomOptions)
         => HubConnection.InvokeAsync(UpdateRoomMethodName, roomOptions);
+
+    public Task UpdateUserAsync(UserOptions userOptions)
+        => HubConnection.InvokeAsync(UpdateUserMethodName, userOptions);
 
     public Task ResetVotesAsync()
         => HubConnection.InvokeAsync(ResetVotesMethodName);

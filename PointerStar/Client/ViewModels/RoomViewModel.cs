@@ -1,4 +1,4 @@
-﻿using PointerStar.Client.Cookies;
+using PointerStar.Client.Cookies;
 using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
@@ -7,6 +7,7 @@ public partial class RoomViewModel : ViewModelBase
 {
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
+    private HttpClient HttpClient { get; }
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -41,6 +42,12 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private bool _autoShowVotes;
 
+    [ObservableProperty]
+    private Guid? _selectedRoleId;
+    
+
+    public string? RoomId { get; set; }
+
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -63,10 +70,11 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie)
+    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
+        HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -85,19 +93,23 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public async Task JoinRoomAsync(string roomId)
+    public async Task JoinRoomAsync()
     {
-        if (RoomHubConnection.IsConnected)
+        if (RoomHubConnection.IsConnected && !string.IsNullOrWhiteSpace(RoomId))
         {
             IsNameModalOpen = false;
             string name = string.IsNullOrWhiteSpace(Name) ? $"User {new Random().Next()}" : Name;
             User user = new(Guid.NewGuid(), name);
+            if (SelectedRoleId is { } id && Role.FromId(id) is { } role)
+            {
+                user = user with { Role = role };
+            }
             CurrentUserId = user.Id;
             if (!string.IsNullOrWhiteSpace(Name))
             {
                 await Cookie.SetValueAsync("name", Name);
             }
-            await RoomHubConnection.JoinRoomAsync(roomId, user);
+            await RoomHubConnection.JoinRoomAsync(RoomId, user);
         }
     }
 
@@ -115,5 +127,9 @@ public partial class RoomViewModel : ViewModelBase
         await base.OnInitializedAsync();
         IsNameModalOpen = true;
         await RoomHubConnection.OpenAsync();
+        if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } role)
+        {
+            SelectedRoleId = role.Id;
+        }
     }
 }

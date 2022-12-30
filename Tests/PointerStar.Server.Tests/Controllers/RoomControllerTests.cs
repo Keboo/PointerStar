@@ -1,4 +1,6 @@
 ﻿using PointerStar.Server.Controllers;
+using PointerStar.Server.Room;
+using PointerStar.Shared;
 
 namespace PointerStar.Server.Tests.Controllers;
 
@@ -23,5 +25,19 @@ public partial class RoomControllerTests : IClassFixture<WebApplicationFactory>
         Assert.False(string.IsNullOrWhiteSpace(responseString1));
         Assert.False(string.IsNullOrWhiteSpace(responseString2));
         Assert.NotEqual(responseString1, responseString2);
+    }
+
+    [Fact]
+    public async Task GetNewUserRole_GetsRoleFromManager()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomManager, Task<Role>>(x => x.GetNewUserRoleAsync("myroom"))
+            .ReturnsAsync(Role.TeamMember);
+        Factory.UseService(mocker.Get<IRoomManager>());
+        HttpClient client = Factory.CreateClient();
+
+        var role = await client.GetFromJsonAsync<Role>("/api/room/GetNewUserRole/myroom");
+        
+        Assert.Equal(Role.TeamMember, role);
     }
 }

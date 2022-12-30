@@ -60,9 +60,9 @@
     </div>
 
     @{
-        var teamMembers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.TeamMember) ?? Enumerable.Empty<User>();
-        var facilitators = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Facilitator) ?? Enumerable.Empty<User>();
-        var observers = ViewModel.RoomState?.Users.Where(x => x.Role == Role.Observer) ?? Enumerable.Empty<User>();
+        var teamMembers = ViewModel.RoomState?.TeamMemebers ?? Enumerable.Empty<User>();
+        var facilitators = ViewModel.RoomState?.Facilitators ?? Enumerable.Empty<User>();
+        var observers = ViewModel.RoomState?.Observers ?? Enumerable.Empty<User>();
     }
     <div class="row">
         <div class="col-7">
@@ -179,7 +179,7 @@
             dialogDisplay = "none";
         }
     }
-    <div class="modal" tabindex="-1" role="dialog" style="display:@dialogDisplay; overflow-y: auto;">
+    <div class="modal" tabindex="-1" role="dialog" style="display:@dialogDisplay">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -190,10 +190,22 @@
                         <input type="text" class="form-control" placeholder="Enter your name" @onkeypress="OnKeyPress" @bind="ViewModel.Name"
                                @bind:event="oninput">
                     </div>
+                    <div class="form-group" style="margin-top:10px">
+                        <span>I want to...</span>
+                        <div class="btn-group" role="group" aria-label="User roles">
+                            <InputRadioGroup @bind-Value="@ViewModel.SelectedRoleId">
+                                <InputRadio Value="@Role.TeamMember.Id" class="btn-check" id="team-member-radio" />
+                                <label class="btn btn-outline-info" for="team-member-radio">Vote</label>
+                                <InputRadio Value="@Role.Facilitator.Id" class="btn-check" id="facilitator-radio" />
+                                <label class="btn btn-outline-secondary" for="facilitator-radio">Facilitate</label>
+                                <InputRadio Value="@Role.Observer.Id" class="btn-check" id="observer-radio" />
+                                <label class="btn btn-outline-light" for="observer-radio">Observe</label>
+                            </InputRadioGroup>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal"
-                            @onclick="JoinRoom">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="JoinRoom">
                         Join Room
                     </button>
                 </div>
@@ -220,6 +232,7 @@
     protected override async Task OnInitializedAsync()
     {
         ViewModel.Name = Name;
+        ViewModel.RoomId = RoomId;
         await base.OnInitializedAsync();
     }
 
@@ -233,9 +246,6 @@
 
     private async Task JoinRoom()
     {
-        if (RoomId is { } roomId)
-        {
-            await ViewModel.JoinRoomAsync(roomId);
-        }
+        await ViewModel.JoinRoomAsync();
     }
 }

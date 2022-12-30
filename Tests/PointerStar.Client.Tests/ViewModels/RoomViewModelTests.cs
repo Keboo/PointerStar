@@ -50,12 +50,15 @@ public partial class RoomViewModelTests
     public async Task JoinRoomAsync_WithHubConnection_JoinsRoom()
     {
         AutoMocker mocker = new();
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
         await viewModel.OnInitializedAsync();
         viewModel.Name = "Foo";
 
-        await viewModel.JoinRoomAsync("RoomId");
+        await viewModel.JoinRoomAsync();
 
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
@@ -70,8 +73,9 @@ public partial class RoomViewModelTests
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
-
-        await viewModel.JoinRoomAsync("RoomId");
+        viewModel.RoomId = "RoomId";
+        
+        await viewModel.JoinRoomAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.IsAny<User>()), Times.Never);
     }
@@ -80,7 +84,11 @@ public partial class RoomViewModelTests
     public async Task OnInitializedAsync_OpensHubConnection()
     {
         AutoMocker mocker = new();
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
+        
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
 
         await viewModel.OnInitializedAsync();
 
@@ -94,7 +102,10 @@ public partial class RoomViewModelTests
         AutoMocker mocker = new();
         mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("name", ""))
             .ReturnsAsync("cached");
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
 
         await viewModel.OnInitializedAsync();
 
