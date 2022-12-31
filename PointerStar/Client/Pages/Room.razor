@@ -209,16 +209,21 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
-                        @if(ViewModel.RoomState is null)
-                        {
+                    @if(ViewModel.RoomState is null)
+                    {
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
                             <span>Join Room</span>
-                        }
-                        else
-                        {
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => ViewModel.IsNameModalOpen = false">
+                            <span>Cancel</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
                             <span>Update</span>
-                        }
-                    </button>
+                        </button>
+                    }
                 </div>
             </div>
         </div>
