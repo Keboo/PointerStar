@@ -68,4 +68,6 @@ public class RoomHubConnection : IRoomHubConnection
 
     public Task ResetVotesAsync()
         => HubConnection.InvokeAsync(ResetVotesMethodName);
+
+    public Task StartVotingAsync() => throw new NotImplementedException();
 }

@@ -174,4 +174,6 @@ public partial class RoomViewModel : ViewModelBase
             SelectedRoleId = role.Id;
         }
     }
+
+    public Task StartVotingAsync() => throw new NotImplementedException();
 }
