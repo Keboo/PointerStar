@@ -10,5 +10,5 @@ public class ClipboardService : IClipboardService
 {
     private readonly IJSRuntime _jsInterop;
     public ClipboardService(IJSRuntime jsInterop) => _jsInterop = jsInterop;
-    public async ValueTask CopyToClipboard(string text) => await _jsInterop.InvokeVoidAsync("navigator.clipboard.writeText", text);
+    public ValueTask CopyToClipboard(string text) => _jsInterop.InvokeVoidAsync("navigator.clipboard.writeText", text);
 }
