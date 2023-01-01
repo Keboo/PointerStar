@@ -86,7 +86,7 @@ public partial class RoomViewModel : ViewModelBase
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
-    public async Task OnClickClipboard(object sender, string? url)
+    public async Task OnClickClipboard(string? url)
     {
         if (!string.IsNullOrEmpty(url))
         {
