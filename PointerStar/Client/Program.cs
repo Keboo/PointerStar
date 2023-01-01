@@ -17,5 +17,6 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddScoped<RoomViewModel>();
 builder.Services.AddScoped<ICookie, Cookie>();
+builder.Services.AddScoped<IClipboardService, ClipboardService>();
 
 await builder.Build().RunAsync();

@@ -4,11 +4,21 @@
 
 @inherits ComponentBase<RoomViewModel>
 
+@inject NavigationManager Navigation;
+    
 @page "/room/{RoomId}"
 
 <PageTitle>Pointer*</PageTitle>
 
-<h2>Room @ViewModel.RoomState?.RoomId</h2>
+<h2>Room @ViewModel.RoomState?.RoomId
+
+    <button id="copy-button" class="btn btn-secondary btn-sm" @onclick="OnClickClipboard">
+        <i class="fa fa-copy"></i> Copy URL
+    </button>
+</h2>
+
+@inject IClipboardService ClipboardService
+
 <h3>
     <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
         @ViewModel.CurrentUser?.Name
@@ -253,5 +263,10 @@
         {
             await ViewModel.SubmitDialogAsync();
         }
+    }
+
+    private async Task OnClickClipboard()
+    {
+        await ClipboardService.CopyToClipboard(Navigation.Uri);     
     }
 }

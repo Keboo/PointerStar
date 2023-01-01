@@ -44,7 +44,7 @@ public partial class RoomViewModel : ViewModelBase
 
     [ObservableProperty]
     private Guid? _selectedRoleId;
-    
+
     public string? RoomId { get; set; }
 
     async partial void OnVotesShownChanged(bool value)
@@ -123,7 +123,7 @@ public partial class RoomViewModel : ViewModelBase
                 });
             }
         }
-        
+
     }
 
     public async Task ResetVotesAsync()
