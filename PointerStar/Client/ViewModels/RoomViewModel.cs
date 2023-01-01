@@ -8,7 +8,7 @@ public partial class RoomViewModel : ViewModelBase
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
-    
+
     private HttpClient HttpClient { get; }
 
     [ObservableProperty]
@@ -51,7 +51,7 @@ public partial class RoomViewModel : ViewModelBase
 
     public string CopyButtonText { get; set; } = "Copy Invitation Link ";
     public string CopyButtonIcon { get; set; } = "fa fa-copy";
-    
+
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -74,31 +74,28 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient, IClipboardService clipboardService)    
+    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient, IClipboardService clipboardService)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
-        
+
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
-    
+
     public async Task OnClickClipboard(object sender, string? url)
     {
-        CopyButtonText = "Copied";
-        CopyButtonIcon = "fa fa-check-square";
-
         if (!string.IsNullOrEmpty(url))
         {
-            await ClipboardService.CopyToClipboard(url);
+            ClipboardService?.CopyToClipboard(url);
+            CopyButtonText = "Copied";
+            CopyButtonIcon = "fa fa-check-square";
         }
         else
         {
             CopyButtonText = "Copy Invalid";
-            // change CopyButtonIcon to an invalid icon
-            
-            CopyButtonIcon = "fa fa-check-square";
+            CopyButtonIcon = "fa fa-exclamation-circle";
         }
 
         await Task.Delay(2000);
@@ -106,7 +103,7 @@ public partial class RoomViewModel : ViewModelBase
         CopyButtonIcon = "fa fa-copy";
         CopyButtonText = "Copy Invitation URL";
     }
-    
+
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
         RoomState = roomState;
