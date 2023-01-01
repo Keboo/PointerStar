@@ -5,22 +5,22 @@
 @inherits ComponentBase<RoomViewModel>
 
 @inject NavigationManager Navigation;
+@inject IClipboardService ClipboardService
     
 @page "/room/{RoomId}"
 
 <PageTitle>Pointer*</PageTitle>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 <h2>Room @ViewModel.RoomState?.RoomId
-
-    <button id="copy-button" class="btn btn-secondary btn-sm" @onclick="OnClickClipboard">
-        <i class="fa fa-copy"></i> Copy URL
+    <button id="copy-button" class="btn btn-secondary btn-sm" @onclick="() => OnClickClipboard(this)">
+        <i class="fa fa-copy"></i> @CopyButtonText
     </button>
-</h2>
+</h2>    
 
-@inject IClipboardService ClipboardService
-
-<h3>
-    <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
+<h3 mar>
+    <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true" title="Align Right">
         @ViewModel.CurrentUser?.Name
     </button>
 </h3>
@@ -255,6 +255,8 @@
     [SupplyParameterFromQuery(Name = "Name")]
     public string? Name { get; set; }
 
+    private string CopyButtonText { get; set; } = "Copy Invitation Link ";
+
     protected override async Task OnInitializedAsync()
     {
         ViewModel.Name = Name;
@@ -270,8 +272,14 @@
         }
     }
 
-    private async Task OnClickClipboard()
+    
+    private async Task OnClickClipboard(object sender)
     {
-        await ClipboardService.CopyToClipboard(Navigation.Uri);     
+        CopyButtonText = "Copied";
+
+        await ClipboardService.CopyToClipboard(Navigation.Uri);
+                
+        await Task.Delay(2000);
+        CopyButtonText = "Copy Invitation URL";
     }
 }
