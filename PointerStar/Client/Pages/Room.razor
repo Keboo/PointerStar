@@ -12,7 +12,18 @@
 
 <h2>Room @ViewModel.RoomState?.RoomId
     <button id="copy-button" class="btn btn-outline-light btn-sm" @onclick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
-        <i class=@ViewModel.CopyButtonIcon></i> @ViewModel.CopyButtonText
+        @switch (ViewModel.ClipboardResult)
+        {
+            case ClipboardResult.Copied:
+                <i class="fa fa-check-square">  Copied</i>
+                break;
+            case ClipboardResult.NotCopied:
+                <i class="fa fa-copy">  Copy Invitation URL</i>
+                break;
+            case ClipboardResult.Invalid:
+                <i class="fa fa-exclamation-circle">  Copy Invalid</i>
+                break;
+        }
     </button>
 </h2>
 

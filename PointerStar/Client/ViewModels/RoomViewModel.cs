@@ -53,6 +53,8 @@ public partial class RoomViewModel : ViewModelBase
     public string _CopyButtonText = "Copy Invitation Link ";
     [ObservableProperty]
     public string _CopyButtonIcon = "fa fa-copy";
+    [ObservableProperty]    
+    public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
 
     async partial void OnVotesShownChanged(bool value)
     {
@@ -91,19 +93,17 @@ public partial class RoomViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(url))
         {
             await ClipboardService.CopyToClipboard(url);
-            CopyButtonText = "Copied";
-            CopyButtonIcon = "fa fa-check-square";
+
+            ClipboardResult = ClipboardResult.Copied;
         }
         else
         {
-            CopyButtonText = "Copy Invalid";
-            CopyButtonIcon = "fa fa-exclamation-circle";
+            ClipboardResult = ClipboardResult.Invalid;
         }
 
         await Task.Delay(1000);
 
-        CopyButtonIcon = "fa fa-copy";
-        CopyButtonText = "Copy Invitation URL";
+        ClipboardResult = ClipboardResult.NotCopied;
     }
 
     private void RoomStateUpdated(object? sender, RoomState roomState)

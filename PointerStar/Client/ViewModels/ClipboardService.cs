@@ -12,3 +12,10 @@ public class ClipboardService : IClipboardService
     public ClipboardService(IJSRuntime jsInterop) => _jsInterop = jsInterop;
     public ValueTask CopyToClipboard(string text) => _jsInterop.InvokeVoidAsync("navigator.clipboard.writeText", text);
 }
+
+public enum ClipboardResult
+{
+    Copied,
+    NotCopied,
+    Invalid
+}
