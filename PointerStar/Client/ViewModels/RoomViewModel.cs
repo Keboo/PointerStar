@@ -7,6 +7,8 @@ public partial class RoomViewModel : ViewModelBase
 {
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
+    private IClipboardService ClipboardService { get; }
+
     private HttpClient HttpClient { get; }
 
     [ObservableProperty]
@@ -44,8 +46,15 @@ public partial class RoomViewModel : ViewModelBase
 
     [ObservableProperty]
     private Guid? _selectedRoleId;
-    
+
     public string? RoomId { get; set; }
+
+    [ObservableProperty]
+    public string _CopyButtonText = "Copy Invitation Link ";
+    [ObservableProperty]
+    public string _CopyButtonIcon = "fa fa-copy";
+    [ObservableProperty]    
+    public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
 
     async partial void OnVotesShownChanged(bool value)
     {
@@ -69,12 +78,32 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient)
+    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient, IClipboardService clipboardService)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
+    }
+
+    public async Task OnClickClipboard(string? url)
+    {
+        if (!string.IsNullOrEmpty(url))
+        {
+            await ClipboardService.CopyToClipboard(url);
+
+            ClipboardResult = ClipboardResult.Copied;
+        }
+        else
+        {
+            ClipboardResult = ClipboardResult.Invalid;
+        }
+
+        await Task.Delay(1000);
+
+        ClipboardResult = ClipboardResult.NotCopied;
     }
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
@@ -123,7 +152,7 @@ public partial class RoomViewModel : ViewModelBase
                 });
             }
         }
-        
+
     }
 
     public async Task ResetVotesAsync()

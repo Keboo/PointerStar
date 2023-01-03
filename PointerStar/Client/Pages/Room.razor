@@ -4,11 +4,29 @@
 
 @inherits ComponentBase<RoomViewModel>
 
+@inject NavigationManager Navigation;
+    
 @page "/room/{RoomId}"
 
 <PageTitle>Pointer*</PageTitle>
 
-<h2>Room @ViewModel.RoomState?.RoomId</h2>
+<h2>Room @ViewModel.RoomState?.RoomId
+    <button id="copy-button" class="btn btn-outline-light btn-sm" @onclick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
+        @switch (ViewModel.ClipboardResult)
+        {
+            case ClipboardResult.Copied:
+                <i class="fa fa-check-square">  Copied</i>
+                break;
+            case ClipboardResult.NotCopied:
+                <i class="fa fa-copy">  Copy Invitation URL</i>
+                break;
+            case ClipboardResult.Invalid:
+                <i class="fa fa-exclamation-circle">  Copy Invalid</i>
+                break;
+        }
+    </button>
+</h2>
+
 <h3>
     <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
         @ViewModel.CurrentUser?.Name
