@@ -1,4 +1,5 @@
-﻿using PointerStar.Client.Cookies;
+﻿using System.ComponentModel;
+using PointerStar.Client.Cookies;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
@@ -15,6 +16,25 @@ public partial class RoomViewModelTests
         Mock<IRoomHubConnection> hubConnection = mocker.GetMock<IRoomHubConnection>();
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         
+        hubConnection.Raise(x => x.RoomStateUpdated += null, hubConnection, roomState);
+
+        Assert.Equal(roomState, viewModel.RoomState);
+    }
+
+    [Fact]
+    [Description("Issue 80")]
+    public void OnRoomStateUpdated_WithChanges_DoesNotTriggerUpdates()
+    {
+        AutoMocker mocker = new();
+        Mock<IRoomHubConnection> hubConnection = new(MockBehavior.Strict);
+        mocker.Use(hubConnection);
+        RoomState roomState = new(Guid.NewGuid().ToString(), Array.Empty<User>())
+        {
+            AutoShowVotes = true,
+            VotesShown = true,
+        };
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
         hubConnection.Raise(x => x.RoomStateUpdated += null, hubConnection, roomState);
 
         Assert.Equal(roomState, viewModel.RoomState);

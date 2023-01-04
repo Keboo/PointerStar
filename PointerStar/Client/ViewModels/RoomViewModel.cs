@@ -108,9 +108,9 @@ public partial class RoomViewModel : ViewModelBase
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
+        _votesShown = roomState.VotesShown;
+        _autoShowVotes = roomState.AutoShowVotes;
         RoomState = roomState;
-        VotesShown = roomState.VotesShown;
-        AutoShowVotes = roomState.AutoShowVotes;
     }
 
     public async Task SubmitVoteAsync(string vote)
