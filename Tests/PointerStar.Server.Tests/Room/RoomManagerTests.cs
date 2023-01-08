@@ -394,4 +394,24 @@ public abstract class RoomManagerTests<TRoomManager>
         //Assert.Null(roomState!.Users[0].Vote);
         //Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
     }
+
+    [Fact]
+    public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
+    {
+        Assert.Fail("update me");
+        //    AutoMocker mocker = new();
+        //    string facilitator = Guid.NewGuid().ToString();
+        //    string teamMember = Guid.NewGuid().ToString();
+        //    IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        //    RoomState room = await CreateRoom(sut, facilitator, teamMember);
+
+        //    _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
+        //    _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
+
+        //    RoomState? roomState = await sut.ResetVotesAsync(teamMember);
+
+        //    Assert.True(roomState?.VotesShown);
+        //    Assert.Null(roomState!.Users[0].Vote);
+        //    Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
+    }
 }
