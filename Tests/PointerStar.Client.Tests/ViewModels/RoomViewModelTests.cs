@@ -236,14 +236,13 @@ public partial class RoomViewModelTests
     public async Task ResetVotes_WithHubConnection_StopsVotingTimer()
     {
         AutoMocker mocker = new();
-        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
         await viewModel.ResetVotesAsync();
 
-        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Once);
-        Assert.Fail("Ensure the voting timer is stopped");
+        mocker.Verify<IRoomHubConnection>(x => x.StopVotingAsync(), Times.Once);
     }
 
     // TODO: do we need this?
@@ -257,7 +256,6 @@ public partial class RoomViewModelTests
 
         await viewModel.ResetVotesAsync();
 
-        mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Once);
-        Assert.Fail("Ensure the voting timer is stopped");
+        mocker.Verify<IRoomHubConnection>(x => x.StopVotingAsync(), Times.Once);
     }
 }

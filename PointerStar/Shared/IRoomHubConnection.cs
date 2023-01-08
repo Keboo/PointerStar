@@ -13,4 +13,5 @@ public interface IRoomHubConnection
     Task UpdateUserAsync(UserOptions userOptions);
     Task ResetVotesAsync();
     Task StartVotingAsync();
+    Task StopVotingAsync();
 }

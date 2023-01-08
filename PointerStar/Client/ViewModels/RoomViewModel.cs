@@ -167,6 +167,7 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             await RoomHubConnection.ResetVotesAsync();
+            await RoomHubConnection.StopVotingAsync();
         }
     }
 
