@@ -220,7 +220,7 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public async Task StartVoting_WithoutHubConnection_DoesNothing()
+    public async Task SubmitVote_WithoutHubConnection_DoesNothing()
     {
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
@@ -237,20 +237,6 @@ public partial class RoomViewModelTests
     {
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
-
-        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
-
-        await viewModel.ResetVotesAsync();
-
-        mocker.Verify<IRoomHubConnection>(x => x.StopVotingAsync(), Times.Once);
-    }
-
-    // TODO: do we need this?
-    [Fact]
-    public async Task ResetVotes_WithoutHubConnection_StopsVotingTimer()
-    {
-        AutoMocker mocker = new();
-        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 

@@ -97,7 +97,7 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, userId) =>
         {
-            var rv = room with
+            var roomState = room with
             {
                 Users = room.Users.Select(u => u.Id == userId ? u with
                 {
@@ -106,15 +106,19 @@ public class InMemoryRoomManager : IRoomManager
                 } : u).ToArray()
             };
 
-            if (ShouldShowVotes(rv))
+            if (ShouldShowVotes(roomState))
             {
-                rv = rv with
+                roomState = roomState with
                 {
                     VotesShown = true
                 };
             }
+            roomState = roomState with
+            {
+                VotingInProgress = true
+            };
 
-            return rv;
+            return roomState;
         });
     }
 
@@ -130,7 +134,8 @@ public class InMemoryRoomManager : IRoomManager
                 return room with
                 {
                     Users = users,
-                    VotesShown = false
+                    VotesShown = false,
+                    VotingInProgress = false,
                 };
             }
             return room;
