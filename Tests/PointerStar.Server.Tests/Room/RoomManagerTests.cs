@@ -356,62 +356,31 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
-    public async Task StartVoting_WithFacilitator_StartsVotingTimer()
+    public async Task SubmitVote_WithFacilitator_StartsVotingTimer()
     {
-        Assert.Fail("update me");
-    //    AutoMocker mocker = new();
-    //    string facilitator = Guid.NewGuid().ToString();
-    //    string teamMember = Guid.NewGuid().ToString();
-    //    IRoomManager sut = mocker.CreateInstance<TRoomManager>();
-    //    RoomState room = await CreateRoom(sut, facilitator, teamMember);
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
 
-    //    _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
-    //    _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
+        RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
 
-    //    RoomState? roomState = await sut.ResetVotesAsync(teamMember);
-
-    //    Assert.True(roomState?.VotesShown);
-    //    Assert.Null(roomState!.Users[0].Vote);
-    //    Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
-    }
-
-    [Fact]
-    public async Task StartVoting_WithTeamMember_DoesNotStartTimer()
-    {
-        Assert.Fail("update me");
-        //AutoMocker mocker = new();
-        //string facilitator = Guid.NewGuid().ToString();
-        //string teamMember = Guid.NewGuid().ToString();
-        //IRoomManager sut = mocker.CreateInstance<TRoomManager>();
-        //RoomState room = await CreateRoom(sut, facilitator, teamMember);
-
-        //_ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
-        //_ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
-
-        //RoomState? roomState = await sut.ResetVotesAsync(teamMember);
-
-        //Assert.True(roomState?.VotesShown);
-        //Assert.Null(roomState!.Users[0].Vote);
-        //Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
+        Assert.True(roomState?.VotingInProgress);
     }
 
     [Fact]
     public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
     {
-        Assert.Fail("update me");
-        //    AutoMocker mocker = new();
-        //    string facilitator = Guid.NewGuid().ToString();
-        //    string teamMember = Guid.NewGuid().ToString();
-        //    IRoomManager sut = mocker.CreateInstance<TRoomManager>();
-        //    RoomState room = await CreateRoom(sut, facilitator, teamMember);
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
 
-        //    _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
-        //    _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
+        RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
+        roomState = await sut.ResetVotesAsync(facilitator);
 
-        //    RoomState? roomState = await sut.ResetVotesAsync(teamMember);
-
-        //    Assert.True(roomState?.VotesShown);
-        //    Assert.Null(roomState!.Users[0].Vote);
-        //    Assert.Equal(room.VoteOptions.First(), roomState.Users[1].Vote);
+        Assert.False(roomState?.VotingInProgress);
     }
 }
