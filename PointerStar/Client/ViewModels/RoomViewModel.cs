@@ -125,6 +125,7 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             await RoomHubConnection.SubmitVoteAsync(vote);
+            await RoomHubConnection.StartVotingAsync();
         }
     }
 
@@ -182,6 +183,4 @@ public partial class RoomViewModel : ViewModelBase
             SelectedRoleId = role.Id;
         }
     }
-
-    public Task StartVotingAsync() => throw new NotImplementedException();
 }
