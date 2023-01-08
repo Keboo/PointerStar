@@ -207,14 +207,14 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public async Task StartVoting_WithHubConnection_InvokesHub()
+    public async Task SubmitVote_WithHubConnection_StartsVotingTimer()
     {
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
-        await viewModel.StartVotingAsync();
+        await viewModel.SubmitVoteAsync("42");
 
         mocker.Verify<IRoomHubConnection>(x => x.StartVotingAsync(), Times.Once);
     }
@@ -227,7 +227,7 @@ public partial class RoomViewModelTests
 
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
-        await viewModel.StartVotingAsync();
+        await viewModel.SubmitVoteAsync("42");
 
         mocker.Verify<IRoomHubConnection>(x => x.StartVotingAsync(), Times.Never);
     }
