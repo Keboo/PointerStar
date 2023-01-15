@@ -50,6 +50,10 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _selectedRoleId;
 
+    // TODO: this needs to be updated after reviewing the timer value
+    [ObservableProperty]
+    private DateTime? _timeSinceVotingStarted;
+
     public string? RoomId { get; set; }
 
     [ObservableProperty]
@@ -116,6 +120,7 @@ public partial class RoomViewModel : ViewModelBase
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
+        _timeSinceVotingStarted = roomState.TimeSinceVotingStarted;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         RoomState = roomState;
     }

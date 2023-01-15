@@ -1,16 +1,21 @@
 using Microsoft.AspNetCore.SignalR;
 using PointerStar.Server.Room;
 using PointerStar.Shared;
+using Timer = System.Timers.Timer;
 
 namespace PointerStar.Server.Hubs;
 
 public class RoomHub : Hub
 {
     private IRoomManager RoomManager { get; }
+    private Timer VotingTimer { get; }
 
     public RoomHub(IRoomManager roomManager)
     {
         RoomManager = roomManager ?? throw new ArgumentNullException(nameof(roomManager));
+        // TODO: I think we need to unsubscribe and dispose the timer but Hub already implements IDisposable...
+        VotingTimer = new();
+        VotingTimer.Elapsed += VotingTimer_Elapsed;
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -38,6 +43,7 @@ public class RoomHub : Hub
         if (roomState?.RoomId is { } roomId)
         {
             await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            VotingTimer.Start();
         }
     }
 
@@ -67,7 +73,12 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.ResetVotesAsync(Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
+            VotingTimer.Stop();
             await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
+
+    // TODO: is this a good idea?
+    private async void VotingTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) =>
+        await UpdateRoomAsync(new RoomOptions { VotingTimerValue = e.SignalTime });
 }
