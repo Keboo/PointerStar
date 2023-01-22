@@ -356,20 +356,6 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
-    public async Task SubmitVote_WithFacilitator_StartsVotingTimer()
-    {
-        AutoMocker mocker = new();
-        string facilitator = Guid.NewGuid().ToString();
-        string teamMember = Guid.NewGuid().ToString();
-        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
-        RoomState room = await CreateRoom(sut, facilitator, teamMember);
-
-        RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
-
-        Assert.True(roomState?.VotingInProgress);
-    }
-
-    [Fact]
     public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
     {
         AutoMocker mocker = new();
@@ -381,6 +367,6 @@ public abstract class RoomManagerTests<TRoomManager>
         RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
         roomState = await sut.ResetVotesAsync(facilitator);
 
-        Assert.False(roomState?.VotingInProgress);
+        Assert.True(roomState?.VoteStartTime.HasValue);
     }
 }

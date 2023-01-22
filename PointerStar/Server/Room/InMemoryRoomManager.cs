@@ -113,11 +113,6 @@ public class InMemoryRoomManager : IRoomManager
                     VotesShown = true
                 };
             }
-            roomState = roomState with
-            {
-                VotingInProgress = true
-            };
-
             return roomState;
         });
     }
@@ -135,7 +130,7 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     Users = users,
                     VotesShown = false,
-                    VotingInProgress = false,
+                    VoteStartTime = DateTime.UtcNow,
                 };
             }
             return room;

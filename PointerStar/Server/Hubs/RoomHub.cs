@@ -78,7 +78,6 @@ public class RoomHub : Hub
         }
     }
 
-    // TODO: is this a good idea?
     private async void VotingTimer_Elapsed(object? sender, System.Timers.ElapsedEventArgs e) =>
         await UpdateRoomAsync(new RoomOptions { VotingTimerValue = e.SignalTime });
 }

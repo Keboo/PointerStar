@@ -50,9 +50,12 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _selectedRoleId;
 
-    // TODO: this needs to be updated after reviewing the timer value
     [ObservableProperty]
-    private DateTime? _timeSinceVotingStarted;
+    private DateTime? _voteStartTime;
+
+    public string VotingElapsedTime => VoteStartTime.HasValue
+        ? (DateTime.UtcNow - VoteStartTime.Value).ToString("mm:ss")
+        : string.Empty;
 
     public string? RoomId { get; set; }
 
@@ -62,7 +65,7 @@ public partial class RoomViewModel : ViewModelBase
     public string _CopyButtonIcon = "fa fa-copy";
     [ObservableProperty]    
     public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
-
+    
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -121,6 +124,7 @@ public partial class RoomViewModel : ViewModelBase
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
         _timeSinceVotingStarted = roomState.TimeSinceVotingStarted;
+        _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         RoomState = roomState;
     }
