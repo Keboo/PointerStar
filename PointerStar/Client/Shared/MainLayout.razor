@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using System.Reflection;
+@inherits LayoutComponentBase
 
 
 <div class="page">
@@ -10,7 +11,8 @@
                 </div>
 
                 <div class="navbar-right">
-                    <a class="nav-link" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                    @*<a class="nav-link" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>*@
+                    <span>@Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)</span>
                 </div>
             </div>
         </nav>
