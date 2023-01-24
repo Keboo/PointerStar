@@ -1,4 +1,4 @@
-﻿@using PointerStar.Client.Components;
+@using PointerStar.Client.Components;
 @using PointerStar.Client.ViewModels;
 @using PointerStar.Shared;
 
@@ -108,7 +108,7 @@
                                 }
                                 else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
                                 {
-                                    <span class="vote-preview"> - @user.Vote</span>
+                                    <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
                                 }
                                 else
                                 {
