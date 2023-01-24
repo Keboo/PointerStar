@@ -29,6 +29,9 @@ public partial class RoomViewModel : ViewModelBase
     public bool IsTeamMember
         => CurrentUser?.Role == Role.TeamMember;
 
+    public bool IsObserver
+        => CurrentUser?.Role == Role.Observer;
+
     public User? CurrentUser
         => RoomState?.Users.FirstOrDefault(u => u.Id == CurrentUserId);
 
@@ -108,8 +111,12 @@ public partial class RoomViewModel : ViewModelBase
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
+        //Intentionally going to the field here to dodge recurssive calls.
+        //The INPC from RoomState will update the state
+#pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
+#pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         RoomState = roomState;
     }
 

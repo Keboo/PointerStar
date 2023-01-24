@@ -1,4 +1,4 @@
-@using PointerStar.Client.Components;
+﻿@using PointerStar.Client.Components;
 @using PointerStar.Client.ViewModels;
 @using PointerStar.Shared;
 
@@ -79,6 +79,15 @@
                 </div>
             </div>
         }
+        else if (ViewModel.IsObserver)
+        {
+            <div class="d-flex justify-content-start">
+                <div class="form-check form-switch" style="margin-left:10px">
+                    <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+                </div>
+            </div>
+        }
     </div>
 
     @{
@@ -106,7 +115,7 @@
                                     }
                                     <span class="vote-value">@user.Vote</span>
                                 }
-                                else if (ViewModel.IsFacilitator && ViewModel.PreviewVotes)
+                                else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
                                 {
                                     <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
                                 }
