@@ -122,7 +122,6 @@ public partial class RoomViewModel : ViewModelBase, IDisposable
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
-        _timeSinceVotingStarted = roomState.TimeSinceVotingStarted;
         _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         RoomState = roomState;
