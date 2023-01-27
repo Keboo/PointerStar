@@ -31,7 +31,6 @@
     <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
         @ViewModel.CurrentUser?.Name
     </button>
-    <span>@ViewModel.VotingElapsedTime</span>
 </h3>
 <div class="container">
     <div class="row">
@@ -88,6 +87,10 @@
                     <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
                 </div>
             </div>
+        }
+        @if (ViewModel.VoteStartTime.HasValue)
+        {
+            <label>Vote Time: <span>@ViewModel.VotingDuration</span></label>
         }
     </div>
 

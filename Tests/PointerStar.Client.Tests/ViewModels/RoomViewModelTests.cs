@@ -32,6 +32,7 @@ public partial class RoomViewModelTests
         {
             AutoShowVotes = true,
             VotesShown = true,
+            VoteStartTime = DateTime.UtcNow,
         };
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
@@ -204,44 +205,5 @@ public partial class RoomViewModelTests
         await viewModel.ResetVotesAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.ResetVotesAsync(), Times.Never);
-    }
-
-    [Fact]
-    public async Task SubmitVote_WithHubConnection_StartsVotingTimer()
-    {
-        AutoMocker mocker = new();
-        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
-
-        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
-
-        await viewModel.SubmitVoteAsync("42");
-
-        mocker.Verify<IRoomHubConnection>(x => x.StartVotingAsync(), Times.Once);
-    }
-
-    [Fact]
-    public async Task SubmitVote_WithoutHubConnection_DoesNothing()
-    {
-        AutoMocker mocker = new();
-        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
-
-        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
-
-        await viewModel.SubmitVoteAsync("42");
-
-        mocker.Verify<IRoomHubConnection>(x => x.StartVotingAsync(), Times.Never);
-    }
-
-    [Fact]
-    public async Task ResetVotes_WithHubConnection_StopsVotingTimer()
-    {
-        AutoMocker mocker = new();
-        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
-
-        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
-
-        await viewModel.ResetVotesAsync();
-
-        mocker.Verify<IRoomHubConnection>(x => x.StopVotingAsync(), Times.Once);
     }
 }

@@ -3,13 +3,13 @@ using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
 
-public partial class RoomViewModel : ViewModelBase
+public partial class RoomViewModel : ViewModelBase, IDisposable
 {
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
-
     private HttpClient HttpClient { get; }
+    private PeriodicTimer VotingTimer { get; }
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -53,9 +53,8 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private DateTime? _voteStartTime;
 
-    public string VotingElapsedTime => VoteStartTime.HasValue
-        ? (DateTime.UtcNow - VoteStartTime.Value).ToString("mm:ss")
-        : string.Empty;
+    [ObservableProperty]
+    private string? _votingDuration;
 
     public string? RoomId { get; set; }
 
@@ -94,8 +93,8 @@ public partial class RoomViewModel : ViewModelBase
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
-
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
+        VotingTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
     }
 
     public async Task OnClickClipboard(string? url)
@@ -134,7 +133,6 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             await RoomHubConnection.SubmitVoteAsync(vote);
-            await RoomHubConnection.StartVotingAsync();
         }
     }
 
@@ -176,8 +174,25 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected)
         {
+            VoteStartTime = DateTime.UtcNow;
             await RoomHubConnection.ResetVotesAsync();
-            await RoomHubConnection.StopVotingAsync();
+            await ProcessVotingTimer();
+        }
+    }
+
+    private async Task ProcessVotingTimer()
+    {
+        while (await VotingTimer.WaitForNextTickAsync())
+        {
+            if (VoteStartTime.HasValue)
+            {
+                var utcNow = DateTime.UtcNow;
+                VotingDuration = utcNow.Subtract(VoteStartTime.Value).ToString("c");
+            }
+            else
+            {
+                VotingDuration = null;
+            }
         }
     }
 
@@ -192,4 +207,6 @@ public partial class RoomViewModel : ViewModelBase
             SelectedRoleId = role.Id;
         }
     }
+
+    public void Dispose() => VotingTimer.Dispose();
 }

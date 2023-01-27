@@ -11,8 +11,6 @@ public class RoomHubConnection : IRoomHubConnection
     public const string UpdateUserMethodName = "UpdateUser";
     public const string ResetVotesMethodName = "ResetVotes";
     public const string RoomUpdatedMethodName = "RoomUpdated";
-    public const string StartVotingMethodName = "StartVoting";
-    public const string StopVotingMethodName = "StopVoting";
 
     public event EventHandler<RoomState>? RoomStateUpdated;
 
@@ -70,8 +68,4 @@ public class RoomHubConnection : IRoomHubConnection
 
     public Task ResetVotesAsync()
         => HubConnection.InvokeAsync(ResetVotesMethodName);
-
-    public Task StartVotingAsync() => HubConnection.InvokeAsync(StartVotingMethodName);
-
-    public Task StopVotingAsync() => HubConnection.InvokeAsync(StopVotingMethodName);
 }
