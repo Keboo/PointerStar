@@ -3,13 +3,12 @@ using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
 
-public partial class RoomViewModel : ViewModelBase, IDisposable
+public partial class RoomViewModel : ViewModelBase
 {
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
     private HttpClient HttpClient { get; }
-    private PeriodicTimer VotingTimer { get; }
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -94,7 +93,6 @@ public partial class RoomViewModel : ViewModelBase, IDisposable
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
-        VotingTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
     }
 
     public async Task OnClickClipboard(string? url)
@@ -124,6 +122,11 @@ public partial class RoomViewModel : ViewModelBase, IDisposable
         _autoShowVotes = roomState.AutoShowVotes;
         _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
+
+        if (VoteStartTime.HasValue)
+        {
+            Task.Run(ProcessVotingTimer);
+        }
         RoomState = roomState;
     }
 
@@ -175,13 +178,13 @@ public partial class RoomViewModel : ViewModelBase, IDisposable
         {
             VoteStartTime = DateTime.UtcNow;
             await RoomHubConnection.ResetVotesAsync();
-            await ProcessVotingTimer();
         }
     }
 
     private async Task ProcessVotingTimer()
     {
-        while (await VotingTimer.WaitForNextTickAsync())
+        using PeriodicTimer votingTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        while (await votingTimer.WaitForNextTickAsync())
         {
             if (VoteStartTime.HasValue)
             {
@@ -206,6 +209,4 @@ public partial class RoomViewModel : ViewModelBase, IDisposable
             SelectedRoleId = role.Id;
         }
     }
-
-    public void Dispose() => VotingTimer.Dispose();
 }
