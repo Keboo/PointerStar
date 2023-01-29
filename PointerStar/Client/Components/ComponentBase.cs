@@ -23,7 +23,5 @@ public abstract class ComponentBase<TViewModel> : ComponentBase
         => base.OnAfterRenderAsync(firstRender);
 
     protected override Task OnInitializedAsync()
-    {
-        return ViewModel.OnInitializedAsync();
-    }
+        => ViewModel.OnInitializedAsync();
 }

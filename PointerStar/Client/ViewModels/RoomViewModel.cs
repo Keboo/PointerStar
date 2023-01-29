@@ -9,6 +9,7 @@ public partial class RoomViewModel : ViewModelBase
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
     private HttpClient HttpClient { get; }
+    private CancellationTokenSource? _timerCancellationSource;
 
     [ObservableProperty]
     private RoomState? _roomState;
@@ -51,9 +52,6 @@ public partial class RoomViewModel : ViewModelBase
 
     [ObservableProperty]
     private DateTime? _voteStartTime;
-
-    [ObservableProperty]
-    private string? _votingDuration;
 
     public string? RoomId { get; set; }
 
@@ -122,11 +120,7 @@ public partial class RoomViewModel : ViewModelBase
         _autoShowVotes = roomState.AutoShowVotes;
         _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
-
-        if (VoteStartTime.HasValue)
-        {
-            Task.Run(ProcessVotingTimer);
-        }
+        
         RoomState = roomState;
     }
 
@@ -176,24 +170,18 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected)
         {
-            VoteStartTime = DateTime.UtcNow;
             await RoomHubConnection.ResetVotesAsync();
         }
     }
 
-    private async Task ProcessVotingTimer()
+    private async Task ProcessVotingTimer(CancellationToken token)
     {
-        using PeriodicTimer votingTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
-        while (await votingTimer.WaitForNextTickAsync())
+        using PeriodicTimer votingTimer = new(TimeSpan.FromSeconds(0.5));
+        while (await votingTimer.WaitForNextTickAsync(token).ConfigureAwait(false))
         {
-            if (VoteStartTime.HasValue)
+            if (VoteStartTime is not null)
             {
-                var utcNow = DateTime.UtcNow;
-                VotingDuration = utcNow.Subtract(VoteStartTime.Value).ToString(@"mm\:ss");
-            }
-            else
-            {
-                VotingDuration = null;
+                base.NotifyStateChanged();
             }
         }
     }
@@ -208,5 +196,10 @@ public partial class RoomViewModel : ViewModelBase
         {
             SelectedRoleId = role.Id;
         }
+        //Just start the timer, it will handle the null case an update when room state changes occure.
+        CancellationTokenSource cts = new();
+        Interlocked.Exchange(ref _timerCancellationSource, cts)?.Cancel();
+        _ = ProcessVotingTimer(cts.Token);
+
     }
 }

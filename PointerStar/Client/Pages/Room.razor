@@ -88,9 +88,9 @@
                 </div>
             </div>
         }
-        @if (ViewModel.VoteStartTime.HasValue)
+        @if (ViewModel.VoteStartTime is { } voteStartTime)
         {
-            <label>Vote Time: <span>@ViewModel.VotingDuration</span></label>
+            <label>Vote Time: <span>@((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))</span></label>
         }
     </div>
 
