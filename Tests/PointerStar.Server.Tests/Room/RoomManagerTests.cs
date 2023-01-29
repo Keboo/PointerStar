@@ -354,4 +354,19 @@ public abstract class RoomManagerTests<TRoomManager>
         }
         return rv ?? throw new InvalidOperationException();
     }
+
+    [Fact]
+    public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+
+        RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
+        roomState = await sut.ResetVotesAsync(facilitator);
+
+        Assert.True(roomState?.VoteStartTime.HasValue);
+    }
 }

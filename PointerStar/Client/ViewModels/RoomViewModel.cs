@@ -8,7 +8,6 @@ public partial class RoomViewModel : ViewModelBase
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
-
     private HttpClient HttpClient { get; }
 
     [ObservableProperty]
@@ -50,6 +49,12 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _selectedRoleId;
 
+    [ObservableProperty]
+    private DateTime? _voteStartTime;
+
+    [ObservableProperty]
+    private string? _votingDuration;
+
     public string? RoomId { get; set; }
 
     [ObservableProperty]
@@ -58,7 +63,7 @@ public partial class RoomViewModel : ViewModelBase
     public string _CopyButtonIcon = "fa fa-copy";
     [ObservableProperty]    
     public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
-
+    
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -87,7 +92,6 @@ public partial class RoomViewModel : ViewModelBase
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
-
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -116,7 +120,13 @@ public partial class RoomViewModel : ViewModelBase
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
+        _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
+
+        if (VoteStartTime.HasValue)
+        {
+            Task.Run(ProcessVotingTimer);
+        }
         RoomState = roomState;
     }
 
@@ -166,7 +176,25 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected)
         {
+            VoteStartTime = DateTime.UtcNow;
             await RoomHubConnection.ResetVotesAsync();
+        }
+    }
+
+    private async Task ProcessVotingTimer()
+    {
+        using PeriodicTimer votingTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        while (await votingTimer.WaitForNextTickAsync())
+        {
+            if (VoteStartTime.HasValue)
+            {
+                var utcNow = DateTime.UtcNow;
+                VotingDuration = utcNow.Subtract(VoteStartTime.Value).ToString(@"mm\:ss");
+            }
+            else
+            {
+                VotingDuration = null;
+            }
         }
     }
 

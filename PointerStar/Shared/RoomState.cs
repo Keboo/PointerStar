@@ -29,6 +29,7 @@ public record class RoomState(string RoomId, User[] Users)
         "Abstain",
         "?"
     };
+    public DateTime? VoteStartTime { get; init; }
 }
 
 public record class User(Guid Id, string Name)

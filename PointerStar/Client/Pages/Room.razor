@@ -88,6 +88,10 @@
                 </div>
             </div>
         }
+        @if (ViewModel.VoteStartTime.HasValue)
+        {
+            <label>Vote Time: <span>@ViewModel.VotingDuration</span></label>
+        }
     </div>
 
     @{

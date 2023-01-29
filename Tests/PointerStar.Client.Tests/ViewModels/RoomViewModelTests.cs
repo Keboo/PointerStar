@@ -32,6 +32,7 @@ public partial class RoomViewModelTests
         {
             AutoShowVotes = true,
             VotesShown = true,
+            VoteStartTime = DateTime.UtcNow,
         };
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
