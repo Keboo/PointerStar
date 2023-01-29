@@ -340,6 +340,21 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Equal(Role.TeamMember, role);
     }
     
+    [Fact]
+    public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+
+        _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
+        RoomState? roomState = await sut.ResetVotesAsync(facilitator);
+
+        Assert.True(roomState?.VoteStartTime.HasValue);
+    }
+
     protected async Task<RoomState> CreateRoom(IRoomManager sut, params string[] connectionIds)
     {
         string roomId = Guid.NewGuid().ToString();
@@ -353,20 +368,5 @@ public abstract class RoomManagerTests<TRoomManager>
             rv = await sut.AddUserToRoomAsync(roomId, user, connectionIds[i]);
         }
         return rv ?? throw new InvalidOperationException();
-    }
-
-    [Fact]
-    public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
-    {
-        AutoMocker mocker = new();
-        string facilitator = Guid.NewGuid().ToString();
-        string teamMember = Guid.NewGuid().ToString();
-        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
-        RoomState room = await CreateRoom(sut, facilitator, teamMember);
-
-        RoomState? roomState = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
-        roomState = await sut.ResetVotesAsync(facilitator);
-
-        Assert.True(roomState?.VoteStartTime.HasValue);
     }
 }
