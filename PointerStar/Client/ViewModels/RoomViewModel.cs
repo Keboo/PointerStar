@@ -189,7 +189,7 @@ public partial class RoomViewModel : ViewModelBase
             if (VoteStartTime.HasValue)
             {
                 var utcNow = DateTime.UtcNow;
-                VotingDuration = utcNow.Subtract(VoteStartTime.Value).ToString("c");
+                VotingDuration = utcNow.Subtract(VoteStartTime.Value).ToString(@"mm\:ss");
             }
             else
             {
