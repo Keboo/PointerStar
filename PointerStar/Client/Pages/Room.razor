@@ -26,13 +26,9 @@
         }
     </button>
 </h2>
-
-<h3>
-    <button class="btn btn-lg btn-outline-secondary" @onclick="() => ViewModel.IsNameModalOpen = true">
-        @ViewModel.CurrentUser?.Name
-    </button>
-</h3>
 <div class="container">
+    <UserSettings ViewModel="ViewModel" />
+
     <div class="row">
         @if (ViewModel.IsFacilitator)
         {
@@ -202,69 +198,6 @@
             </div>
         }
     </div>
-
-    @{
-        string dialogDisplay;
-        if (ViewModel.IsNameModalOpen)
-        {
-            dialogDisplay = "block";
-        }
-        else
-        {
-            dialogDisplay = "none";
-        }
-    }
-    <div class="modal" tabindex="-1" role="dialog" style="display:@dialogDisplay">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Please Enter Your Name</h5>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Enter your name" @onkeypress="OnKeyPress" @bind="ViewModel.Name"
-                               @bind:event="oninput">
-                    </div>
-                    <div class="form-group" style="margin-top:10px">
-                        <span>I want to...</span>
-                        <div class="btn-group" role="group" aria-label="User roles">
-                            <InputRadioGroup @bind-Value="@ViewModel.SelectedRoleId">
-                                <InputRadio Value="@Role.TeamMember.Id" class="btn-check" id="team-member-radio" />
-                                <label class="btn btn-outline-info" for="team-member-radio">Vote</label>
-                                <InputRadio Value="@Role.Facilitator.Id" class="btn-check" id="facilitator-radio" />
-                                <label class="btn btn-outline-secondary" for="facilitator-radio">Facilitate</label>
-                                <InputRadio Value="@Role.Observer.Id" class="btn-check" id="observer-radio" />
-                                <label class="btn btn-outline-light" for="observer-radio">Observe</label>
-                            </InputRadioGroup>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    @if(ViewModel.RoomState is null)
-                    {
-                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
-                            <span>Join Room</span>
-                        </button>
-                    }
-                    else
-                    {
-                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => ViewModel.IsNameModalOpen = false">
-                            <span>Cancel</span>
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
-                            <span>Update</span>
-                        </button>
-                    }
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if (ViewModel.IsNameModalOpen)
-    {
-        <div class="modal-backdrop fade show"></div>
-    }
-
 </div>
 
 @code {
@@ -281,13 +214,5 @@
         ViewModel.Name = Name;
         ViewModel.RoomId = RoomId;
         await base.OnInitializedAsync();
-    }
-
-    private async void OnKeyPress(KeyboardEventArgs args)
-    {
-        if (args.Key == "Enter")
-        {
-            await ViewModel.SubmitDialogAsync();
-        }
     }
 }
