@@ -51,16 +51,20 @@ public class InMemoryRoomManager : IRoomManager
             //Only allow facilitators to change the room options
             if (room.Users.FirstOrDefault(x => x.Id == userId)?.Role == Role.Facilitator)
             {
-                if (roomOptions.VotesShown is { } votesShown)
-                {
-                    room = room with { VotesShown = votesShown };
-                }
-
                 if (roomOptions.AutoShowVotes is { } autoShowVotes)
                 {
                     room = room with { AutoShowVotes = autoShowVotes };
                 }
-                if (ShouldShowVotes(room))
+
+                if (roomOptions.VotesShown is { } votesShown)
+                {
+                    room = room with { VotesShown = votesShown };
+                    if (!votesShown && room.AutoShowVotes)
+                    {
+                        room = room with { AutoShowVotes = false };
+                    }
+                }
+                else if (ShouldShowVotes(room))
                 {
                     room = room with { VotesShown = true };
                 }
