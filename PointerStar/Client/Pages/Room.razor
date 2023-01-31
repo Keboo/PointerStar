@@ -15,13 +15,16 @@
         @switch (ViewModel.ClipboardResult)
         {
             case ClipboardResult.Copied:
-                <i class="fa fa-check-square">  Copied</i>
+                <i class="fa fa-check-square"></i>
+                <span>Copied</span>
                 break;
             case ClipboardResult.NotCopied:
-                <i class="fa fa-copy">  Copy Invitation URL</i>
+                <i class="fa fa-copy"></i>
+                <span>Copy Invitation URL</span>
                 break;
             case ClipboardResult.Invalid:
-                <i class="fa fa-exclamation-circle">  Copy Invalid</i>
+                <i class="fa fa-exclamation-circle"></i>
+                <span>Copy Invalid</span>
                 break;
         }
     </button>
