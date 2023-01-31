@@ -84,7 +84,7 @@ public partial class RoomViewModelTests
 
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
-        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("name", "Foo", null), Times.Once);
+        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("Name", "Foo", null), Times.Once);
         Assert.False(viewModel.IsNameModalOpen);
     }
 
@@ -144,7 +144,7 @@ public partial class RoomViewModelTests
     public async Task OnInitializedAsync_WithCachedName_LoadsCachedName()
     {
         AutoMocker mocker = new();
-        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("name", ""))
+        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("Name", ""))
             .ReturnsAsync("cached");
         mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
             .ReturnsJson(Role.TeamMember);
@@ -182,6 +182,27 @@ public partial class RoomViewModelTests
         };
 
         Assert.True(mre.Wait(TimeSpan.FromSeconds(2)));
+    }
+
+    [Fact]
+    public async Task OnInitializedAsync_WithExistingUserData_JoinsRoomWithoutDialog()
+    {
+        AutoMocker mocker = new();
+        Guid roleId = Role.Observer.Id;
+        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("Name", ""))
+            .ReturnsAsync("User Name");
+        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("RoleId", ""))
+            .ReturnsAsync(roleId.ToString("D"));
+        mocker.Setup<ICookie, ValueTask<string>>(x => x.GetValueAsync("RoomId", ""))
+            .ReturnsAsync("RoomId");
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
+
+        await viewModel.OnInitializedAsync();
+
+        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId",
+            It.Is<User>(u => u.Role.Id == roleId && u.Name == "User Name")), Times.Once);
+        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]

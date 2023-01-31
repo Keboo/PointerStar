@@ -59,9 +59,9 @@ public partial class RoomViewModel : ViewModelBase
     public string _CopyButtonText = "Copy Invitation Link ";
     [ObservableProperty]
     public string _CopyButtonIcon = "fa fa-copy";
-    [ObservableProperty]    
+    [ObservableProperty]
     public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
-    
+
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -120,7 +120,7 @@ public partial class RoomViewModel : ViewModelBase
         _autoShowVotes = roomState.AutoShowVotes;
         _voteStartTime = roomState.VoteStartTime;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
-        
+
         RoomState = roomState;
     }
 
@@ -147,10 +147,6 @@ public partial class RoomViewModel : ViewModelBase
                     user = user with { Role = role };
                 }
                 CurrentUserId = user.Id;
-                if (!string.IsNullOrWhiteSpace(Name))
-                {
-                    await Cookie.SetValueAsync("name", Name);
-                }
                 await RoomHubConnection.JoinRoomAsync(RoomId, user);
             }
             else
@@ -162,6 +158,13 @@ public partial class RoomViewModel : ViewModelBase
                     Role = SelectedRoleId is not null ? Role.FromId(SelectedRoleId.Value) : null
                 });
             }
+
+            if (!string.IsNullOrWhiteSpace(Name))
+            {
+                await Cookie.SetNameAsync(Name);
+            }
+            await Cookie.SetRoomAsync(RoomId);
+            await Cookie.SetRoleAsync(SelectedRoleId);
         }
 
     }
@@ -188,13 +191,30 @@ public partial class RoomViewModel : ViewModelBase
 
     public override async Task OnInitializedAsync()
     {
-        Name = await Cookie.GetValueAsync("name");
+        Name = await Cookie.GetNameAsync();
         await base.OnInitializedAsync();
-        IsNameModalOpen = true;
         await RoomHubConnection.OpenAsync();
-        if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } role)
+
+        string lastRoomId = await Cookie.GetRoomAsync();
+        Guid? lastRoleId = await Cookie.GetRoleAsync();
+        if (lastRoomId == RoomId && lastRoleId is not null
+            && Role.FromId(lastRoleId.Value) is { } role 
+            && !string.IsNullOrWhiteSpace(Name))
         {
-            SelectedRoleId = role.Id;
+            User user = new(Guid.NewGuid(), Name);
+            user = user with { Role = role };
+            SelectedRoleId = lastRoleId;
+            CurrentUserId = user.Id;
+            await RoomHubConnection.JoinRoomAsync(RoomId, user);
+        }
+        else
+        {
+            //TODO: should we leverage the lastRoleId here?
+            IsNameModalOpen = true;
+            if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } newUserRole)
+            {
+                SelectedRoleId = newUserRole.Id;
+            }
         }
         //Just start the timer, it will handle the null case an update when room state changes occure.
         CancellationTokenSource cts = new();
