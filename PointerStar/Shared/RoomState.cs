@@ -12,7 +12,8 @@ public record class RoomState(string RoomId, User[] Users)
         => Users.Where(u => u.Role == Role.Observer).ToList();
 
     public bool VotesShown { get; init; }
-    public bool AutoShowVotes { get; init; }
+    //We want the default to be true so new facilitators have this on by default
+    public bool AutoShowVotes { get; init; } = true;
     
     public string[] VoteOptions { get; init; } = new[]
     {

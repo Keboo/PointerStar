@@ -23,6 +23,7 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Single(roomState.Users);
         //First user is the room is made the facilitator
         Assert.Equal(user with { Role = Role.Facilitator }, roomState.Users[0]);
+        Assert.True(roomState.AutoShowVotes);
     }
 
     [Fact]
@@ -210,11 +211,11 @@ public abstract class RoomManagerTests<TRoomManager>
         RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
         {
             VotesShown = true,
-            AutoShowVotes = true
+            AutoShowVotes = false
         }, connectionId2);
 
         Assert.False(roomState?.VotesShown);
-        Assert.False(roomState!.AutoShowVotes);
+        Assert.True(roomState!.AutoShowVotes);
     }
 
     [Fact]
