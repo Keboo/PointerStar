@@ -318,6 +318,18 @@ public partial class RoomViewModelTests
         Assert.True(viewModel.IsObserver);
     }
 
+    [Fact]
+    public void PreviewVotes_NewInstance_IsTrue()
+    {
+        AutoMocker mocker = new();
+        User observer = new(Guid.NewGuid(), "Observer") { Role = Role.Observer };
+        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { observer });
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        Assert.True(viewModel.PreviewVotes);
+    }
+
+
     private static void WithRoomState(AutoMocker mocker, RoomState roomState)
     {
         mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null, roomState);
