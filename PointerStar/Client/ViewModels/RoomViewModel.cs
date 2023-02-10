@@ -42,7 +42,7 @@ public partial class RoomViewModel : ViewModelBase
     private bool _votesShown;
 
     [ObservableProperty]
-    private bool _previewVotes;
+    private bool _previewVotes = true;
 
     [ObservableProperty]
     private bool _autoShowVotes;
