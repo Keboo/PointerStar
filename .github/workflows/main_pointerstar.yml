@@ -31,7 +31,7 @@ jobs:
         run: dotnet build --configuration Release --version "${{ env.version }}"
 
       - name: dotnet test
-        run: dotnet test --configuration Release
+        run: dotnet test --configuration Release --no-build
         
       - name: dotnet publish
         run: dotnet publish -c Release -p:PublishDir=${{env.DOTNET_ROOT}}/publish
