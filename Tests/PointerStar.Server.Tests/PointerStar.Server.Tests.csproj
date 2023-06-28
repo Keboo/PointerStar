@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.8" />
-    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.6.2" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk" Version="17.6.3" />
   </ItemGroup>
 
   <ItemGroup>
