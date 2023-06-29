@@ -66,36 +66,72 @@
                 </CardHeaderContent>
             </MudCardHeader>
             <MudCardContent>
-                @if (teamMembers.Any())
-                {
-                    @foreach (var user in teamMembers)
+                <MudStack Row=true>
+                    <MudStack>
+                        @if (teamMembers.Any())
+                        {
+                            @foreach (var user in teamMembers)
+                            {
+                                <MudText>
+                                    @user.Name
+                                    @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                                    {
+                                        <span> - </span>
+                                        if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
+                                        {
+                                            <span class="original-vote-value">(@user.OriginalVote) </span>
+                                        }
+                                        <span class="vote-value">@user.Vote</span>
+                                    }
+                                    else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
+                                    {
+                                        <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
+                                    }
+                                    else
+                                    {
+                                        <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
+                                    }
+                                </MudText>
+                            }
+                        }
+                        else
+                        {
+                            <MudText>Waiting for team members to join...</MudText>
+                        }
+                    </MudStack>
+                    @if (ViewModel.VotesShown && ViewModel.RoomState is { } roomState)
                     {
-                        <MudText>
-                            @user.Name
-                            @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                        var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
+                        var groupedVotes = votes
+                            .GroupBy(x => x)
+                            .OrderByDescending(x => x.Count()).ToArray();
+                        int? maxVote = groupedVotes.Any() ? groupedVotes.Select(x => x.Count()).Max() : null;
+                        int fontSize = 0;
+                        @if (maxVote is not null)
+                        {
+                            var percentageOfVote = (double)maxVote / teamMembers.Count();
+                            fontSize = percentageOfVote switch
                             {
-                                <span> - </span>
-                                if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
-                                {
-                                    <span class="original-vote-value">(@user.OriginalVote) </span>
-                                }
-                                <span class="vote-value">@user.Vote</span>
-                            }
-                            else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
-                            {
-                                <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
-                            }
-                            else
-                            {
-                                <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
-                            }
-                        </MudText>
+                                >= 1.0 => 20,
+                                >= 0.9 => 16,
+                                >= 0.7 => 12,
+                                > 0.5 => 10,
+                                _ => 0
+                            };
+                        }
+
+                        <MudChart ChartType="ChartType.Donut" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                                  InputData="@groupedVotes.Select(x => (double)x.Count()).ToArray()"
+                                  InputLabels="@groupedVotes.Select(x => x.Key).ToArray()"
+                                  >
+                            <CustomGraphics>
+                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--mud-palette-text-primary)" font-family="Helvetica" font-size="@fontSize">@groupedVotes.FirstOrDefault()?.Key</text>
+                            </CustomGraphics>
+                        </MudChart>
+
                     }
-                }
-                else
-                {
-                    <MudText>Waiting for team members to join...</MudText>
-                }
+                </MudStack>
+
             </MudCardContent>
         </MudCard>
     </MudItem>
