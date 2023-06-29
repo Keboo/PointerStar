@@ -4,8 +4,9 @@
 
 <PageTitle>Pointer*</PageTitle>
 
-<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRoom">Create Room</MudButton>
-
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Row="true" Style="height:100px" >
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRoom">Create Room</MudButton>
+</MudStack>
 
 @code {
     private async Task NavigateToRoom()
