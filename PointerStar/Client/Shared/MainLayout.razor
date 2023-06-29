@@ -2,24 +2,39 @@
 @inherits LayoutComponentBase
 
 <Toolbelt.Blazor.PWA.Updater.PWAUpdater />
+<MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-<div class="page">
-    <main>
-        <nav class="navbar navbar-static-top navbar-dark bg-dark">
-            <div class="container-fluid">
-                <div class="navbar-header">
-                    <a class="navbar-brand btn btn-outline-secondary homebutton" href="#"></a>
-                </div>
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5" Class="ml-3">Pointer*</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.subtitle1" Align="Align.End">@Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)</MudText>
+    </MudAppBar>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
 
-                <div class="navbar-right">
-                    @*<a class="nav-link" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>*@
-                    <span>@Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)</span>
-                </div>
-            </div>
-        </nav>
+@code {
+    private bool _isDarkMode;
+    private MudThemeProvider _mudThemeProvider;
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+            await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            StateHasChanged();
+        }
+    }
+
+    private Task OnSystemPreferenceChanged(bool newValue)
+    {
+        _isDarkMode = newValue;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

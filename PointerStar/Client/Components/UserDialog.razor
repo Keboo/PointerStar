@@ -1,0 +1,30 @@
+﻿@using PointerStar.Client.ViewModels;
+@inherits ComponentBase<UserDialogViewModel>
+
+<MudDialog>
+    <DialogContent>
+        <MudStack>
+            <MudTextField @bind-Value="ViewModel.Name" Label="Name" Variant="Variant.Text" FullWidth=true></MudTextField>
+            <MudStack Row=true>
+                <MudText>I want to...</MudText>
+                <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
+                    <MudButton>Vote</MudButton>
+                    <MudButton>Facilitate</MudButton>
+                    <MudButton>Observe</MudButton>
+                </MudButtonGroup>
+            </MudStack>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; }
+
+    void Submit() => MudDialog.Close(DialogResult.Ok(ViewModel));
+    void Cancel() => MudDialog.Cancel();
+}

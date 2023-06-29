@@ -1,3 +1,5 @@
+using MudBlazor;
+using PointerStar.Client.Components;
 using PointerStar.Client.Cookies;
 using PointerStar.Shared;
 
@@ -8,6 +10,7 @@ public partial class RoomViewModel : ViewModelBase
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
+    private IDialogService DialogService { get; }
     private HttpClient HttpClient { get; }
     private CancellationTokenSource? _timerCancellationSource;
 
@@ -84,12 +87,18 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient, IClipboardService clipboardService)
+    public RoomViewModel(
+        IRoomHubConnection roomHubConnection,
+        ICookie cookie,
+        HttpClient httpClient,
+        IClipboardService clipboardService,
+        IDialogService dialogService)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -151,7 +160,7 @@ public partial class RoomViewModel : ViewModelBase
             }
             else
             {
-                //We have room state so the user should update thier information
+                //We have room state so the user should update their information
                 await RoomHubConnection.UpdateUserAsync(new UserOptions
                 {
                     Name = Name,
@@ -198,7 +207,7 @@ public partial class RoomViewModel : ViewModelBase
         string lastRoomId = await Cookie.GetRoomAsync();
         Guid? lastRoleId = await Cookie.GetRoleAsync();
         if (lastRoomId == RoomId && lastRoleId is not null
-            && Role.FromId(lastRoleId.Value) is { } role 
+            && Role.FromId(lastRoleId.Value) is { } role
             && !string.IsNullOrWhiteSpace(Name))
         {
             User user = new(Guid.NewGuid(), Name);
@@ -210,13 +219,22 @@ public partial class RoomViewModel : ViewModelBase
         else
         {
             //TODO: should we leverage the lastRoleId here?
-            IsNameModalOpen = true;
-            if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } newUserRole)
+            var options = new DialogOptions { CloseOnEscapeKey = true };
+            var dialogReference = await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", options);
+            var dialogResult = await dialogReference.Result;
+            if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
             {
-                SelectedRoleId = newUserRole.Id;
+                Name = userViewModel.Name;
+                if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } newUserRole)
+                {
+                    SelectedRoleId = newUserRole.Id;
+                }
+                //SelectedRoleId = Role.TeamMember.Id;
+                await SubmitDialogAsync();
             }
+
         }
-        //Just start the timer, it will handle the null case an update when room state changes occure.
+        //Just start the timer, it will handle the null case an update when room state changes occurs.
         CancellationTokenSource cts = new();
         Interlocked.Exchange(ref _timerCancellationSource, cts)?.Cancel();
         _ = ProcessVotingTimer(cts.Token);

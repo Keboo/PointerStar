@@ -30,9 +30,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{566CC054-6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Client.Tests", "Tests\PointerStar.Client.Tests\PointerStar.Client.Tests.csproj", "{11AF6C7D-6EC6-45B7-82E5-F815AE5A3721}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointerStar.Server.Tests", "Tests\PointerStar.Server.Tests\PointerStar.Server.Tests.csproj", "{6521C77B-AC31-4F1B-8EC5-FB7174D7BF1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Server.Tests", "Tests\PointerStar.Server.Tests\PointerStar.Server.Tests.csproj", "{6521C77B-AC31-4F1B-8EC5-FB7174D7BF1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointerStar.Shared.Tests", "Tests\PointerStar.Shared.Tests\PointerStar.Shared.Tests.csproj", "{63BFF661-B487-4447-8245-BD016F75631C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Shared.Tests", "Tests\PointerStar.Shared.Tests\PointerStar.Shared.Tests.csproj", "{63BFF661-B487-4447-8245-BD016F75631C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

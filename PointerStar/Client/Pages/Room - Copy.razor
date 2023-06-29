@@ -1,0 +1,300 @@
+﻿@using PointerStar.Client.Components;
+@using PointerStar.Client.ViewModels;
+@using PointerStar.Shared;
+
+@inherits ComponentBase<RoomViewModel>
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+@page "/oldroom/{RoomId}"
+
+<PageTitle>Pointer*</PageTitle>
+
+<div class="d-flex justify-content-between">
+    <h2>
+        Room @ViewModel.RoomState?.RoomId
+        <button id="copy-button" class="btn btn-outline-light btn-sm" @onclick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
+            @switch (ViewModel.ClipboardResult)
+            {
+                case ClipboardResult.Copied:
+                    <i class="fa fa-check-square"></i>
+                    <span>Copied</span>
+                    break;
+                case ClipboardResult.NotCopied:
+                    <i class="fa fa-copy"></i>
+                    <span>Copy Invitation URL</span>
+                    break;
+                case ClipboardResult.Invalid:
+                    <i class="fa fa-exclamation-circle"></i>
+                    <span>Copy Invalid</span>
+                    break;
+            }
+        </button>
+    </h2>
+
+    <h3>
+        <button class="btn btn-lg btn-outline-secondary" style="border-width: 3px;" @onclick="() => ViewModel.IsNameModalOpen = true">
+            <i class="fa fa-pencil"></i>
+            @ViewModel.CurrentUser?.Name
+        </button>
+    </h3>
+</div>
+<div class="container">
+    <div class="row">
+        @if (ViewModel.IsFacilitator)
+        {
+            <h2 class="heading">Facilitate</h2>
+            <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-start">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" @bind="ViewModel.VotesShown">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Show votes</label>
+                    </div>
+                    <div class="form-check" style="margin: 0px 10px;">
+                        <input class="form-check-input" type="checkbox" value="" id="autoRevealVotesCheckbox" @bind="ViewModel.AutoShowVotes">
+                        <label class="form-check-label" for="autoRevealVotesCheckbox">
+                            Automatically reveal votes
+                        </label>
+                    </div>
+                    <div class="form-check form-switch" style="margin-left:10px">
+                        <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                        <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-warning" @onclick="ViewModel.ResetVotesAsync">Reset Votes</button>
+                </div>
+            </div>
+        }
+        else if (ViewModel.IsTeamMember)
+        {
+            <h2 class="heading">Vote</h2>
+            <div class="row">
+                <div class="d-flex justify-content-start flex-wrap vote-button-row">
+                    @foreach (string[] rowOptions in (ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>()).Chunk(4))
+                    {
+                        @foreach (string option in rowOptions)
+                        {
+                            <div>
+                                @{
+                                    string buttonClass = option == ViewModel.CurrentVote ? "btn-success" : "btn-info";
+                                }
+                                <button class="btn btn-lg @buttonClass vote-button" @onclick="() => ViewModel.SubmitVoteAsync(option)">@option</button>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        }
+        else if (ViewModel.IsObserver)
+        {
+            <div class="d-flex justify-content-start">
+                <div class="form-check form-switch" style="margin-left:10px">
+                    <input class="form-check-input" type="checkbox" @bind="ViewModel.PreviewVotes">
+                    <label class="form-check-label" for="flexSwitchCheckDefault">Preview votes</label>
+                </div>
+            </div>
+        }
+        @if (ViewModel.VoteStartTime is { } voteStartTime)
+        {
+            <label>Vote Time: <span>@((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))</span></label>
+        }
+    </div>
+
+    @{
+        var teamMembers = ViewModel.RoomState?.TeamMemebers ?? Enumerable.Empty<User>();
+        var facilitators = ViewModel.RoomState?.Facilitators ?? Enumerable.Empty<User>();
+        var observers = ViewModel.RoomState?.Observers ?? Enumerable.Empty<User>();
+    }
+    <div class="row">
+        <div class="col-7">
+            <div class="card border-info mb-3 user-card">
+                <div class="card-header">Team Members</div>
+                <div class="card-body">
+                    @if (teamMembers.Any())
+                    {
+                        @foreach (var user in teamMembers)
+                        {
+                            <p>
+                                @user.Name
+                                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                                {
+                                    <span> - </span>
+                                    if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
+                                    {
+                                        <span class="original-vote-value">(@user.OriginalVote) </span>
+                                    }
+                                    <span class="vote-value">@user.Vote</span>
+                                }
+                                else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
+                                {
+                                    <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
+                                }
+                                else
+                                {
+                                    <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
+                                }
+                            </p>
+                        }
+                    }
+                    else
+                    {
+                        <span>Waiting for team members to join...</span>
+                    }
+                </div>
+            </div>
+
+            @if (facilitators.Any())
+            {
+                <div class="card border-secondary mb-3 user-card">
+                    <div class="card-header">Facilitators</div>
+                    <div class="card-body">
+                        @foreach (var user in facilitators)
+                        {
+                            <p>@user.Name</p>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (observers.Any())
+            {
+                <div class="card border-dark mb-3 user-card">
+                    <div class="card-header">Observers</div>
+                    <div class="card-body">
+                        @foreach (var user in observers)
+                        {
+                            <p>@user.Name</p>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        @if (ViewModel.VotesShown && ViewModel.RoomState is { } roomState)
+        {
+            <div class="col-5">
+                <div class="card border-primary votes-card">
+                    <div class="card-header">Votes</div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Vote</th>
+                                    <th scope="col">Count</th>
+                                    <th scope="col">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
+                                    var groupedVotes = votes.GroupBy(x => x).OrderBy(x => Array.IndexOf(roomState.VoteOptions, x.Key)).ToArray();
+                                    int? maxVote = groupedVotes.Any() ? groupedVotes.Select(x => x.Count()).Max() : null;
+                                    foreach (var group in groupedVotes)
+                                    {
+                                        var count = group.Count();
+                                        var rowStyle = count == maxVote ? "table-dark" : "table-active";
+                                        <tr class="@rowStyle">
+                                            <th scope="row">@(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)</th>
+                                            <td>@count</td>
+                                            <td>
+                                                @(string.Format("{0:P0}", count / (double)votes.Length))
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @{
+        string dialogDisplay;
+        if (ViewModel.IsNameModalOpen)
+        {
+            dialogDisplay = "block";
+        }
+        else
+        {
+            dialogDisplay = "none";
+        }
+    }
+    <div class="modal" tabindex="-1" role="dialog" style="display:@dialogDisplay">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Please Enter Your Name</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <input type="text" class="form-control" placeholder="Enter your name" @onkeypress="OnKeyPress" @bind="ViewModel.Name"
+                               @bind:event="oninput">
+                    </div>
+                    <div class="form-group" style="margin-top:10px">
+                        <span>I want to...</span>
+                        <div class="btn-group" role="group" aria-label="User roles">
+                            <InputRadioGroup @bind-Value="@ViewModel.SelectedRoleId">
+                                <InputRadio Value="@Role.TeamMember.Id" class="btn-check" id="team-member-radio" />
+                                <label class="btn btn-outline-info" for="team-member-radio">Vote</label>
+                                <InputRadio Value="@Role.Facilitator.Id" class="btn-check" id="facilitator-radio" />
+                                <label class="btn btn-outline-secondary" for="facilitator-radio">Facilitate</label>
+                                <InputRadio Value="@Role.Observer.Id" class="btn-check" id="observer-radio" />
+                                <label class="btn btn-outline-light" for="observer-radio">Observe</label>
+                            </InputRadioGroup>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @if(ViewModel.RoomState is null)
+                    {
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
+                            <span>Join Room</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="() => ViewModel.IsNameModalOpen = false">
+                            <span>Cancel</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" @onclick="ViewModel.SubmitDialogAsync">
+                            <span>Update</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (ViewModel.IsNameModalOpen)
+    {
+        <div class="modal-backdrop fade show"></div>
+    }
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string? RoomId { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "Name")]
+    public string? Name { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.Name = Name;
+        ViewModel.RoomId = RoomId;
+        await base.OnInitializedAsync();
+    }
+
+    private async void OnKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ViewModel.SubmitDialogAsync();
+        }
+    }
+}
