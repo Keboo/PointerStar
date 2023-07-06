@@ -1,5 +1,4 @@
-﻿using PointerStar.Client.Pages;
-using PointerStar.Shared;
+﻿using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
 

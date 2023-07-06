@@ -94,7 +94,7 @@ public partial class RoomViewModel : ViewModelBase
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
-    public async Task OnClickClipboard(string? url)
+    public async Task OnClickClipboardAsync(string? url)
     {
         if (!string.IsNullOrEmpty(url))
         {
@@ -125,7 +125,7 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public async Task SubmitDialogAsync()
+    public async Task ConnectToRoomAsync()
     {
         if (RoomHubConnection.IsConnected && !string.IsNullOrWhiteSpace(RoomId))
         {
@@ -227,10 +227,8 @@ public partial class RoomViewModel : ViewModelBase
             {
                 Name = userViewModel.Name;
                 SelectedRoleId = userViewModel.SelectedRoleId;
-                //TODO: Why do we need to call this here?
-                await SubmitDialogAsync();
+                await ConnectToRoomAsync();
             }
         }
-        
     }
 }
