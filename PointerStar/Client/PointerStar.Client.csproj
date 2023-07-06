@@ -27,8 +27,4 @@
     <Using Include="System.ComponentModel" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\css\" />
-  </ItemGroup>
-
 </Project>

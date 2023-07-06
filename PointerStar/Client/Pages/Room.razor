@@ -106,7 +106,7 @@
                             {
                                 var count = group.Count();
                                 double percentage = count / (double)votes.Length;
-                                string text = $"{(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)} - {percentage:P0}";
+                                string text = $"{(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)} - {count} ({percentage:P0})";
                                 Typo textSize = count == maxVote ? Typo.body1 : Typo.body2;
                                 string barStyle = $"background-color: var({(count == maxVote ? "--mud-palette-primary-darken" : "--mud-palette-primary-lighten")});";
                                 <MudText Typo="@textSize">@text</MudText>
