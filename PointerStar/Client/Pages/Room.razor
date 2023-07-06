@@ -10,18 +10,23 @@
 <PageTitle>Pointer*</PageTitle>
 
 <MudGrid>
-    <MudItem xs="2">
-        <MudPaper Class="d-flex align-center justify-center mud-width-full py-8">Room: @ViewModel.RoomId</MudPaper>
-    </MudItem>
-    <MudItem xs="2">
-        <MudButton Class="d-flex align-center justify-center mud-width-full py-8" Variant="Variant.Outlined">Copy Invitation URL</MudButton>
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
+            <MudButton Variant="Variant.Outlined" Height="40px"
+                       OnClick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
+                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
+                Copy Invitation URL
+            </MudButton>
+            <MudButton Variant="Variant.Outlined"
+                       OnClick="() => ViewModel.ShowUserDialogAsync()">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
+                @ViewModel.Name
+            </MudButton>
+        </MudPaper>
+        
     </MudItem>
     <MudItem xs="8">
-        <MudButton Class="d-flex align-center justify-center mud-width-full py-8" Variant="Variant.Outlined"
-                   OnClick="() => ViewModel.ShowUserDialogAsync()">
-            <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
-            @ViewModel.Name
-        </MudButton>
+        
 
     </MudItem>
     <MudItem xs="12">

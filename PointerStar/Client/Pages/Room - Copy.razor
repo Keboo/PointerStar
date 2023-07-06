@@ -13,7 +13,7 @@
 <div class="d-flex justify-content-between">
     <h2>
         Room @ViewModel.RoomState?.RoomId
-        <button id="copy-button" class="btn btn-outline-light btn-sm" @onclick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
+        @* <button id="copy-button" class="btn btn-outline-light btn-sm" @onclick="() => ViewModel.OnClickClipboard(Navigation.Uri)">
             @switch (ViewModel.ClipboardResult)
             {
                 case ClipboardResult.Copied:
@@ -29,7 +29,7 @@
                     <span>Copy Invalid</span>
                     break;
             }
-        </button>
+        </button> *@
     </h2>
 
     <h3>

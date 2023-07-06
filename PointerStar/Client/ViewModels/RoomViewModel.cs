@@ -11,7 +11,8 @@ public partial class RoomViewModel : ViewModelBase
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
     private IDialogService DialogService { get; }
-    private HttpClient HttpClient { get; }
+    private ISnackbar Snackbar { get; }
+
     private CancellationTokenSource? _timerCancellationSource;
 
     [ObservableProperty]
@@ -58,13 +59,6 @@ public partial class RoomViewModel : ViewModelBase
 
     public string? RoomId { get; set; }
 
-    [ObservableProperty]
-    public string _CopyButtonText = "Copy Invitation Link ";
-    [ObservableProperty]
-    public string _CopyButtonIcon = "fa fa-copy";
-    [ObservableProperty]
-    public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
-
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -90,15 +84,15 @@ public partial class RoomViewModel : ViewModelBase
     public RoomViewModel(
         IRoomHubConnection roomHubConnection,
         ICookie cookie,
-        HttpClient httpClient,
         IClipboardService clipboardService,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        ISnackbar snackbar)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
-        HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        Snackbar = snackbar ?? throw new ArgumentNullException(nameof(snackbar));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -108,16 +102,8 @@ public partial class RoomViewModel : ViewModelBase
         {
             await ClipboardService.CopyToClipboard(url);
 
-            ClipboardResult = ClipboardResult.Copied;
+            Snackbar.Add("Link Copied", Severity.Success);
         }
-        else
-        {
-            ClipboardResult = ClipboardResult.Invalid;
-        }
-
-        await Task.Delay(1000);
-
-        ClipboardResult = ClipboardResult.NotCopied;
     }
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
