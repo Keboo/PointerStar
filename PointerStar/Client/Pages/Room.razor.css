@@ -1,16 +1,12 @@
-﻿.vote-button {
+﻿::deep .vote-button {
     display: inline-block;
     padding: 20px 20px 20px 20px;
     margin: 5px 5px 4px 5px;
     text-align: center;
     vertical-align: middle;
     white-space: nowrap;
-    width: 100px;
-    height: 100px;
-}
-
-.vote-button-row {
-    max-width: 700px;
+    width: 70px;
+    height: 70px;
 }
 
 .heading {
@@ -21,12 +17,10 @@
 }
 
 .user-card {
-    /*max-width: 80%;*/
     margin: 10px 0px;
 }
 
 .votes-card {
-    /*max-width: 80%;*/
     margin: 10px 0px;
 }
 

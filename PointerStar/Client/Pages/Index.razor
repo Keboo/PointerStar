@@ -1,18 +1,12 @@
 ﻿@page "/"
-@layout MainLayout
-@inject NavigationManager Navigation;
-@inject HttpClient Http;
+@inject NavigationManager Navigation
+@inject HttpClient Http
 
 <PageTitle>Pointer*</PageTitle>
 
-
-<div class="container">
-    <div class="row">
-        <div class="text-center">
-            <button class="btn btn-primary" @onclick="NavigateToRoom">Create Room</button>
-        </div>
-    </div>
-</div>
+<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Row="true" Style="height:100px" >
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRoom">Create Room</MudButton>
+</MudStack>
 
 @code {
     private async Task NavigateToRoom()

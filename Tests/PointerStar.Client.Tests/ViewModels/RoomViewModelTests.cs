@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
+using MudBlazor;
+using PointerStar.Client.Components;
 using PointerStar.Client.Cookies;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
@@ -69,7 +70,7 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public async Task SubmitDialogAsync_WithHubConnection_JoinsRoom()
+    public async Task ConnectToRoomAsync_WithHubConnection_JoinsRoom()
     {
         AutoMocker mocker = new();
         mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
@@ -80,16 +81,15 @@ public partial class RoomViewModelTests
         await viewModel.OnInitializedAsync();
         viewModel.Name = "Foo";
 
-        await viewModel.SubmitDialogAsync();
+        await viewModel.ConnectToRoomAsync();
 
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
         mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("Name", "Foo", null), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]
-    public async Task SubmitDialogAsync_WithoutHubConnection_DoesNothing()
+    public async Task ConnectToRoomAsync_WithoutHubConnection_DoesNothing()
     {
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
@@ -97,13 +97,13 @@ public partial class RoomViewModelTests
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         viewModel.RoomId = "RoomId";
 
-        await viewModel.SubmitDialogAsync();
+        await viewModel.ConnectToRoomAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.IsAny<User>()), Times.Never);
     }
 
     [Fact]
-    public async Task SubmitDialogAsync_WithExistingRoomState_UpdatesUser()
+    public async Task ConnectToRoomAsync_WithExistingRoomState_UpdatesUser()
     {
         AutoMocker mocker = new();
         mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
@@ -118,10 +118,9 @@ public partial class RoomViewModelTests
 
         viewModel.Name = "New Name";
         viewModel.SelectedRoleId = Role.Observer.Id;
-        await viewModel.SubmitDialogAsync();
+        await viewModel.ConnectToRoomAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.UpdateUserAsync(It.Is<UserOptions>(u => u.Name == "New Name" && u.Role == Role.Observer)), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -137,7 +136,6 @@ public partial class RoomViewModelTests
         await viewModel.OnInitializedAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.OpenAsync(), Times.Once);
-        Assert.True(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -202,7 +200,6 @@ public partial class RoomViewModelTests
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId",
             It.Is<User>(u => u.Role.Id == roleId && u.Name == "User Name")), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -322,13 +319,60 @@ public partial class RoomViewModelTests
     public void PreviewVotes_NewInstance_IsTrue()
     {
         AutoMocker mocker = new();
-        User observer = new(Guid.NewGuid(), "Observer") { Role = Role.Observer };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { observer });
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
 
         Assert.True(viewModel.PreviewVotes);
     }
 
+    [Fact]
+    public async Task OnClickClipboardAsync_WithUrl_PutsUrlOnClipboard()
+    {
+        AutoMocker mocker = new();
+        const string url = "https://example.com";
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+
+        await viewModel.OnClickClipboardAsync(url);
+
+        mocker.Verify<IClipboardService, ValueTask>(x => x.CopyToClipboard(url), Times.Once);
+    }
+
+    [Fact]
+    public async Task ShowUserDialog_WithNewUser_JoinsRooms()
+    {
+        //Arrange
+        AutoMocker mocker = new();
+
+        //Setup the dialog with a new user and role
+        WithUserDialog(mocker, "Test User", Role.Observer.Id);
+
+        //Simulate the hub connection already being made
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
+
+        //Act
+        await viewModel.ShowUserDialogAsync();
+
+        //Assert
+        mocker.VerifyAll();
+        mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Test User" && u.Role == Role.Observer)), Times.Once);
+    }
+
+    private static void WithUserDialog(AutoMocker mocker, string? name, Guid? selectedRoleId)
+    {
+        UserDialogViewModel dialogViewModel = mocker.CreateInstance<UserDialogViewModel>();
+        dialogViewModel.Name = name;
+        dialogViewModel.SelectedRoleId = selectedRoleId;
+        mocker.Use(dialogViewModel);
+        Mock<IDialogReference> dialogReference = mocker.GetMock<IDialogReference>();
+        dialogReference.Setup(x => x.Result).ReturnsAsync(DialogResult.Ok(dialogViewModel));
+
+        mocker.Setup<IDialogService, Task<IDialogReference>>(x => x.ShowAsync<UserDialog>(It.IsAny<string>(), It.IsAny<DialogParameters>(), It.IsAny<DialogOptions>()))
+            .ReturnsAsync(dialogReference.Object)
+            .Verifiable();
+    }
 
     private static void WithRoomState(AutoMocker mocker, RoomState roomState)
     {

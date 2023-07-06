@@ -1,3 +1,5 @@
+using MudBlazor;
+using PointerStar.Client.Components;
 using PointerStar.Client.Cookies;
 using PointerStar.Shared;
 
@@ -8,7 +10,9 @@ public partial class RoomViewModel : ViewModelBase
     private IRoomHubConnection RoomHubConnection { get; }
     private ICookie Cookie { get; }
     private IClipboardService ClipboardService { get; }
-    private HttpClient HttpClient { get; }
+    private IDialogService DialogService { get; }
+    private ISnackbar Snackbar { get; }
+
     private CancellationTokenSource? _timerCancellationSource;
 
     [ObservableProperty]
@@ -20,8 +24,6 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private string? _name;
 
-    [ObservableProperty]
-    private bool _isNameModalOpen;
 
     public bool IsFacilitator
         => CurrentUser?.Role == Role.Facilitator;
@@ -55,13 +57,6 @@ public partial class RoomViewModel : ViewModelBase
 
     public string? RoomId { get; set; }
 
-    [ObservableProperty]
-    public string _CopyButtonText = "Copy Invitation Link ";
-    [ObservableProperty]
-    public string _CopyButtonIcon = "fa fa-copy";
-    [ObservableProperty]
-    public ClipboardResult _ClipboardResult = ClipboardResult.NotCopied;
-
     async partial void OnVotesShownChanged(bool value)
     {
         if (RoomHubConnection.IsConnected)
@@ -84,31 +79,29 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public RoomViewModel(IRoomHubConnection roomHubConnection, ICookie cookie, HttpClient httpClient, IClipboardService clipboardService)
+    public RoomViewModel(
+        IRoomHubConnection roomHubConnection,
+        ICookie cookie,
+        IClipboardService clipboardService,
+        IDialogService dialogService,
+        ISnackbar snackbar)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
-        HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
+        DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+        Snackbar = snackbar ?? throw new ArgumentNullException(nameof(snackbar));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
-    public async Task OnClickClipboard(string? url)
+    public async Task OnClickClipboardAsync(string? url)
     {
         if (!string.IsNullOrEmpty(url))
         {
             await ClipboardService.CopyToClipboard(url);
 
-            ClipboardResult = ClipboardResult.Copied;
+            Snackbar.Add("Link Copied", Severity.Success);
         }
-        else
-        {
-            ClipboardResult = ClipboardResult.Invalid;
-        }
-
-        await Task.Delay(1000);
-
-        ClipboardResult = ClipboardResult.NotCopied;
     }
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
@@ -132,11 +125,10 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
-    public async Task SubmitDialogAsync()
+    public async Task ConnectToRoomAsync()
     {
         if (RoomHubConnection.IsConnected && !string.IsNullOrWhiteSpace(RoomId))
         {
-            IsNameModalOpen = false;
             if (RoomState is null)
             {
                 //No room state, so the user needs to join the room
@@ -151,7 +143,7 @@ public partial class RoomViewModel : ViewModelBase
             }
             else
             {
-                //We have room state so the user should update thier information
+                //We have room state so the user should update their information
                 await RoomHubConnection.UpdateUserAsync(new UserOptions
                 {
                     Name = Name,
@@ -198,7 +190,7 @@ public partial class RoomViewModel : ViewModelBase
         string lastRoomId = await Cookie.GetRoomAsync();
         Guid? lastRoleId = await Cookie.GetRoleAsync();
         if (lastRoomId == RoomId && lastRoleId is not null
-            && Role.FromId(lastRoleId.Value) is { } role 
+            && Role.FromId(lastRoleId.Value) is { } role
             && !string.IsNullOrWhiteSpace(Name))
         {
             User user = new(Guid.NewGuid(), Name);
@@ -209,17 +201,34 @@ public partial class RoomViewModel : ViewModelBase
         }
         else
         {
-            //TODO: should we leverage the lastRoleId here?
-            IsNameModalOpen = true;
-            if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } newUserRole)
-            {
-                SelectedRoleId = newUserRole.Id;
-            }
+            await ShowUserDialogAsync();
+
         }
-        //Just start the timer, it will handle the null case an update when room state changes occure.
+        //Just start the timer, it will handle the null case an update when room state changes occurs.
         CancellationTokenSource cts = new();
         Interlocked.Exchange(ref _timerCancellationSource, cts)?.Cancel();
         _ = ProcessVotingTimer(cts.Token);
 
+    }
+
+    public async Task ShowUserDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters<UserDialog>
+        {
+            { x => x.RoomId, RoomId },
+            { x => x.Name, Name },
+            { x => x.SelectedRoleId, SelectedRoleId }
+        };
+        if (await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options) is { } dialogReference)
+        {
+            var dialogResult = await dialogReference.Result;
+            if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
+            {
+                Name = userViewModel.Name;
+                SelectedRoleId = userViewModel.SelectedRoleId;
+                await ConnectToRoomAsync();
+            }
+        }
     }
 }
