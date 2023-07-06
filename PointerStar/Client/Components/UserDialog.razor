@@ -1,4 +1,5 @@
 ﻿@using PointerStar.Client.ViewModels;
+@using PointerStar.Shared;
 @inherits ComponentBase<UserDialogViewModel>
 
 <MudDialog>
@@ -7,10 +8,22 @@
             <MudTextField @bind-Value="ViewModel.Name" Label="Name" Variant="Variant.Text" FullWidth=true></MudTextField>
             <MudStack Row=true>
                 <MudText>I want to...</MudText>
-                <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
-                    <MudButton>Vote</MudButton>
-                    <MudButton>Facilitate</MudButton>
-                    <MudButton>Observe</MudButton>
+                <MudButtonGroup OverrideStyles="false">
+                    <MudButton Color="Color.Primary"
+                               Variant="@(ViewModel.SelectedRoleId == Role.TeamMember.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.TeamMember)">
+                        Vote
+                    </MudButton>
+                    <MudButton Color="Color.Primary"
+                               Variant="@(ViewModel.SelectedRoleId == Role.Facilitator.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.Facilitator)">
+                        Facilitate
+                    </MudButton>
+                    <MudButton Color="Color.Primary"
+                               Variant="@(ViewModel.SelectedRoleId == Role.Observer.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.Observer)">
+                        Observe
+                    </MudButton>
                 </MudButtonGroup>
             </MudStack>
         </MudStack>
@@ -23,8 +36,22 @@
 
 @code {
     [CascadingParameter]
-    MudDialogInstance MudDialog { get; set; }
+    private MudDialogInstance? MudDialog { get; set; }
+    [Parameter]
+    public string? RoomId { get; set; }
+    [Parameter]
+    public string? Name { get; set; }
+    [Parameter]
+    public Guid? SelectedRoleId { get; set; }
 
-    void Submit() => MudDialog.Close(DialogResult.Ok(ViewModel));
-    void Cancel() => MudDialog.Cancel();
+    private void Submit() => MudDialog?.Close(DialogResult.Ok(ViewModel));
+    private void Cancel() => MudDialog?.Cancel();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        ViewModel.Name = Name;
+        ViewModel.SelectedRoleId = SelectedRoleId;
+        await ViewModel.LoadRoomDataAsync(RoomId);
+    }
 }

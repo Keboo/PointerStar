@@ -17,8 +17,12 @@
         <MudButton Class="d-flex align-center justify-center mud-width-full py-8" Variant="Variant.Outlined">Copy Invitation URL</MudButton>
     </MudItem>
     <MudItem xs="8">
-        @* TODO: Add pencil icon *@
-        <MudButton Class="d-flex align-center justify-center mud-width-full py-8" Variant="Variant.Outlined">@ViewModel.Name</MudButton>
+        <MudButton Class="d-flex align-center justify-center mud-width-full py-8" Variant="Variant.Outlined"
+                   OnClick="() => ViewModel.ShowUserDialogAsync()">
+            <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
+            @ViewModel.Name
+        </MudButton>
+
     </MudItem>
     <MudItem xs="12">
         <MudDivider DividerType="DividerType.Middle" Class="my-6" />
@@ -120,14 +124,14 @@
                             };
                         }
 
-                        <MudChart ChartType="ChartType.Donut" LegendPosition="Position.Bottom" Width="200px" Height="200px"
+                        @* <MudChart ChartType="ChartType.Donut" LegendPosition="Position.Bottom" Width="200px" Height="200px"
                                   InputData="@groupedVotes.Select(x => (double)x.Count()).ToArray()"
                                   InputLabels="@groupedVotes.Select(x => x.Key).ToArray()"
                                   >
                             <CustomGraphics>
                                 <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="var(--mud-palette-text-primary)" font-family="Helvetica" font-size="@fontSize">@groupedVotes.FirstOrDefault()?.Key</text>
                             </CustomGraphics>
-                        </MudChart>
+                        </MudChart> *@
 
                     }
                 </MudStack>

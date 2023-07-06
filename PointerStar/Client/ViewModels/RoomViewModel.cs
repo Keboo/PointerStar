@@ -204,8 +204,9 @@ public partial class RoomViewModel : ViewModelBase
         await base.OnInitializedAsync();
         await RoomHubConnection.OpenAsync();
 
-        string lastRoomId = await Cookie.GetRoomAsync();
-        Guid? lastRoleId = await Cookie.GetRoleAsync();
+        //TODO:
+        string lastRoomId = "";//await Cookie.GetRoomAsync();
+        Guid? lastRoleId = null;// await Cookie.GetRoleAsync();
         if (lastRoomId == RoomId && lastRoleId is not null
             && Role.FromId(lastRoleId.Value) is { } role
             && !string.IsNullOrWhiteSpace(Name))
@@ -218,20 +219,7 @@ public partial class RoomViewModel : ViewModelBase
         }
         else
         {
-            //TODO: should we leverage the lastRoleId here?
-            var options = new DialogOptions { CloseOnEscapeKey = true };
-            var dialogReference = await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", options);
-            var dialogResult = await dialogReference.Result;
-            if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
-            {
-                Name = userViewModel.Name;
-                if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{RoomId}") is { } newUserRole)
-                {
-                    SelectedRoleId = newUserRole.Id;
-                }
-                //SelectedRoleId = Role.TeamMember.Id;
-                await SubmitDialogAsync();
-            }
+            await ShowUserDialogAsync();
 
         }
         //Just start the timer, it will handle the null case an update when room state changes occurs.
@@ -239,5 +227,25 @@ public partial class RoomViewModel : ViewModelBase
         Interlocked.Exchange(ref _timerCancellationSource, cts)?.Cancel();
         _ = ProcessVotingTimer(cts.Token);
 
+    }
+
+    public async Task ShowUserDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters<UserDialog>
+        {
+            { x => x.RoomId, RoomId },
+            { x => x.Name, Name },
+            { x => x.SelectedRoleId, SelectedRoleId }
+        };
+        var dialogReference = await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options);
+        var dialogResult = await dialogReference.Result;
+        if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
+        {
+            Name = userViewModel.Name;
+            SelectedRoleId = userViewModel.SelectedRoleId;
+            //TODO: Why do we need to call this here?
+            await SubmitDialogAsync();
+        }
     }
 }
