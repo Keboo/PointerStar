@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using System.Reflection;
 using PointerStar.Client.Cookies;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
@@ -85,7 +84,6 @@ public partial class RoomViewModelTests
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
         mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("Name", "Foo", null), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -121,7 +119,6 @@ public partial class RoomViewModelTests
         await viewModel.SubmitDialogAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.UpdateUserAsync(It.Is<UserOptions>(u => u.Name == "New Name" && u.Role == Role.Observer)), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -137,7 +134,6 @@ public partial class RoomViewModelTests
         await viewModel.OnInitializedAsync();
 
         mocker.Verify<IRoomHubConnection>(x => x.OpenAsync(), Times.Once);
-        Assert.True(viewModel.IsNameModalOpen);
     }
 
     [Fact]
@@ -202,7 +198,6 @@ public partial class RoomViewModelTests
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId",
             It.Is<User>(u => u.Role.Id == roleId && u.Name == "User Name")), Times.Once);
-        Assert.False(viewModel.IsNameModalOpen);
     }
 
     [Fact]

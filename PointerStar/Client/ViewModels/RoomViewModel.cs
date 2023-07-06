@@ -24,8 +24,6 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private string? _name;
 
-    [ObservableProperty]
-    private bool _isNameModalOpen;
 
     public bool IsFacilitator
         => CurrentUser?.Role == Role.Facilitator;
@@ -131,7 +129,6 @@ public partial class RoomViewModel : ViewModelBase
     {
         if (RoomHubConnection.IsConnected && !string.IsNullOrWhiteSpace(RoomId))
         {
-            IsNameModalOpen = false;
             if (RoomState is null)
             {
                 //No room state, so the user needs to join the room
@@ -190,9 +187,8 @@ public partial class RoomViewModel : ViewModelBase
         await base.OnInitializedAsync();
         await RoomHubConnection.OpenAsync();
 
-        //TODO:
-        string lastRoomId = "";//await Cookie.GetRoomAsync();
-        Guid? lastRoleId = null;// await Cookie.GetRoleAsync();
+        string lastRoomId = await Cookie.GetRoomAsync();
+        Guid? lastRoleId = await Cookie.GetRoleAsync();
         if (lastRoomId == RoomId && lastRoleId is not null
             && Role.FromId(lastRoleId.Value) is { } role
             && !string.IsNullOrWhiteSpace(Name))
@@ -224,14 +220,17 @@ public partial class RoomViewModel : ViewModelBase
             { x => x.Name, Name },
             { x => x.SelectedRoleId, SelectedRoleId }
         };
-        var dialogReference = await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options);
-        var dialogResult = await dialogReference.Result;
-        if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
+        if (await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options) is { } dialogReference)
         {
-            Name = userViewModel.Name;
-            SelectedRoleId = userViewModel.SelectedRoleId;
-            //TODO: Why do we need to call this here?
-            await SubmitDialogAsync();
+            var dialogResult = await dialogReference.Result;
+            if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
+            {
+                Name = userViewModel.Name;
+                SelectedRoleId = userViewModel.SelectedRoleId;
+                //TODO: Why do we need to call this here?
+                await SubmitDialogAsync();
+            }
         }
+        
     }
 }
