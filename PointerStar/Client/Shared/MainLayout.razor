@@ -19,14 +19,14 @@
 
 @code {
     private bool _isDarkMode;
-    private MudThemeProvider _mudThemeProvider;
+    private MudThemeProvider? _mudThemeProvider;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && _mudThemeProvider is { } themeProvider)
         {
-            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
-            await _mudThemeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            _isDarkMode = await themeProvider.GetSystemPreference();
+            await themeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
             StateHasChanged();
         }
     }
