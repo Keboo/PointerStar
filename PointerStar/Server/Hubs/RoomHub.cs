@@ -70,4 +70,14 @@ public class RoomHub : Hub
             await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
+
+    [HubMethodName(RoomHubConnection.RemoveUserMethodName)]
+    public async Task RemoveUserAsync(Guid userId)
+    {
+        RoomState? roomState = await RoomManager.RemoveUserAsync(userId, Context.ConnectionId);
+        if (roomState?.RoomId is { } roomId)
+        {
+            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        }
+    }
 }

@@ -33,9 +33,9 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> DisconnectAsync(string connectionId)
     {
-        return WithConnection(connectionId, (room, userId) =>
+        return WithConnection(connectionId, (room, currentUser) =>
         {
-            User[] users = room.Users.Where(x => x.Id != userId).ToArray();
+            User[] users = room.Users.Where(x => x.Id != currentUser.Id).ToArray();
             if (users.Any())
             {
                 return room with { Users = users };
@@ -46,10 +46,10 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> UpdateRoomAsync(RoomOptions roomOptions, string connectionId)
     {
-        return WithConnection(connectionId, (room, userId) =>
+        return WithConnection(connectionId, (room, currentUser) =>
         {
             //Only allow facilitators to change the room options
-            if (room.Users.FirstOrDefault(x => x.Id == userId)?.Role == Role.Facilitator)
+            if (currentUser.Role == Role.Facilitator)
             {
                 if (roomOptions.AutoShowVotes is { } autoShowVotes)
                 {
@@ -76,11 +76,11 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> UpdateUserAsync(UserOptions userOptions, string connectionId)
     {
-        return WithConnection(connectionId, (room, userId) =>
+        return WithConnection(connectionId, (room, currentUser) =>
         {
             User[] users = room.Users.Select(x =>
             {
-                if (x.Id == userId)
+                if (x.Id == currentUser.Id)
                 {
                     if (userOptions.Name is { } name)
                     {
@@ -99,11 +99,11 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> SubmitVoteAsync(string vote, string connectionId)
     {
-        return WithConnection(connectionId, (room, userId) =>
+        return WithConnection(connectionId, (room, currentUser) =>
         {
             var roomState = room with
             {
-                Users = room.Users.Select(u => u.Id == userId ? u with
+                Users = room.Users.Select(u => u.Id == currentUser.Id ? u with
                 {
                     OriginalVote = room.VotesShown ? u.OriginalVote : vote,
                     Vote = vote
@@ -123,10 +123,8 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState?> ResetVotesAsync(string connectionId)
     {
-        return WithConnection(connectionId, (room, userId) =>
+        return WithConnection(connectionId, (room, currentUser) =>
         {
-            User? currentUser = room.Users.FirstOrDefault(x => x.Id == userId);
-            if (currentUser is null) return null;
             if (currentUser.Role == Role.Facilitator)
             {
                 User[] users = room.Users.Select(u => u with { Vote = null }).ToArray();
@@ -154,12 +152,31 @@ public class InMemoryRoomManager : IRoomManager
         });
     }
 
-    private Task<RoomState?> WithConnection(string connectionId, Func<RoomState, Guid, RoomState?> updateRoom)
+    public Task<RoomState?> RemoveUserAsync(Guid userId, string connectionId)
+    {
+        return WithConnection(connectionId, (room, currentUser) =>
+        {
+            if (currentUser.Role != Role.Facilitator)
+            {
+                return room;
+            }
+            return room with
+            {
+                Users = room.Users.Select(u => u.Id == userId ? u with
+                {
+                    Role = Role.Observer
+                } : u).ToArray()
+            };
+        });
+    }
+
+
+    private Task<RoomState?> WithConnection(string connectionId, Func<RoomState, User, RoomState?> updateRoom)
     {
         if (ConnectionsToRoom.TryGetValue(connectionId, out string? roomId) &&
             ConnectionsToUser.TryGetValue(connectionId, out User? user))
         {
-            return WithExistingRoom(roomId, room => updateRoom(room, user.Id));
+            return WithExistingRoom(roomId, room => updateRoom(room, user));
         }
         return Task.FromResult<RoomState?>(null);
     }
@@ -211,8 +228,8 @@ public class InMemoryRoomManager : IRoomManager
     {
         if (roomState.AutoShowVotes)
         {
-            var teamMemebers = roomState.TeamMemebers;
-            if (teamMemebers.Any() && teamMemebers.All(x => x.Vote is not null))
+            var teamMembers = roomState.TeamMemebers;
+            if (teamMembers.Any() && teamMembers.All(x => x.Vote is not null))
             {
                 return true;
             }

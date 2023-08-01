@@ -10,19 +10,19 @@ namespace PointerStar.Server.Controllers;
 public class RoomController : ControllerBase
 {
     private static readonly Random Random = new();
-    private Hashids Hashids { get; }
+    private Hashids HashIds { get; }
     private IRoomManager RoomManager { get; }
 
-    public RoomController(Hashids hashids, IRoomManager roomManager)
+    public RoomController(Hashids hashIds, IRoomManager roomManager)
     {
-        Hashids = hashids ?? throw new ArgumentNullException(nameof(hashids));
+        HashIds = hashIds ?? throw new ArgumentNullException(nameof(hashIds));
         RoomManager = roomManager ?? throw new ArgumentNullException(nameof(roomManager));
     }
 
 
     [HttpGet("Generate")]
     public string Generate()
-        => Hashids.Encode(Random.Next());
+        => HashIds.Encode(Random.Next());
 
     [HttpGet("GetNewUserRole/{RoomId}")]
     public Task<Role> GetNewUserRole(string roomId)

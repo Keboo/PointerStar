@@ -360,6 +360,21 @@ public partial class RoomViewModelTests
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Test User" && u.Role == Role.Observer)), Times.Once);
     }
 
+    [Fact]
+    public async Task RemoveUserAsync_WithUserId_RemovesUser()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+        User teamMember = new(Guid.NewGuid(), "Team Member") { Role = Role.TeamMember };
+        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { teamMember });
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        WithRoomState(mocker, roomState);
+
+        await viewModel.RemoveUserAsync(teamMember.Id);
+
+        mocker.Verify<IRoomHubConnection>(x => x.RemoveUserAsync(teamMember.Id), Times.Once);
+    }
+
     private static void WithUserDialog(AutoMocker mocker, string? name, Guid? selectedRoleId)
     {
         UserDialogViewModel dialogViewModel = mocker.CreateInstance<UserDialogViewModel>();
