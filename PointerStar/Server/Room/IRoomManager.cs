@@ -10,6 +10,7 @@ public interface IRoomManager
     Task<RoomState?> UpdateUserAsync(UserOptions userOptions, string connectionId);
     Task<RoomState?> SubmitVoteAsync(string vote, string connectionId);
     Task<RoomState?> ResetVotesAsync(string connectionId);
+    Task<RoomState?> RemoveUserAsync(Guid userId, string connectionId);
 
     Task<Role> GetNewUserRoleAsync(string roomId);
 }

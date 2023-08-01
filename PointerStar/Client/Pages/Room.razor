@@ -118,8 +118,6 @@
             </MudItem>
         }
 
-
-
         <MudItem xs="12">
             <MudCard>
                 <MudCardHeader>
@@ -133,6 +131,14 @@
                         @foreach (var user in teamMembers)
                         {
                             <MudText>
+                                @if (ViewModel.IsFacilitator)
+                                {
+                                    string tooltip = $"Make {user.Name} an Observer";
+                                    <MudTooltip Text="@tooltip">
+                                        <MudIconButton Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Surface" aria-label="Remove person"
+                                                       OnClick="() => ViewModel.RemoveUserAsync(user.Id)"></MudIconButton>
+                                    </MudTooltip>
+                                }
                                 @user.Name
                                 @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
                                 {
@@ -151,6 +157,7 @@
                                 {
                                     <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
                                 }
+
                             </MudText>
                         }
                     }

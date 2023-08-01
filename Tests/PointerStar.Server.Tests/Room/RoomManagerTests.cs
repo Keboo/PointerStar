@@ -137,7 +137,7 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
-    public async Task SubmitVoteAsync_WithAutoShowVotes_ShowsVotesWhenAllTeamMemebersHaveVoted()
+    public async Task SubmitVoteAsync_WithAutoShowVotes_ShowsVotesWhenAllTeamMembersHaveVoted()
     {
         AutoMocker mocker = new();
         string facilitator = Guid.NewGuid().ToString();
@@ -194,7 +194,7 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
-    public async Task UpateRoomAsync_WithTeamMemberUser_DoesNotUpdateRoom()
+    public async Task UpdateRoomAsync_WithTeamMemberUser_DoesNotUpdateRoom()
     {
         AutoMocker mocker = new();
 
@@ -333,7 +333,7 @@ public abstract class RoomManagerTests<TRoomManager>
         AutoMocker mocker = new();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
 
-        Role role= await sut.GetNewUserRoleAsync("unkownId");
+        Role role= await sut.GetNewUserRoleAsync("unknownId");
 
         Assert.Equal(Role.Facilitator, role);
     }
@@ -344,7 +344,7 @@ public abstract class RoomManagerTests<TRoomManager>
         AutoMocker mocker = new();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         string roomId = Guid.NewGuid().ToString();
-        User user = new(Guid.NewGuid(), "Team Memeber");
+        User user = new(Guid.NewGuid(), "Team Member");
         _ = await sut.AddUserToRoomAsync(roomId, user, Guid.NewGuid().ToString());
 
         Role role = await sut.GetNewUserRoleAsync(roomId);
@@ -353,7 +353,7 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
-    public async Task GetNewUserRoleAsync_WithExistingFacilitator_ReturnsTeamMemeber()
+    public async Task GetNewUserRoleAsync_WithExistingFacilitator_ReturnsTeamMember()
     {
         AutoMocker mocker = new();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -378,14 +378,64 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.True(roomState?.VoteStartTime.HasValue);
     }
-    
+
+    [Fact]
+    public async Task RemoveUserAsync_WithFacilitator_MovesTeamMemberToObserver()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+        User userToRemove = room.TeamMemebers.Single();
+
+        RoomState? roomState = await sut.RemoveUserAsync(userToRemove.Id, facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Empty(roomState.TeamMemebers);
+        Assert.Equal(userToRemove.Id, roomState.Observers.Select(x => x.Id).Single());
+    }
+
+    [Fact]
+    public async Task RemoveUserAsync_WithTeamMember_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember1 = Guid.NewGuid().ToString();
+        string teamMember2 = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember1, teamMember2);
+        User userToRemove = room.TeamMemebers.First();
+
+        RoomState? roomState = await sut.RemoveUserAsync(userToRemove.Id, teamMember2);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(2, roomState.TeamMemebers.Count);
+    }
+
+    [Fact]
+    public async Task RemoveUserAsync_WithUnknownUserId_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+
+        RoomState? roomState = await sut.RemoveUserAsync(Guid.NewGuid(), facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(1, roomState.TeamMemebers.Count);
+    }
+
+
     protected async Task<RoomState> CreateRoom(IRoomManager sut, params string[] connectionIds)
     {
         string roomId = Guid.NewGuid().ToString();
         RoomState? rv = null;
         for (int i = 0; i < connectionIds.Length; i++)
         {
-            User user = new(Guid.NewGuid(), i == 0 ? $"Facilitator" : $"Team Memeber {i}")
+            User user = new(Guid.NewGuid(), i == 0 ? $"Facilitator" : $"Team Member {i}")
             {
                 Role = i == 0 ? Role.Facilitator : Role.TeamMember
             };

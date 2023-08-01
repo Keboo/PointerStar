@@ -10,6 +10,7 @@ public class RoomHubConnection : IRoomHubConnection
     public const string UpdateRoomMethodName = "UpdateRoom";
     public const string UpdateUserMethodName = "UpdateUser";
     public const string ResetVotesMethodName = "ResetVotes";
+    public const string RemoveUserMethodName = "RemoveUser";
     public const string RoomUpdatedMethodName = "RoomUpdated";
 
     public event EventHandler<RoomState>? RoomStateUpdated;
@@ -68,4 +69,6 @@ public class RoomHubConnection : IRoomHubConnection
 
     public Task ResetVotesAsync()
         => HubConnection.InvokeAsync(ResetVotesMethodName);
+    public Task RemoveUserAsync(Guid userId)
+        => HubConnection.InvokeAsync(RemoveUserMethodName, userId);
 }

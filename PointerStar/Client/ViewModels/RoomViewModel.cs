@@ -106,7 +106,7 @@ public partial class RoomViewModel : ViewModelBase
 
     private void RoomStateUpdated(object? sender, RoomState roomState)
     {
-        //Intentionally going to the field here to dodge recurssive calls.
+        //Intentionally going to the field here to dodge recursive calls.
         //The INPC from RoomState will update the state
 #pragma warning disable MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
         _votesShown = roomState.VotesShown;
@@ -166,6 +166,14 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             await RoomHubConnection.ResetVotesAsync();
+        }
+    }
+
+    public async Task RemoveUserAsync(Guid userId)
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.RemoveUserAsync(userId);
         }
     }
 
