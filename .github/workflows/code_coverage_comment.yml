@@ -11,7 +11,7 @@ defaults:
     shell: pwsh
 
 jobs:
-  upload:
+  post-code-coverage:
     runs-on: ubuntu-latest
     if: >
       github.event.workflow_run.event == 'pull_request' &&
@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Download artifacts
         run: gh run download ${{ github.event.workflow_run.id }} -n CodeCoverage
+        env:
+          GH_TOKEN: ${{ github.token }}
 
       - name: 'Get PR Number'
         id: get-pr-number
