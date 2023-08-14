@@ -43,6 +43,7 @@ jobs:
           title: 'Code Coverage'
 
       - name: Write PR Number
+        if: ${{ github.event_name == 'pull_request' }}
         run: |
           echo ${{ github.event.number }} > ./coveragereport/PullRequestNumber
 
@@ -54,9 +55,11 @@ jobs:
           if-no-files-found: error
         
       - name: dotnet publish
-        run: dotnet publish --configuration Release -p:Version="${{ env.version }}" -p:PublishDir=${{env.DOTNET_ROOT}}/publish
+        if: ${{ github.event_name != 'pull_request' }}
+        run: dotnet publish --configuration Release --no-build -p:Version="${{ env.version }}" -p:PublishDir=${{env.DOTNET_ROOT}}/publish
 
       - name: Upload artifact for deployment job
+        if: ${{ github.event_name != 'pull_request' }}
         uses: actions/upload-artifact@v3
         with:
           name: app
