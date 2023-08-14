@@ -11,7 +11,7 @@ defaults:
     shell: pwsh
 
 jobs:
-  upload:
+  post-code-coverage:
     runs-on: ubuntu-latest
     if: >
       github.event.workflow_run.event == 'pull_request' &&
