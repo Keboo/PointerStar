@@ -17,32 +17,8 @@ jobs:
       github.event.workflow_run.event == 'pull_request' &&
       github.event.workflow_run.conclusion == 'success'
     steps:
-      - name: Download artifact
-        uses: actions/github-script@v6
-        with:
-          script: |
-            var artifacts = await github.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: ${{ github.event.workflow_run.id }},
-            });
-
-            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "CodeCoverage"
-            })[0];
-            
-            var download = await github.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-
-            var fs = require('fs');
-            fs.writeFileSync('${{github.workspace}}/CodeCoverage.zip', Buffer.from(download.data));
-      
-      - name: Unzip artifact
-        run: unzip CodeCoverage.zip
+      - name: Download artifacts
+        run: gh run download ${{ github.event.workflow_run.id }} -n CodeCoverage
 
       - name: 'Get PR Number'
         id: get-pr-number
