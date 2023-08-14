@@ -18,7 +18,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Download artifacts
-        run: gh run download ${{ github.event.workflow_run.id }} -n CodeCoverage
+        run: gh run download ${{ github.event.workflow_run.id }} -n CodeCoverage --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ github.token }}
 
