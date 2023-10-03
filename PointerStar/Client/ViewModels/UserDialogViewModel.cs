@@ -11,15 +11,21 @@ public partial class UserDialogViewModel : ViewModelBase
     private Guid? _selectedRoleId;
 
     private HttpClient HttpClient { get; }
+    private IRoomHubConnection RoomHubConnection { get; }
 
-    public UserDialogViewModel(HttpClient httpClient)
+    public UserDialogViewModel(HttpClient httpClient, IRoomHubConnection roomHubConnection)
     {
         HttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
     }
 
     public void SelectRole(Role? role)
     {
         SelectedRoleId = role?.Id;
+        if(RoomHubConnection.IsConnected)
+        {
+            RoomHubConnection.UpdateUserAsync(new UserOptions { Name = Name, Role = role });
+        }
     }
 
     public async Task LoadRoomDataAsync(string? roomId)
