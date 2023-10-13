@@ -13,6 +13,11 @@ public class InMemoryRoomManager : IRoomManager
         ConnectionsToRoom.AddOrUpdate(connectionId, roomId, (_, _) => roomId);
         ConnectionsToUser.AddOrUpdate(connectionId, user, (_, _) => user);
 
+        if (user.Name.Length > User.MaxNameLength)
+        {
+            user = user with { Name = user.Name[..User.MaxNameLength] };
+        }
+
         return WithRoomLock(roomId, () =>
         {
             RoomState rv = Rooms.AddOrUpdate(roomId,
@@ -84,6 +89,10 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     if (userOptions.Name is { } name)
                     {
+                        if (name.Length > User.MaxNameLength)
+                        {
+                            name = name[..User.MaxNameLength];
+                        }
                         x = x with { Name = name };
                     }
                     if (userOptions.Role is { } role)

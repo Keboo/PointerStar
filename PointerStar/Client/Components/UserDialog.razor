@@ -5,7 +5,7 @@
 <MudDialog>
     <DialogContent>
         <MudStack>
-            <MudTextField @bind-Value="ViewModel.Name" Label="Name" Variant="Variant.Text" FullWidth=true></MudTextField>
+            <MudTextField @bind-Value="ViewModel.Name" Label="Name" Variant="Variant.Text" MaxLength=User.MaxNameLength FullWidth=true></MudTextField>
             <MudStack Row=true>
                 <MudText>I want to...</MudText>
                 <MudButtonGroup OverrideStyles="false">
