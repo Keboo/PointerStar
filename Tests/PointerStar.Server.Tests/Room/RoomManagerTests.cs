@@ -135,6 +135,26 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
+    public async Task SubmitVoteAsync_WithInvalidVoteOption_DoesNotUpdateVote()
+    {
+        AutoMocker mocker = new();
+
+        string roomId = Guid.NewGuid().ToString();
+        string connectionId = Guid.NewGuid().ToString();
+        User user = new(Guid.NewGuid(), "User 1");
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+
+        _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
+
+        RoomState? roomState = await sut.SubmitVoteAsync("Foo", connectionId);
+
+        Assert.NotNull(roomState);
+        Assert.Single(roomState.Users);
+        Assert.Null(roomState.Users.Single().Vote);
+        Assert.Null(roomState.Users.Single().OriginalVote);
+    }
+
+    [Fact]
     public async Task SubmitVoteAsync_AfterVotesShown_UpdatesVote()
     {
         AutoMocker mocker = new();

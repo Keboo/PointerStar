@@ -110,6 +110,10 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, currentUser) =>
         {
+            if (!room.VoteOptions.Contains(vote))
+            {
+                return room;
+            }
             var roomState = room with
             {
                 Users = room.Users.Select(u => u.Id == currentUser.Id ? u with
