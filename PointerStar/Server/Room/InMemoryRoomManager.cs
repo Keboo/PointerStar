@@ -241,7 +241,7 @@ public class InMemoryRoomManager : IRoomManager
     {
         if (roomState.AutoShowVotes)
         {
-            var teamMembers = roomState.TeamMemebers;
+            var teamMembers = roomState.TeamMembers;
             if (teamMembers.Any() && teamMembers.All(x => x.Vote is not null))
             {
                 return true;

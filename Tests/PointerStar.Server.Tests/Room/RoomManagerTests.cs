@@ -51,7 +51,7 @@ public abstract class RoomManagerTests<TRoomManager>
     {
         AutoMocker mocker = new();
 
-        string tooLongName = "User 1 abcdefghijklmnopqrstuvwxyz";
+        string tooLongName = "User 1 this is a really long name";
         string roomId = Guid.NewGuid().ToString();
         User user1 = new(Guid.NewGuid(), tooLongName) { Role = Role.Facilitator };
 
@@ -169,9 +169,9 @@ public abstract class RoomManagerTests<TRoomManager>
 
 
         Assert.NotNull(roomState);
-        Assert.Single(roomState.TeamMemebers);
-        Assert.Equal("2", roomState.TeamMemebers.Single().Vote);
-        Assert.Equal("1", roomState.TeamMemebers.Single().OriginalVote);
+        Assert.Single(roomState.TeamMembers);
+        Assert.Equal("2", roomState.TeamMembers.Single().Vote);
+        Assert.Equal("1", roomState.TeamMembers.Single().OriginalVote);
     }
 
     [Fact]
@@ -309,7 +309,8 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.NotNull(roomState);
         Assert.Single(roomState.Users);
-        Assert.Equal("Updated Name", roomState.Users.Single().Name);
+        User facilitatorUser = Assert.Single(roomState.Facilitators);
+        Assert.Equal("Updated Name", facilitatorUser.Name);
     }
 
     [Fact]
@@ -324,14 +325,15 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.NotNull(roomState);
         Assert.Single(roomState.Users);
-        Assert.Equal(Role.TeamMember, roomState.Users.Single().Role);
+        User teamMember = Assert.Single(roomState.TeamMembers);
+        Assert.Equal(Role.TeamMember, teamMember.Role);
     }
 
     [Fact]
     public async Task UpdateUserAsync_WithNameTooLong_TrimsName()
     {
         AutoMocker mocker = new();
-        string tooLongName = "User 1 abcdefghijklmnopqrstuvwxyz";
+        string tooLongName = "User 1 this is a really long name";
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, facilitator);
@@ -443,12 +445,12 @@ public abstract class RoomManagerTests<TRoomManager>
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, facilitator, teamMember);
-        User userToRemove = room.TeamMemebers.Single();
+        User userToRemove = room.TeamMembers.Single();
 
         RoomState? roomState = await sut.RemoveUserAsync(userToRemove.Id, facilitator);
 
         Assert.NotNull(roomState);
-        Assert.Empty(roomState.TeamMemebers);
+        Assert.Empty(roomState.TeamMembers);
         Assert.Equal(userToRemove.Id, roomState.Observers.Select(x => x.Id).Single());
     }
 
@@ -461,12 +463,12 @@ public abstract class RoomManagerTests<TRoomManager>
         string teamMember2 = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, facilitator, teamMember1, teamMember2);
-        User userToRemove = room.TeamMemebers.First();
+        User userToRemove = room.TeamMembers.First();
 
         RoomState? roomState = await sut.RemoveUserAsync(userToRemove.Id, teamMember2);
 
         Assert.NotNull(roomState);
-        Assert.Equal(2, roomState.TeamMemebers.Count);
+        Assert.Equal(2, roomState.TeamMembers.Count);
     }
 
     [Fact]
@@ -481,7 +483,7 @@ public abstract class RoomManagerTests<TRoomManager>
         RoomState? roomState = await sut.RemoveUserAsync(Guid.NewGuid(), facilitator);
 
         Assert.NotNull(roomState);
-        Assert.Equal(1, roomState.TeamMemebers.Count);
+        Assert.Single(roomState.TeamMembers);
     }
 
 

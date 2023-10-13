@@ -196,3 +196,13 @@ dotnet_style_prefer_auto_properties = true:silent
 dotnet_style_object_initializer = true:suggestion
 dotnet_style_collection_initializer = true:suggestion
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
+
+############################### 
+# Spell Check                 # 
+###############################
+# https://learn.microsoft.com/visualstudio/ide/text-spell-checker
+spelling_exclusion_path = .\exclusions.dic
+spelling_checkable_types = strings,identifiers,comments
+spelling_languages = en-us
+# This is only the level that spelling errors occur in the Error List, it is not actually a compile-time warning/error
+spelling_error_severity = warning
