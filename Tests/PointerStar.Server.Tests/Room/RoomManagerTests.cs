@@ -47,6 +47,24 @@ public abstract class RoomManagerTests<TRoomManager>
     }
 
     [Fact]
+    public async Task AddUserToRoomAsync_WithUserWithLongName_TrimsUsersName()
+    {
+        AutoMocker mocker = new();
+
+        string tooLongName = "User 1 abcdefghijklmnopqrstuvwxyz";
+        string roomId = Guid.NewGuid().ToString();
+        User user1 = new(Guid.NewGuid(), tooLongName) { Role = Role.Facilitator };
+
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+
+        RoomState roomState = await sut.AddUserToRoomAsync(roomId, user1, Guid.NewGuid().ToString());
+
+        Assert.True(tooLongName.Length > User.MaxNameLength);
+        Assert.Single(roomState.Users);
+        Assert.Equal(user1 with { Name = tooLongName[..User.MaxNameLength] }, roomState.Users[0]);
+    }
+
+    [Fact]
     public async Task DisconnectAsync_WithMultipleConnectedUser_RemovesFromCurrentRoom()
     {
         AutoMocker mocker = new();
@@ -287,6 +305,24 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.NotNull(roomState);
         Assert.Single(roomState.Users);
         Assert.Equal(Role.TeamMember, roomState.Users.Single().Role);
+    }
+
+    [Fact]
+    public async Task UpdateUserAsync_WithNameTooLong_TrimsName()
+    {
+        AutoMocker mocker = new();
+        string tooLongName = "User 1 abcdefghijklmnopqrstuvwxyz";
+        string facilitator = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator);
+
+        RoomState? roomState = await sut.UpdateUserAsync(new UserOptions { Name = tooLongName }, facilitator);
+
+        Assert.True(tooLongName.Length > User.MaxNameLength);
+
+        Assert.NotNull(roomState);
+        Assert.Single(roomState.Users);
+        Assert.Equal(tooLongName[..User.MaxNameLength], roomState.Users.Single().Name);
     }
 
     [Fact]
