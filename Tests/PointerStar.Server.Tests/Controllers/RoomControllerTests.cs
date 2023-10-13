@@ -31,12 +31,12 @@ public partial class RoomControllerTests : IClassFixture<WebApplicationFactory>
     public async Task GetNewUserRole_GetsRoleFromManager()
     {
         AutoMocker mocker = new();
-        mocker.Setup<IRoomManager, Task<Role>>(x => x.GetNewUserRoleAsync("myroom"))
+        mocker.Setup<IRoomManager, Task<Role>>(x => x.GetNewUserRoleAsync("room"))
             .ReturnsAsync(Role.TeamMember);
         Factory.UseService(mocker.Get<IRoomManager>());
         HttpClient client = Factory.CreateClient();
 
-        var role = await client.GetFromJsonAsync<Role>("/api/room/GetNewUserRole/myroom");
+        var role = await client.GetFromJsonAsync<Role>("/api/room/GetNewUserRole/room");
         
         Assert.Equal(Role.TeamMember, role);
     }

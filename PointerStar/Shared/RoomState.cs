@@ -2,7 +2,7 @@
 
 public record class RoomState(string RoomId, User[] Users)
 {
-    public IReadOnlyList<User> TeamMemebers
+    public IReadOnlyList<User> TeamMembers
         => Users.Where(u => u.Role == Role.TeamMember).ToList();
 
     public IReadOnlyList<User> Facilitators
