@@ -51,7 +51,7 @@ public abstract class RoomManagerTests<TRoomManager>
     {
         AutoMocker mocker = new();
 
-        string tooLongName = "User 1 this is a really long name";
+        string tooLongName = "User 1 this is a really, really, really, really, long name";
         string roomId = Guid.NewGuid().ToString();
         User user1 = new(Guid.NewGuid(), tooLongName) { Role = Role.Facilitator };
 
@@ -125,7 +125,7 @@ public abstract class RoomManagerTests<TRoomManager>
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
 
         _ = await sut.AddUserToRoomAsync(roomId, user, connectionId);
-        
+
         RoomState? roomState = await sut.SubmitVoteAsync("1", connectionId);
 
         Assert.NotNull(roomState);
@@ -188,7 +188,7 @@ public abstract class RoomManagerTests<TRoomManager>
 
         RoomState? roomState = await sut.SubmitVoteAsync("1", teamMember1);
         Assert.False(roomState?.VotesShown);
-        
+
         roomState = await sut.SubmitVoteAsync("1", teamMember2);
         Assert.True(roomState?.VotesShown);
     }
@@ -219,7 +219,7 @@ public abstract class RoomManagerTests<TRoomManager>
         string connectionId = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, connectionId);
-        
+
         RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
         {
             VotesShown = votesShown,
@@ -271,7 +271,7 @@ public abstract class RoomManagerTests<TRoomManager>
         _ = await sut.SubmitVoteAsync("1", teamMember2);
 
         RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions { AutoShowVotes = true }, facilitator);
-        
+
         Assert.True(roomState?.VotesShown);
     }
 
@@ -333,7 +333,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateUserAsync_WithNameTooLong_TrimsName()
     {
         AutoMocker mocker = new();
-        string tooLongName = "User 1 this is a really long name";
+        string tooLongName = "User 1 this is a really, really, really, really, long name";
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, facilitator);
@@ -355,7 +355,7 @@ public abstract class RoomManagerTests<TRoomManager>
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, facilitator, teamMember);
-        
+
         _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
         _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
 
@@ -374,7 +374,7 @@ public abstract class RoomManagerTests<TRoomManager>
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, facilitator, teamMember);
-        
+
         _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
         _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
 
@@ -421,7 +421,7 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.Equal(Role.TeamMember, role);
     }
-    
+
     [Fact]
     public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
     {
