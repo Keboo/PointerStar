@@ -34,7 +34,7 @@
     <PackageVersion Include="MudBlazor" Version="6.19.1" />
     <PackageVersion Include="Polly" Version="8.4.0" />
     <PackageVersion Include="Toolbelt.Blazor.PWA.Updater" Version="2.1.0.1" />
-    <PackageVersion Include="xunit" Version="2.8.0" />
+    <PackageVersion Include="xunit" Version="2.8.1" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
