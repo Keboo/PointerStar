@@ -13,4 +13,8 @@
     <PackageReference Update="Microsoft.NET.Test.Sdk" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
 </Project>
