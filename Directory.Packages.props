@@ -32,7 +32,7 @@
     <PackageVersion Include="Moq" Version="4.20.72" />
     <PackageVersion Include="Moq.AutoMock" Version="3.5.0" />
     <PackageVersion Include="MudBlazor" Version="7.15.0" />
-    <PackageVersion Include="Polly" Version="8.5.1" />
+    <PackageVersion Include="Polly" Version="8.5.2" />
     <PackageVersion Include="Toolbelt.Blazor.PWA.Updater" Version="3.0.1" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.1">
