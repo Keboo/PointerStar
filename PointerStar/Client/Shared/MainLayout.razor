@@ -26,8 +26,8 @@
     {
         if (firstRender && _mudThemeProvider is { } themeProvider)
         {
-            _isDarkMode = await themeProvider.GetSystemPreference();
-            await themeProvider.WatchSystemPreference(OnSystemPreferenceChanged);
+            _isDarkMode = await themeProvider.GetSystemDarkModeAsync();
+            await themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
             StateHasChanged();
         }
     }
