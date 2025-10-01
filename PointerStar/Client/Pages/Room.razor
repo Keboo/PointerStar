@@ -9,15 +9,25 @@
 
 <PageTitle>Pointer*</PageTitle>
 <div>
-    <MudGrid Style="margin:10px;width:unset">
+    <MudGrid Style="margin:10px">
         <MudItem xs="12">
             <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
-                <MudButton Variant="Variant.Outlined" Height="40px"
+                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
                            OnClick="() => ViewModel.OnClickClipboardAsync(Navigation.Uri)">
                     <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
                     Copy Invitation URL
                 </MudButton>
-                <MudButton Variant="Variant.Outlined"
+                <MudStack>
+                    <MudButton OnClick="@ToggleQRCode" 
+                               Variant="Variant.Text" 
+                               StartIcon="@(_showQRCode ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
+                        @(_showQRCode ? "Hide" : "Show") QR Code
+                    </MudButton>
+                    <MudCollapse Expanded="@_showQRCode">
+                        <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
+                    </MudCollapse>
+                </MudStack>
+                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
                            OnClick="() => ViewModel.ShowUserDialogAsync()">
                     <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
                     @ViewModel.Name
@@ -25,10 +35,6 @@
             </MudPaper>
 
         </MudItem>
-        <MudItem xs="12">
-            <MudDivider DividerType="DividerType.Middle" Class="my-6" />
-        </MudItem>
-
         @if (ViewModel.VoteStartTime is { } voteStartTime)
         {
             <MudItem xs="12">
@@ -211,6 +217,14 @@
 </div>
 
 @code {
+
+    private bool _showQRCode = false;
+
+    private void ToggleQRCode()
+    {
+        _showQRCode = !_showQRCode;
+        StateHasChanged();
+    }
 
     [Parameter]
     public string? RoomId { get; set; }
