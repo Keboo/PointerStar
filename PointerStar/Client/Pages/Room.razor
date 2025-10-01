@@ -11,28 +11,30 @@
 <div>
     <MudGrid Style="margin:10px">
         <MudItem xs="12">
-            <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
-                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
-                           OnClick="() => ViewModel.OnClickClipboardAsync(Navigation.Uri)">
-                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
-                    Copy Invitation URL
-                </MudButton>
-                <MudStack>
+            <MudStack Spacing="2">
+                <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
+                    <MudButton Variant="Variant.Outlined" Style="height: 40px;"
+                               OnClick="() => ViewModel.OnClickClipboardAsync(Navigation.Uri)">
+                        <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
+                        Copy Invitation URL
+                    </MudButton>
                     <MudButton OnClick="@ToggleQRCode" 
                                Variant="Variant.Text" 
                                StartIcon="@(_showQRCode ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
                         @(_showQRCode ? "Hide" : "Show") QR Code
                     </MudButton>
-                    <MudCollapse Expanded="@_showQRCode">
+                    <MudButton Variant="Variant.Outlined" Style="height: 40px;"
+                               OnClick="() => ViewModel.ShowUserDialogAsync()">
+                        <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
+                        @ViewModel.Name
+                    </MudButton>
+                </MudPaper>
+                <MudCollapse Expanded="@_showQRCode">
+                    <div style="display: flex; justify-content: center;">
                         <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
-                    </MudCollapse>
-                </MudStack>
-                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
-                           OnClick="() => ViewModel.ShowUserDialogAsync()">
-                    <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
-                    @ViewModel.Name
-                </MudButton>
-            </MudPaper>
+                    </div>
+                </MudCollapse>
+            </MudStack>
 
         </MudItem>
         @if (ViewModel.VoteStartTime is { } voteStartTime)
