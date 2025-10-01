@@ -26,6 +26,14 @@
 
         </MudItem>
         <MudItem xs="12">
+            <MudPaper Class="d-flex align-center gap-4" Elevation="0">
+                <div>
+                    <MudText Typo="Typo.body2">Scan to join on mobile:</MudText>
+                    <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12">
             <MudDivider DividerType="DividerType.Middle" Class="my-6" />
         </MudItem>
 
