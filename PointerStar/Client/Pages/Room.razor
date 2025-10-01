@@ -26,11 +26,18 @@
 
         </MudItem>
         <MudItem xs="12">
-            <MudPaper Class="d-flex align-center gap-4" Elevation="0">
-                <div>
-                    <MudText Typo="Typo.body2">Scan to join on mobile:</MudText>
-                    <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
-                </div>
+            <MudPaper Elevation="0">
+                <MudButton OnClick="@(() => _showQRCode = !_showQRCode)" 
+                           Variant="Variant.Text" 
+                           StartIcon="@(_showQRCode ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
+                    @(_showQRCode ? "Hide" : "Show") QR Code
+                </MudButton>
+                <MudCollapse Expanded="@_showQRCode">
+                    <div style="padding: 16px 0;">
+                        <MudText Typo="Typo.body2">Scan to join on mobile:</MudText>
+                        <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
+                    </div>
+                </MudCollapse>
             </MudPaper>
         </MudItem>
         <MudItem xs="12">
@@ -219,6 +226,8 @@
 </div>
 
 @code {
+
+    private bool _showQRCode = false;
 
     [Parameter]
     public string? RoomId { get; set; }
