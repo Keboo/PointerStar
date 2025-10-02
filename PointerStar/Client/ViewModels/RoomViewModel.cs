@@ -228,15 +228,12 @@ public partial class RoomViewModel : ViewModelBase
             { x => x.Name, Name },
             { x => x.SelectedRoleId, SelectedRoleId }
         };
-        if (await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options) is { } dialogReference)
+        if (await DialogService.ShowAsync<UserDialog>("Please Enter Your Name", parameters, options) is { } dialogReference &&
+            await dialogReference.Result is { Canceled: false, Data: UserDialogViewModel userViewModel })
         {
-            var dialogResult = await dialogReference.Result;
-            if (!dialogResult.Canceled && dialogResult.Data is UserDialogViewModel userViewModel)
-            {
-                Name = userViewModel.Name;
-                SelectedRoleId = userViewModel.SelectedRoleId;
-                await ConnectToRoomAsync();
-            }
+            Name = userViewModel.Name;
+            SelectedRoleId = userViewModel.SelectedRoleId;
+            await ConnectToRoomAsync();
         }
     }
 }

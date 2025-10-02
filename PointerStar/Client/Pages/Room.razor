@@ -8,213 +8,211 @@
 @page "/room/{RoomId}"
 
 <PageTitle>Pointer*</PageTitle>
-<div>
-    <MudGrid Style="margin:10px">
+<MudGrid Style="padding:10px">
+    <MudItem xs="12">
+        <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
+            <MudButton Variant="Variant.Outlined" Style="height: 40px;"
+                       OnClick="() => ViewModel.OnClickClipboardAsync(Navigation.Uri)">
+                <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
+                Copy Invitation URL
+            </MudButton>
+            <MudStack>
+                <MudButton OnClick="@ToggleQRCode"
+                           Variant="Variant.Text"
+                           StartIcon="@(_showQRCode ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
+                    @(_showQRCode ? "Hide" : "Show") QR Code
+                </MudButton>
+                <MudCollapse Expanded="@_showQRCode">
+                    <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
+                </MudCollapse>
+            </MudStack>
+            <MudButton Variant="Variant.Outlined" Style="height: 40px;"
+                       OnClick="() => ViewModel.ShowUserDialogAsync()">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
+                @ViewModel.Name
+            </MudButton>
+        </MudPaper>
+
+    </MudItem>
+    @if (ViewModel.VoteStartTime is { } voteStartTime)
+    {
         <MudItem xs="12">
-            <MudPaper Class="d-flex justify-space-between flex-grow-1 gap-4" Elevation="0">
-                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
-                           OnClick="() => ViewModel.OnClickClipboardAsync(Navigation.Uri)">
-                    <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Title="Copy" />
-                    Copy Invitation URL
-                </MudButton>
-                <MudStack>
-                    <MudButton OnClick="@ToggleQRCode" 
-                               Variant="Variant.Text" 
-                               StartIcon="@(_showQRCode ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)">
-                        @(_showQRCode ? "Hide" : "Show") QR Code
-                    </MudButton>
-                    <MudCollapse Expanded="@_showQRCode">
-                        <QRCode Data="@Navigation.Uri" PixelsPerModule="5" ImageStyle="border: 2px solid var(--mud-palette-divider); border-radius: 4px; padding: 8px; background: white;" />
-                    </MudCollapse>
-                </MudStack>
-                <MudButton Variant="Variant.Outlined" Style="height: 40px;"
-                           OnClick="() => ViewModel.ShowUserDialogAsync()">
-                    <MudIcon Icon="@Icons.Material.Filled.Edit" Title="Edit" />
-                    @ViewModel.Name
-                </MudButton>
-            </MudPaper>
-
+            <MudText>
+                Vote Time: @((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))
+            </MudText>
         </MudItem>
-        @if (ViewModel.VoteStartTime is { } voteStartTime)
-        {
-            <MudItem xs="12">
-                <MudText>
-                    Vote Time: @((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))
-                </MudText>
-            </MudItem>
-        }
-        @if (ViewModel.IsTeamMember)
-        {
-            <MudItem xs="12">
-                @foreach (string option in ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>())
-                {
-                    Color color = option == ViewModel.CurrentVote ? Color.Success : Color.Primary;
-                    <MudButton Class="d-inline-flex pa-4 vote-button" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
-                }
-            </MudItem>
-        }
-        else if (ViewModel.IsFacilitator)
-        {
-            <MudItem xs="12">
-                <MudStack Justify="Justify.FlexStart" Row="true">
-                    <MudSwitch @bind-Value="@ViewModel.VotesShown" Label="Show votes" Color="Color.Success" />
-                    <MudSwitch @bind-Value="@ViewModel.AutoShowVotes" Label="Automatically reveal votes" Color="Color.Info" />
-                    <MudSwitch @bind-Value="@ViewModel.PreviewVotes" Label="Preview votes" Color="Color.Info" />
-                    <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ViewModel.ResetVotesAsync">Reset Votes</MudButton>
-                </MudStack>
-            </MudItem>
-        }
-        else if (ViewModel.IsObserver)
-        {
-            <MudItem xs="12">
-                <MudStack Justify="Justify.FlexStart" Row="true">
-                    <MudSwitch @bind-Value="@ViewModel.PreviewVotes" Label="Preview votes" Color="Color.Info" />
-                </MudStack>
-            </MudItem>
-        }
-
-        @{
-            var teamMembers = ViewModel.RoomState?.TeamMembers ?? Enumerable.Empty<User>();
-            var facilitators = ViewModel.RoomState?.Facilitators ?? Enumerable.Empty<User>();
-            var observers = ViewModel.RoomState?.Observers ?? Enumerable.Empty<User>();
-        }
-
-        @if (ViewModel.VotesShown && ViewModel.RoomState is { } roomState)
-        {
-            var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
-            var groupedVotes = votes.GroupBy(x => x).OrderBy(x => Array.IndexOf(roomState.VoteOptions, x.Key)).ToArray();
-
-            int? maxVote = groupedVotes.Any() ? groupedVotes.Select(x => x.Count()).Max() : null;
-            int fontSize = 0;
-            @if (maxVote is not null)
+    }
+    @if (ViewModel.IsTeamMember)
+    {
+        <MudItem xs="12">
+            @foreach (string option in ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>())
             {
-                var percentageOfVote = (double)maxVote / teamMembers.Count();
-                fontSize = percentageOfVote switch
-                {
-                    >= 1.0 => 20,
-                    >= 0.9 => 16,
-                    >= 0.7 => 12,
-                    > 0.5 => 10,
-                    _ => 0
-                };
+                Color color = option == ViewModel.CurrentVote ? Color.Success : Color.Primary;
+                <MudButton Class="d-inline-flex pa-4 vote-button" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
             }
+        </MudItem>
+    }
+    else if (ViewModel.IsFacilitator)
+    {
+        <MudItem xs="12">
+            <MudStack Justify="Justify.FlexStart" Row="true">
+                <MudSwitch @bind-Value="@ViewModel.VotesShown" Label="Show votes" Color="Color.Success" />
+                <MudSwitch @bind-Value="@ViewModel.AutoShowVotes" Label="Automatically reveal votes" Color="Color.Info" />
+                <MudSwitch @bind-Value="@ViewModel.PreviewVotes" Label="Preview votes" Color="Color.Info" />
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ViewModel.ResetVotesAsync">Reset Votes</MudButton>
+            </MudStack>
+        </MudItem>
+    }
+    else if (ViewModel.IsObserver)
+    {
+        <MudItem xs="12">
+            <MudStack Justify="Justify.FlexStart" Row="true">
+                <MudSwitch @bind-Value="@ViewModel.PreviewVotes" Label="Preview votes" Color="Color.Info" />
+            </MudStack>
+        </MudItem>
+    }
 
-            <MudItem xs="12">
-                <MudCard Outlined="true">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Results</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudStack>
-                            @foreach (var group in groupedVotes)
-                            {
-                                var count = group.Count();
-                                double percentage = count / (double)votes.Length;
-                                string text = $"{(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)} - {count} Votes ({percentage:P0})";
-                                Typo textSize = count == maxVote ? Typo.body1 : Typo.body2;
-                                string barStyle = $"background-color: var({(count == maxVote ? "--mud-palette-primary-darken" : "--mud-palette-primary-lighten")});";
-                                <MudText Typo="@textSize">@text</MudText>
-                                <MudPaper Height="10px" Width="@($"{percentage:P0}")" Style="@barStyle" />
-                            }
-                        </MudStack>
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
+    @{
+        var teamMembers = ViewModel.RoomState?.TeamMembers ?? Enumerable.Empty<User>();
+        var facilitators = ViewModel.RoomState?.Facilitators ?? Enumerable.Empty<User>();
+        var observers = ViewModel.RoomState?.Observers ?? Enumerable.Empty<User>();
+    }
+
+    @if (ViewModel.VotesShown && ViewModel.RoomState is { } roomState)
+    {
+        var votes = teamMembers.Select(x => x.Vote).ToArray() ?? Array.Empty<string>();
+        var groupedVotes = votes.GroupBy(x => x).OrderBy(x => Array.IndexOf(roomState.VoteOptions, x.Key)).ToArray();
+
+        int? maxVote = groupedVotes.Any() ? groupedVotes.Select(x => x.Count()).Max() : null;
+        int fontSize = 0;
+        @if (maxVote is not null)
+        {
+            var percentageOfVote = (double)maxVote / teamMembers.Count();
+            fontSize = percentageOfVote switch
+            {
+                >= 1.0 => 20,
+                >= 0.9 => 16,
+                >= 0.7 => 12,
+                > 0.5 => 10,
+                _ => 0
+            };
         }
 
+        <MudItem xs="12">
+            <MudCard Outlined="true">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Results</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        @foreach (var group in groupedVotes)
+                        {
+                            var count = group.Count();
+                            double percentage = count / (double)votes.Length;
+                            string text = $"{(string.IsNullOrWhiteSpace(group.Key) ? "…" : group.Key)} - {count} Votes ({percentage:P0})";
+                            Typo textSize = count == maxVote ? Typo.body1 : Typo.body2;
+                            string barStyle = $"background-color: var({(count == maxVote ? "--mud-palette-primary-darken" : "--mud-palette-primary-lighten")});";
+                            <MudText Typo="@textSize">@text</MudText>
+                            <MudPaper Height="10px" Width="@($"{percentage:P0}")" Style="@barStyle" />
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Team Members</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                @if (teamMembers.Any())
+                {
+                    @foreach (var user in teamMembers)
+                    {
+                        <MudText>
+                            @if (ViewModel.IsFacilitator)
+                            {
+                                string tooltip = $"Make {user.Name} an Observer";
+                                <MudTooltip Text="@tooltip">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Surface" aria-label="Remove person"
+                                                   OnClick="() => ViewModel.RemoveUserAsync(user.Id)"></MudIconButton>
+                                </MudTooltip>
+                            }
+                            @user.Name
+                            @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
+                            {
+                                <span> - </span>
+                                if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
+                                {
+                                    <span class="original-vote-value">(@user.OriginalVote) </span>
+                                }
+                                <span class="vote-value">@user.Vote</span>
+                            }
+                            else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
+                            {
+                                <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
+                            }
+                            else
+                            {
+                                <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
+                            }
+
+                        </MudText>
+                    }
+                }
+                else
+                {
+                    <MudText>Waiting for team members to join...</MudText>
+                }
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @if (facilitators.Any())
+    {
         <MudItem xs="12">
             <MudCard>
                 <MudCardHeader>
                     <CardHeaderContent>
-                        <MudText Typo="Typo.h6">Team Members</MudText>
+                        <MudText Typo="Typo.h6">Facilitators</MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>
-                    @if (teamMembers.Any())
+                    @foreach (var user in facilitators)
                     {
-                        @foreach (var user in teamMembers)
-                        {
-                            <MudText>
-                                @if (ViewModel.IsFacilitator)
-                                {
-                                    string tooltip = $"Make {user.Name} an Observer";
-                                    <MudTooltip Text="@tooltip">
-                                        <MudIconButton Icon="@Icons.Material.Filled.PersonRemove" Color="Color.Surface" aria-label="Remove person"
-                                                       OnClick="() => ViewModel.RemoveUserAsync(user.Id)"></MudIconButton>
-                                    </MudTooltip>
-                                }
-                                @user.Name
-                                @if (ViewModel.VotesShown && !string.IsNullOrWhiteSpace(user.Vote))
-                                {
-                                    <span> - </span>
-                                    if (!string.IsNullOrWhiteSpace(user.OriginalVote) && user.OriginalVote != user.Vote)
-                                    {
-                                        <span class="original-vote-value">(@user.OriginalVote) </span>
-                                    }
-                                    <span class="vote-value">@user.Vote</span>
-                                }
-                                else if ((ViewModel.IsFacilitator || ViewModel.IsObserver) && ViewModel.PreviewVotes)
-                                {
-                                    <span class="vote-preview"> - @(string.IsNullOrEmpty(user.Vote) ? "…" : @user.Vote)</span>
-                                }
-                                else
-                                {
-                                    <span> - @(string.IsNullOrEmpty(user.Vote) ? "…" : "✓")</span>
-                                }
-
-                            </MudText>
-                        }
-                    }
-                    else
-                    {
-                        <MudText>Waiting for team members to join...</MudText>
+                        <MudText>@user.Name</MudText>
                     }
                 </MudCardContent>
             </MudCard>
         </MudItem>
+    }
 
-        @if (facilitators.Any())
-        {
-            <MudItem xs="12">
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Facilitators</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        @foreach (var user in facilitators)
-                        {
-                            <MudText>@user.Name</MudText>
-                        }
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
+    @if (observers.Any())
+    {
+        <MudItem xs="12">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Observers</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    @foreach (var user in observers)
+                    {
+                        <MudText>@user.Name</MudText>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
 
-        @if (observers.Any())
-        {
-            <MudItem xs="12">
-                <MudCard>
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6">Observers</MudText>
-                        </CardHeaderContent>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        @foreach (var user in observers)
-                        {
-                            <MudText>@user.Name</MudText>
-                        }
-                    </MudCardContent>
-                </MudCard>
-            </MudItem>
-        }
-
-    </MudGrid>
-</div>
+</MudGrid>
 
 @code {
 
