@@ -47,28 +47,6 @@ else
 app.UseHttpsRedirection();
 
 app.UseBlazorFrameworkFiles();
-
-// Add middleware to prevent caching of critical files for PWA updates
-app.Use(async (context, next) =>
-{
-    var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
-    
-    // Prevent caching of service worker files and index.html to ensure updates are detected
-    if (path.EndsWith("service-worker.js") || 
-        path.EndsWith("service-worker.published.js") || 
-        path.EndsWith("service-worker-assets.js") || 
-        path.EndsWith("index.html") ||
-        path == "/" || 
-        path == "")
-    {
-        context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-        context.Response.Headers.Pragma = "no-cache";
-        context.Response.Headers.Expires = "0";
-    }
-    
-    await next();
-});
-
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -79,7 +57,7 @@ app.MapControllers();
 
 app.MapHub<RoomHub>($"/{nameof(RoomHub)}");
 
-app.MapFallbackToFile("index.html");
+app.MapFallbackToPage("/_Host");
 
 app.Run();
 
