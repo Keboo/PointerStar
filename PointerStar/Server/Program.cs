@@ -57,7 +57,7 @@ app.MapControllers();
 
 app.MapHub<RoomHub>($"/{nameof(RoomHub)}");
 
-app.MapFallbackToFile("index.html");
+app.MapFallbackToPage("/_Host");
 
 app.Run();
 
