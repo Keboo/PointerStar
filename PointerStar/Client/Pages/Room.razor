@@ -45,10 +45,10 @@
     @if (ViewModel.IsTeamMember)
     {
         <MudItem xs="12">
-            @foreach (string option in ViewModel.RoomState?.VoteOptions ?? Enumerable.Empty<string>())
+            @foreach (string option in ViewModel.RoomState?.VoteOptions ?? [])
             {
                 Color color = option == ViewModel.CurrentVote ? Color.Success : Color.Primary;
-                <MudButton Class="d-inline-flex pa-4 vote-button" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
+                <MudButton Class="d-inline-flex pa-4 vote-button" Style="margin: 5px" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
             }
         </MudItem>
     }
