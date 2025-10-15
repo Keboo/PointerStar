@@ -6,12 +6,12 @@ public class InMemoryRoomManager : IRoomManager
     private ConcurrentDictionary<string, SemaphoreSlim> RoomLocks { get; } = new();
     private ConcurrentDictionary<string, RoomState> Rooms { get; } = new();
     private ConcurrentDictionary<string, string> ConnectionsToRoom { get; } = new();
-    private ConcurrentDictionary<string, User> ConnectionsToUser { get; } = new();
+    private ConcurrentDictionary<string, Guid> ConnectionsToUserId { get; } = new();
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
     {
         ConnectionsToRoom.AddOrUpdate(connectionId, roomId, (_, _) => roomId);
-        ConnectionsToUser.AddOrUpdate(connectionId, user, (_, _) => user);
+        ConnectionsToUserId.AddOrUpdate(connectionId, user.Id, (_, _) => user.Id);
 
         if (user.Name.Length > User.MaxNameLength)
         {
@@ -21,14 +21,14 @@ public class InMemoryRoomManager : IRoomManager
         return WithRoomLock(roomId, () =>
         {
             RoomState rv = Rooms.AddOrUpdate(roomId,
-                new RoomState(roomId, new[] { user }),
+                new RoomState(roomId, [user]),
             (_, roomState) =>
             {
                 return roomState with
                 {
-                    Users = roomState.Users
+                    Users = [..roomState.Users
                         .Where(u => u.Id != user.Id)
-                        .Append(user).ToArray()
+                        .Append(user)]
                 };
             });
             return Task.FromResult(rv);
@@ -40,8 +40,8 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, currentUser) =>
         {
-            User[] users = room.Users.Where(x => x.Id != currentUser.Id).ToArray();
-            if (users.Any())
+            User[] users = [..room.Users.Where(x => x.Id != currentUser.Id)];
+            if (users.Length != 0)
             {
                 return room with { Users = users };
             }
@@ -83,7 +83,7 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, currentUser) =>
         {
-            User[] users = room.Users.Select(x =>
+            User[] users = [..room.Users.Select(x =>
             {
                 if (x.Id == currentUser.Id)
                 {
@@ -101,7 +101,7 @@ public class InMemoryRoomManager : IRoomManager
                     }
                 }
                 return x;
-            }).ToArray();
+            })];
             return room with { Users = users };
         });
     }
@@ -116,11 +116,11 @@ public class InMemoryRoomManager : IRoomManager
             }
             var roomState = room with
             {
-                Users = room.Users.Select(u => u.Id == currentUser.Id ? u with
+                Users = [..room.Users.Select(u => u.Id == currentUser.Id ? u with
                 {
                     OriginalVote = room.VotesShown ? u.OriginalVote : vote,
                     Vote = vote
-                } : u).ToArray()
+                } : u)]
             };
 
             if (ShouldShowVotes(roomState))
@@ -187,20 +187,21 @@ public class InMemoryRoomManager : IRoomManager
     private Task<RoomState?> WithConnection(string connectionId, Func<RoomState, User, RoomState?> updateRoom)
     {
         if (ConnectionsToRoom.TryGetValue(connectionId, out string? roomId) &&
-            ConnectionsToUser.TryGetValue(connectionId, out User? user))
+            ConnectionsToUserId.TryGetValue(connectionId, out Guid userId))
         {
-            return WithExistingRoom(roomId, room => updateRoom(room, user));
+            return WithExistingRoom(roomId, userId, (room, user) => updateRoom(room, user));
         }
         return Task.FromResult<RoomState?>(null);
     }
 
-    private Task<RoomState?> WithExistingRoom(string roomId, Func<RoomState, RoomState?> updateRoom)
+    private Task<RoomState?> WithExistingRoom(string roomId, Guid userId, Func<RoomState, User, RoomState?> updateRoom)
     {
         return WithRoomLock(roomId, () =>
         {
-            if (Rooms.TryGetValue(roomId, out RoomState? existingRoom))
+            if (Rooms.TryGetValue(roomId, out RoomState? existingRoom) &&
+                existingRoom.Users.SingleOrDefault(x => x.Id == userId) is { } user)
             {
-                RoomState? updatedRoom = updateRoom(existingRoom);
+                RoomState? updatedRoom = updateRoom(existingRoom, user);
                 if (updatedRoom is not null)
                 {
                     if (Rooms.TryUpdate(roomId, updatedRoom, existingRoom))

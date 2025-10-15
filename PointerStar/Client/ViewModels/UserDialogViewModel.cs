@@ -22,10 +22,6 @@ public partial class UserDialogViewModel : ViewModelBase
     public void SelectRole(Role? role)
     {
         SelectedRoleId = role?.Id;
-        if(RoomHubConnection.IsConnected)
-        {
-            RoomHubConnection.UpdateUserAsync(new UserOptions { Name = Name, Role = role });
-        }
     }
 
     public async Task LoadRoomDataAsync(string? roomId)

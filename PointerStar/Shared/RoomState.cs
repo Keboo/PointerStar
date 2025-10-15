@@ -3,13 +3,13 @@
 public record class RoomState(string RoomId, User[] Users)
 {
     public IReadOnlyList<User> TeamMembers
-        => Users.Where(u => u.Role == Role.TeamMember).ToList();
+        => [.. Users.Where(u => u.Role == Role.TeamMember)];
 
     public IReadOnlyList<User> Facilitators
-        => Users.Where(u => u.Role == Role.Facilitator).ToList();
+        => [.. Users.Where(u => u.Role == Role.Facilitator)];
 
     public IReadOnlyList<User> Observers
-        => Users.Where(u => u.Role == Role.Observer).ToList();
+        => [.. Users.Where(u => u.Role == Role.Observer)];
 
     public bool VotesShown { get; init; }
     //We want the default to be true so new facilitators have this on by default
@@ -24,9 +24,6 @@ public record class RoomState(string RoomId, User[] Users)
         "8",
         "13",
         "21",
-        "34",
-        "55",
-        "89",
         "Abstain",
         "?"
     };
