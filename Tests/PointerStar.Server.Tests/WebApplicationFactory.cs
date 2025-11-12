@@ -6,7 +6,7 @@ namespace PointerStar.Server.Tests;
 
 public class WebApplicationFactory : WebApplicationFactory<Program>
 {
-    private List<ServiceDescriptor> AdditionalServices { get; } = new();
+    private List<ServiceDescriptor> AdditionalServices { get; } = [];
     
     public void UseService<TInterface>(TInterface instance)
         where TInterface : notnull

@@ -1,6 +1,6 @@
 ﻿namespace PointerStar.Shared;
 
-public record class RoomState(string RoomId, User[] Users)
+public sealed record class RoomState(string RoomId, User[] Users)
 {
     public IReadOnlyList<User> TeamMembers
         => [.. Users.Where(u => u.Role == Role.TeamMember)];
@@ -30,7 +30,7 @@ public record class RoomState(string RoomId, User[] Users)
     public DateTime? VoteStartTime { get; init; }
 }
 
-public record class User(Guid Id, string Name)
+public sealed record class User(Guid Id, string Name)
 {
     public const int MaxNameLength = 40;
 
@@ -39,7 +39,7 @@ public record class User(Guid Id, string Name)
     public Role Role { get; init; } = Role.TeamMember;
 }
 
-public record class Role(Guid Id, string Name)
+public sealed record class Role(Guid Id, string Name)
 {
     private static readonly Guid FacilitatorId = new("5fea7d71-fb62-405c-823c-09752c684bf0");
     private static readonly Guid TeamMemberId = new("116b133b-b16d-4a92-a3ce-ae53688e973c");
