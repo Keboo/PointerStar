@@ -113,8 +113,8 @@ public partial class RoomViewModelTests
         viewModel.RoomId = "RoomId";
         await viewModel.OnInitializedAsync();
         viewModel.Name = "Foo";
-        var roomState = new RoomState("roomId", new[] { new User(Guid.NewGuid(), "Test") });
-        mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null, roomState);
+        var roomState = new RoomState("roomId", [new User(Guid.NewGuid(), "Test")]);
+        mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null!, roomState);
 
         viewModel.Name = "New Name";
         viewModel.SelectedRoleId = Role.Observer.Id;
@@ -165,7 +165,7 @@ public partial class RoomViewModelTests
         viewModel.RoomId = "RoomId";
         await viewModel.OnInitializedAsync();
         User facilitator = new(Guid.NewGuid(), "Facilitator") { Role = Role.Facilitator };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { facilitator })
+        RoomState roomState = new(Guid.NewGuid().ToString(), [facilitator])
         {
             VoteStartTime = DateTime.UtcNow.AddMinutes(-1)
         };
@@ -174,7 +174,7 @@ public partial class RoomViewModelTests
 
         //We expect a timer or similar to trigger state changes to make it appear as though the timer is updating
         ManualResetEventSlim mre = new(false);
-        viewModel.PropertyChanged += (object? _, PropertyChangedEventArgs e) =>
+        viewModel.PropertyChanged += (_, e) =>
         {
             mre.Set();
         };
@@ -272,7 +272,7 @@ public partial class RoomViewModelTests
     {
         AutoMocker mocker = new();
         User facilitator = new(Guid.NewGuid(), "Facilitator") { Role = Role.Facilitator };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { facilitator });
+        RoomState roomState = new(Guid.NewGuid().ToString(), [facilitator]);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         viewModel.CurrentUserId = facilitator.Id;
         WithRoomState(mocker, roomState);
@@ -288,7 +288,7 @@ public partial class RoomViewModelTests
     {
         AutoMocker mocker = new();
         User teamMember = new(Guid.NewGuid(), "Team Member") { Role = Role.TeamMember };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { teamMember });
+        RoomState roomState = new(Guid.NewGuid().ToString(), [teamMember]);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         viewModel.CurrentUserId = teamMember.Id;
         WithRoomState(mocker, roomState);
@@ -304,7 +304,7 @@ public partial class RoomViewModelTests
     {
         AutoMocker mocker = new();
         User observer = new(Guid.NewGuid(), "Observer") { Role = Role.Observer };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { observer });
+        RoomState roomState = new(Guid.NewGuid().ToString(), [observer]);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         viewModel.CurrentUserId = observer.Id;
         WithRoomState(mocker, roomState);
@@ -366,7 +366,7 @@ public partial class RoomViewModelTests
         AutoMocker mocker = new();
         mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
         User teamMember = new(Guid.NewGuid(), "Team Member") { Role = Role.TeamMember };
-        RoomState roomState = new(Guid.NewGuid().ToString(), new[] { teamMember });
+        RoomState roomState = new(Guid.NewGuid().ToString(), [teamMember]);
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
         WithRoomState(mocker, roomState);
 
@@ -390,7 +390,5 @@ public partial class RoomViewModelTests
     }
 
     private static void WithRoomState(AutoMocker mocker, RoomState roomState)
-    {
-        mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null, roomState);
-    }
+        => mocker.GetMock<IRoomHubConnection>().Raise(x => x.RoomStateUpdated += null, null!, roomState);
 }

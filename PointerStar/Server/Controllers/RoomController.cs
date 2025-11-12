@@ -1,4 +1,4 @@
-﻿using HashidsNet;
+using HashidsNet;
 using Microsoft.AspNetCore.Mvc;
 using PointerStar.Server.Room;
 using PointerStar.Shared;
@@ -7,18 +7,11 @@ namespace PointerStar.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class RoomController : ControllerBase
+public class RoomController(Hashids hashIds, IRoomManager roomManager) : ControllerBase
 {
     private static readonly Random Random = new();
-    private Hashids HashIds { get; }
-    private IRoomManager RoomManager { get; }
-
-    public RoomController(Hashids hashIds, IRoomManager roomManager)
-    {
-        HashIds = hashIds ?? throw new ArgumentNullException(nameof(hashIds));
-        RoomManager = roomManager ?? throw new ArgumentNullException(nameof(roomManager));
-    }
-
+    private Hashids HashIds { get; } = hashIds ?? throw new ArgumentNullException(nameof(hashIds));
+    private IRoomManager RoomManager { get; } = roomManager ?? throw new ArgumentNullException(nameof(roomManager));
 
     [HttpGet("Generate")]
     public string Generate()

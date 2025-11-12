@@ -5,14 +5,9 @@ using PointerStar.Shared;
 namespace PointerStar.Server.Tests.Controllers;
 
 [ConstructorTests(typeof(RoomController))]
-public partial class RoomControllerTests : IClassFixture<WebApplicationFactory>
+public partial class RoomControllerTests(WebApplicationFactory factory) : IClassFixture<WebApplicationFactory>
 {
-    private WebApplicationFactory Factory { get; }
-
-    public RoomControllerTests(WebApplicationFactory factory)
-    {
-        Factory = factory;
-    }
+    private WebApplicationFactory Factory { get; } = factory;
 
     [Fact]
     public async Task Generate_ReturnsUniqueStrings()
