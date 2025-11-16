@@ -5,6 +5,7 @@ using MudBlazor;
 using MudBlazor.Services;
 using PointerStar.Client;
 using PointerStar.Client.Cookies;
+using PointerStar.Client.Services;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 using Toolbelt.Blazor.Extensions.DependencyInjection;
@@ -34,5 +35,6 @@ builder.Services.AddScoped<RoomViewModel>();
 builder.Services.AddScoped<UserDialogViewModel>();
 builder.Services.AddScoped<ICookie, Cookie>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
+builder.Services.AddScoped<IThemeService, ThemeService>();
 
 await builder.Build().RunAsync();
