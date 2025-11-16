@@ -5,23 +5,26 @@
 <MudDialog>
     <DialogContent>
         <MudStack>
-            <MudTextField @bind-Value="ViewModel.Name" Label="Name" Variant="Variant.Text" MaxLength=User.MaxNameLength FullWidth=true></MudTextField>
+            <MudTextField @bind-Value="ViewModel.TempName" Label="Name" Variant="Variant.Text" MaxLength=User.MaxNameLength FullWidth=true Disabled="ViewModel.IsLoading"></MudTextField>
             <MudStack Row=true>
                 <MudText>I want to...</MudText>
                 <MudButtonGroup OverrideStyles="false">
                     <MudButton Color="Color.Primary"
-                               Variant="@(ViewModel.SelectedRoleId == Role.TeamMember.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.TeamMember)">
+                               Variant="@(ViewModel.TempSelectedRoleId == Role.TeamMember.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.TeamMember)"
+                               Disabled="ViewModel.IsLoading">
                         Vote
                     </MudButton>
                     <MudButton Color="Color.Primary"
-                               Variant="@(ViewModel.SelectedRoleId == Role.Facilitator.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.Facilitator)">
+                               Variant="@(ViewModel.TempSelectedRoleId == Role.Facilitator.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.Facilitator)"
+                               Disabled="ViewModel.IsLoading">
                         Facilitate
                     </MudButton>
                     <MudButton Color="Color.Primary"
-                               Variant="@(ViewModel.SelectedRoleId == Role.Observer.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.Observer)">
+                               Variant="@(ViewModel.TempSelectedRoleId == Role.Observer.Id ? Variant.Filled : Variant.Outlined)"
+                               OnClick="() => ViewModel.SelectRole(Role.Observer)"
+                               Disabled="ViewModel.IsLoading">
                         Observe
                     </MudButton>
                 </MudButtonGroup>
@@ -29,8 +32,8 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+        <MudButton OnClick="Cancel" Disabled="ViewModel.IsLoading">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="ViewModel.IsLoading">Ok</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -44,14 +47,18 @@
     [Parameter]
     public Guid? SelectedRoleId { get; set; }
 
-    private void Submit() => MudDialog?.Close(DialogResult.Ok(ViewModel));
+    private void Submit()
+    {
+        ViewModel.Commit();
+        MudDialog?.Close(DialogResult.Ok(ViewModel));
+    }
+    
     private void Cancel() => MudDialog?.Cancel();
 
     protected override async Task OnParametersSetAsync()
     {
         await base.OnParametersSetAsync();
-        ViewModel.Name = Name;
-        ViewModel.SelectedRoleId = SelectedRoleId;
+        ViewModel.InitializeFromCurrent(Name, SelectedRoleId);
         await ViewModel.LoadRoomDataAsync(RoomId);
     }
 }
