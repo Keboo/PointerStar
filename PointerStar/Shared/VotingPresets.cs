@@ -1,5 +1,8 @@
 namespace PointerStar.Shared;
 
+/// <summary>
+/// Pre-defined voting option presets for common pointing poker scales.
+/// </summary>
 public static class VotingPresets
 {
     public static string[] Fibonacci { get; } =
