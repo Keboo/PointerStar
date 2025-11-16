@@ -15,18 +15,7 @@ public sealed record class RoomState(string RoomId, User[] Users)
     //We want the default to be true so new facilitators have this on by default
     public bool AutoShowVotes { get; init; } = true;
 
-    public string[] VoteOptions { get; init; } =
-    [
-        "1",
-        "2",
-        "3",
-        "5",
-        "8",
-        "13",
-        "21",
-        "Abstain",
-        "?"
-    ];
+    public string[] VoteOptions { get; init; } = VotingPresets.Fibonacci;
     public DateTime? VoteStartTime { get; init; }
 }
 
