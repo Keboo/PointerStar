@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Hashids.net" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
   </ItemGroup>
 
