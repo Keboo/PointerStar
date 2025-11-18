@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.5.33103.201
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11206.111 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Server", "PointerStar\Server\PointerStar.Server.csproj", "{A355C71D-158E-47A8-9C77-8B55C6DF9A5E}"
 EndProject
@@ -36,6 +36,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Server.Tests", "Tests\PointerStar.Server.Tests\PointerStar.Server.Tests.csproj", "{6521C77B-AC31-4F1B-8EC5-FB7174D7BF1C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PointerStar.Shared.Tests", "Tests\PointerStar.Shared.Tests\PointerStar.Shared.Tests.csproj", "{63BFF661-B487-4447-8245-BD016F75631C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{1E473559-F1C4-4748-B7BC-DC74E2DE0BF6}"
+	ProjectSection(SolutionItems) = preProject
+		docs\KustoQueries.md = docs\KustoQueries.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,6 +81,7 @@ Global
 		{11AF6C7D-6EC6-45B7-82E5-F815AE5A3721} = {566CC054-6689-479D-BB64-26F2CB2BA43B}
 		{6521C77B-AC31-4F1B-8EC5-FB7174D7BF1C} = {566CC054-6689-479D-BB64-26F2CB2BA43B}
 		{63BFF661-B487-4447-8245-BD016F75631C} = {566CC054-6689-479D-BB64-26F2CB2BA43B}
+		{1E473559-F1C4-4748-B7BC-DC74E2DE0BF6} = {2EAFC20C-739A-4CC0-AB81-5DEEB7C407BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FBEB6B9F-F8F5-42C1-9734-668FA9C44687}

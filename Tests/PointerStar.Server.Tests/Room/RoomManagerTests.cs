@@ -11,6 +11,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task AddUserToRoomAsync_WithNewRoom_CreatesNewRoom()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
@@ -30,6 +31,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task AddUserToRoomAsync_WithUser_AddsToExistingRoom()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         User user1 = new(Guid.NewGuid(), "User 1") { Role = Role.Facilitator };
@@ -50,6 +52,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task AddUserToRoomAsync_WithUserWithLongName_TrimsUsersName()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string tooLongName = "User 1 this is a really, really, really, really, long name";
         string roomId = Guid.NewGuid().ToString();
@@ -68,6 +71,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task DisconnectAsync_WithMultipleConnectedUser_RemovesFromCurrentRoom()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId1 = Guid.NewGuid().ToString();
@@ -89,6 +93,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task DisconnectAsync_WithLastConnectedUser_RemovesRoom()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
@@ -105,6 +110,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task DisconnectAsync_WithDisconnectedUser_ReturnsNull()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string connectionId = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -118,6 +124,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task SubmitVoteAsync_WithConnectedUser_UpdatesVote()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
@@ -138,6 +145,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task SubmitVoteAsync_WithInvalidVoteOption_DoesNotUpdateVote()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId = Guid.NewGuid().ToString();
@@ -158,6 +166,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task SubmitVoteAsync_AfterVotesShown_UpdatesVote()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember1 = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -178,6 +188,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task SubmitVoteAsync_WithAutoShowVotes_ShowsVotesWhenAllTeamMembersHaveVoted()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember1 = Guid.NewGuid().ToString();
         string teamMember2 = Guid.NewGuid().ToString();
@@ -197,6 +209,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task SubmitVoteAsync_WithDisconnectedUser_ReturnsNull()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string connectionId = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -216,6 +229,8 @@ public abstract class RoomManagerTests<TRoomManager>
         bool expectedVotesShown, bool expectedAutoShowVotes)
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string connectionId = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, connectionId);
@@ -235,6 +250,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_WithTeamMemberUser_DoesNotUpdateRoom()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
 
         string roomId = Guid.NewGuid().ToString();
         string connectionId1 = Guid.NewGuid().ToString();
@@ -261,6 +277,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_WithAutoShowVotesAfterAllVotesCast_RevealsVotes()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember1 = Guid.NewGuid().ToString();
         string teamMember2 = Guid.NewGuid().ToString();
@@ -279,6 +297,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_HidingShownVotesWithAutoRevealEnabled_DisablesAutoRevealAndHidesVotes()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember1 = Guid.NewGuid().ToString();
         string teamMember2 = Guid.NewGuid().ToString();
@@ -301,6 +321,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateUserAsync_WithName_UpdatesUsers()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, facilitator);
@@ -317,6 +339,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateUserAsync_WithRole_UpdatesUser()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, facilitator);
@@ -333,6 +357,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateUserAsync_WithNameTooLong_TrimsName()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string tooLongName = "User 1 this is a really, really, really, really, long name";
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -351,6 +377,9 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task ResetVotes_WithFacilitator_ClearsAllVotes()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -370,6 +399,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task ResetVotes_WithTeamMember_DoesNotReset()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -389,6 +420,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task GetNewUserRoleAsync_WithNewRoom_ReturnsFacilitator()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
 
         Role role= await sut.GetNewUserRoleAsync("unknownId");
@@ -400,6 +433,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task GetNewUserRoleAsync_WithoutFacilitatorsInTheRoom_ReturnsFacilitator()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         string roomId = Guid.NewGuid().ToString();
         User user = new(Guid.NewGuid(), "Team Member");
@@ -414,6 +449,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task GetNewUserRoleAsync_WithExistingFacilitator_ReturnsTeamMember()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, Guid.NewGuid().ToString());
 
@@ -426,6 +463,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task ResetVotes_WithFacilitator_StopsVotingTimer()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -441,6 +480,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task RemoveUserAsync_WithFacilitator_MovesTeamMemberToObserver()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
@@ -458,6 +499,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task RemoveUserAsync_WithTeamMember_DoesNothing()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember1 = Guid.NewGuid().ToString();
         string teamMember2 = Guid.NewGuid().ToString();
@@ -475,6 +518,8 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task RemoveUserAsync_WithUnknownUserId_DoesNothing()
     {
         AutoMocker mocker = new();
+        mocker.AddApplicationInsights();
+
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();

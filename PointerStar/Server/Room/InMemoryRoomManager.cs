@@ -1,4 +1,6 @@
 ﻿using PointerStar.Shared;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
 
 namespace PointerStar.Server.Room;
 public class InMemoryRoomManager : IRoomManager
@@ -7,6 +9,12 @@ public class InMemoryRoomManager : IRoomManager
     private ConcurrentDictionary<string, RoomState> Rooms { get; } = new();
     private ConcurrentDictionary<string, string> ConnectionsToRoom { get; } = new();
     private ConcurrentDictionary<string, Guid> ConnectionsToUserId { get; } = new();
+    private TelemetryClient TelemetryClient { get; }
+
+    public InMemoryRoomManager(TelemetryClient telemetryClient)
+    {
+        TelemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
+    }
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
     {
@@ -20,6 +28,8 @@ public class InMemoryRoomManager : IRoomManager
 
         return WithRoomLock(roomId, () =>
         {
+            bool isNewRoom = !Rooms.ContainsKey(roomId);
+            
             RoomState rv = Rooms.AddOrUpdate(roomId,
                 new RoomState(roomId, [user]),
             (_, roomState) =>
@@ -31,6 +41,27 @@ public class InMemoryRoomManager : IRoomManager
                         .Append(user)]
                 };
             });
+
+            // Track room creation
+            if (isNewRoom)
+            {
+                TelemetryClient?.TrackEvent("RoomCreated", new Dictionary<string, string>
+                {
+                    { "RoomId", roomId }
+                });
+            }
+
+            // Track user connection
+            TelemetryClient?.TrackEvent("UserConnected", new Dictionary<string, string>
+            {
+                { "RoomId", roomId },
+                { "UserId", user.Id.ToString() },
+                { "UserRole", user.Role.Name }
+            });
+
+            // Track room user count metric
+            TelemetryClient?.GetMetric("RoomUserCount", "RoomId").TrackValue(rv.Users.Length, roomId);
+
             return Task.FromResult(rv);
         });
 
@@ -41,8 +72,19 @@ public class InMemoryRoomManager : IRoomManager
         return WithConnection(connectionId, (room, currentUser) =>
         {
             User[] users = [..room.Users.Where(x => x.Id != currentUser.Id)];
+            
+            // Track user disconnection
+            TelemetryClient?.TrackEvent("UserDisconnected", new Dictionary<string, string>
+            {
+                { "RoomId", room.RoomId },
+                { "UserId", currentUser.Id.ToString() },
+                { "UserRole", currentUser.Role.Name }
+            });
+
             if (users.Length != 0)
             {
+                // Track remaining user count
+                TelemetryClient?.GetMetric("RoomUserCount", "RoomId").TrackValue(users.Length, room.RoomId);
                 return room with { Users = users };
             }
             return null;
@@ -141,6 +183,14 @@ public class InMemoryRoomManager : IRoomManager
             if (currentUser.Role == Role.Facilitator)
             {
                 User[] users = room.Users.Select(u => u with { Vote = null }).ToArray();
+                
+                // Track vote reset (indicates active pointing session)
+                TelemetryClient?.TrackEvent("VotesReset", new Dictionary<string, string>
+                {
+                    { "RoomId", room.RoomId },
+                    { "FacilitatorId", currentUser.Id.ToString() }
+                });
+
                 return room with
                 {
                     Users = users,
