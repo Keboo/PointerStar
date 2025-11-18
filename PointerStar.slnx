@@ -1,0 +1,27 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="Directory.Packages.props" />
+    <File Path="exclusions.dic" />
+    <File Path="NuGet.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Solution Items/.github/">
+    <File Path=".github/dependabot.yml" />
+    <File Path=".github/workflows/main_pointerstar.yml" />
+  </Folder>
+  <Folder Name="/Solution Items/docs/">
+    <File Path="docs/KustoQueries.md" />
+  </Folder>
+  <Folder Name="/Test/">
+    <File Path="Tests/Directory.Build.props" />
+    <Project Path="Tests/PointerStar.Client.Tests/PointerStar.Client.Tests.csproj" />
+    <Project Path="Tests/PointerStar.Server.Tests/PointerStar.Server.Tests.csproj" />
+    <Project Path="Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj" />
+  </Folder>
+  <Project Path="PointerStar/Client/PointerStar.Client.csproj" />
+  <Project Path="PointerStar/Server/PointerStar.Server.csproj" />
+  <Project Path="PointerStar/Shared/PointerStar.Shared.csproj" />
+</Solution>
