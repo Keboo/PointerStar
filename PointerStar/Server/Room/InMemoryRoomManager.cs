@@ -9,15 +9,11 @@ public class InMemoryRoomManager : IRoomManager
     private ConcurrentDictionary<string, RoomState> Rooms { get; } = new();
     private ConcurrentDictionary<string, string> ConnectionsToRoom { get; } = new();
     private ConcurrentDictionary<string, Guid> ConnectionsToUserId { get; } = new();
-    private TelemetryClient? TelemetryClient { get; }
+    private TelemetryClient TelemetryClient { get; }
 
-    public InMemoryRoomManager() : this(null)
+    public InMemoryRoomManager(TelemetryClient telemetryClient)
     {
-    }
-
-    public InMemoryRoomManager(TelemetryClient? telemetryClient)
-    {
-        TelemetryClient = telemetryClient;
+        TelemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
     }
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)

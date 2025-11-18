@@ -117,15 +117,28 @@ let maxUsers = customMetrics
 let sessions = customEvents
     | where name == "VotesReset"
     | summarize PointingSessions = count() by Month = startofmonth(timestamp);
+let roomActivity = customEvents
+    | where name in ("UserConnected", "UserDisconnected")
+    | extend RoomId = tostring(customDimensions.RoomId)
+    | summarize 
+        FirstActivity = min(timestamp), 
+        LastActivity = max(timestamp),
+        EventCount = count()
+        by RoomId
+    | where EventCount >= 2
+    | extend DurationMinutes = datetime_diff('minute', LastActivity, FirstActivity)
+    | summarize AvgDurationMinutes = avg(DurationMinutes) by Month = startofmonth(FirstActivity);
 roomCreations
 | join kind=fullouter maxUsers on Month
 | join kind=fullouter sessions on Month
+| join kind=fullouter roomActivity on Month
 | project 
-    Month = coalesce(Month, Month1, Month2),
-    RoomsCreated = coalesce(RoomsCreated, 0),
-    AvgMaxUsers = coalesce(AvgMaxUsers, 0.0),
-    PeakUsers = coalesce(PeakUsers, 0),
-    PointingSessions = coalesce(PointingSessions, 0)
+    ["Month"] = format_datetime(Month, 'M/yyyy'),
+    ["Rooms Created"] = coalesce(RoomsCreated, long(0)),
+    ["Avg Users in Room"] = round(coalesce(AvgMaxUsers, real(0.0)), 1),
+    ["Peak Users in Room"] = coalesce(PeakUsers, real(0)),
+    ["Pointing Sessions"] = coalesce(PointingSessions, long(0)),
+    ["Avg Room Duration"] = round(coalesce(AvgDurationMinutes, real(0.0)), 1)
 | order by Month desc
 ```
 

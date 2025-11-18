@@ -6,7 +6,9 @@ using PointerStar.Server.Room;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+//#if !DEBUG
 builder.Services.AddApplicationInsightsTelemetry();
+//#endif
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
