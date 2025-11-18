@@ -48,6 +48,7 @@ builder.Services.AddScoped<ICookieConsentService, CookieConsentService>(sp =>
     var basicCookie = new Cookie(jsRuntime);
     return new CookieConsentService(basicCookie);
 });
+builder.Services.AddScoped<VotingOptionsDialogViewModel>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
 
