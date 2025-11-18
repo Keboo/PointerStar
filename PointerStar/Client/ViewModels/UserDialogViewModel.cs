@@ -13,24 +13,8 @@ public partial class UserDialogViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isLoading;
 
-    // Temporary fields to hold dialog changes before commit
-    private string? _tempName;
-    private Guid? _tempSelectedRoleId;
-
     private HttpClient HttpClient { get; }
     private IRoomHubConnection RoomHubConnection { get; }
-
-    public string? TempName
-    {
-        get => _tempName;
-        set => SetProperty(ref _tempName, value);
-    }
-
-    public Guid? TempSelectedRoleId
-    {
-        get => _tempSelectedRoleId;
-        set => SetProperty(ref _tempSelectedRoleId, value);
-    }
 
     public UserDialogViewModel(HttpClient httpClient, IRoomHubConnection roomHubConnection)
     {
@@ -40,12 +24,12 @@ public partial class UserDialogViewModel : ViewModelBase
 
     public void SelectRole(Role? role)
     {
-        TempSelectedRoleId = role?.Id;
+        SelectedRoleId = role?.Id;
     }
 
     public async Task LoadRoomDataAsync(string? roomId)
     {
-        if (TempSelectedRoleId is null &&
+        if (SelectedRoleId is null &&
             roomId is not null)
         {
             IsLoading = true;
@@ -53,7 +37,7 @@ public partial class UserDialogViewModel : ViewModelBase
             {
                 if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{roomId}") is { } newUserRole)
                 {
-                    TempSelectedRoleId = newUserRole.Id;
+                    SelectedRoleId = newUserRole.Id;
                 }
             }
             finally
@@ -61,17 +45,5 @@ public partial class UserDialogViewModel : ViewModelBase
                 IsLoading = false;
             }
         }
-    }
-
-    public void Commit()
-    {
-        Name = TempName;
-        SelectedRoleId = TempSelectedRoleId;
-    }
-
-    public void InitializeFromCurrent(string? name, Guid? selectedRoleId)
-    {
-        TempName = name;
-        TempSelectedRoleId = selectedRoleId;
     }
 }

@@ -61,6 +61,3 @@ app.MapFallbackToPage("/_Host");
 
 app.Run();
 
-
-//Just doing this to make the generated class public
-public partial class Program { }
