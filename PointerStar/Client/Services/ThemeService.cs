@@ -19,11 +19,10 @@ public interface IThemeService
     Task CycleThemeAsync();
 }
 
-public class ThemeService : IThemeService
+public class ThemeService(ICookie cookie) : IThemeService
 {
-    private readonly ICookie _cookie;
-    private Func<Task<bool>>? _getSystemPreference;
-    private bool _systemPreference;
+    private readonly ICookie _cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
+    private bool _systemIsDark;
 
     public ThemePreference CurrentPreference { get; private set; }
     
@@ -31,23 +30,15 @@ public class ThemeService : IThemeService
     {
         ThemePreference.Dark => true,
         ThemePreference.Light => false,
-        ThemePreference.System => _systemPreference,
-        _ => _systemPreference
+        _ => _systemIsDark
     };
 
     public event EventHandler? ThemeChanged;
 
-    public ThemeService(ICookie cookie)
-    {
-        _cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
-    }
-
     public async Task InitializeAsync(Func<Task<bool>> getSystemPreference)
     {
-        _getSystemPreference = getSystemPreference ?? throw new ArgumentNullException(nameof(getSystemPreference));
-        
         // Get system preference
-        _systemPreference = await _getSystemPreference();
+        _systemIsDark = await getSystemPreference();
 
         // Load saved preference from cookie
         string preferenceValue = await _cookie.GetThemePreferenceAsync();
@@ -73,21 +64,19 @@ public class ThemeService : IThemeService
 
     public async Task CycleThemeAsync()
     {
-        var nextPreference = CurrentPreference switch
+        var nextPreference = IsDarkMode switch
         {
-            ThemePreference.System => ThemePreference.Light,
-            ThemePreference.Light => ThemePreference.Dark,
-            ThemePreference.Dark => ThemePreference.System,
-            _ => ThemePreference.System
+            true => ThemePreference.Light,
+            false => ThemePreference.Dark,
         };
         await SetPreferenceAsync(nextPreference);
     }
 
     public async Task UpdateSystemPreferenceAsync(bool isDark)
     {
-        if (_systemPreference != isDark)
+        if (_systemIsDark != isDark)
         {
-            _systemPreference = isDark;
+            _systemIsDark = isDark;
             if (CurrentPreference == ThemePreference.System)
             {
                 ThemeChanged?.Invoke(this, EventArgs.Empty);

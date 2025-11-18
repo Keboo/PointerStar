@@ -63,7 +63,6 @@
     {
         return ThemeService.CurrentPreference switch
         {
-            ThemePreference.System => Icons.Material.Filled.Brightness4,
             ThemePreference.Light => Icons.Material.Filled.LightMode,
             ThemePreference.Dark => Icons.Material.Filled.DarkMode,
             _ => Icons.Material.Filled.Brightness4
@@ -74,9 +73,8 @@
     {
         return ThemeService.CurrentPreference switch
         {
-            ThemePreference.System => "Theme: System (click to switch to Light)",
             ThemePreference.Light => "Theme: Light (click to switch to Dark)",
-            ThemePreference.Dark => "Theme: Dark (click to switch to System)",
+            ThemePreference.Dark => "Theme: Dark (click to switch to Light)",
             _ => "Toggle theme"
         };
     }

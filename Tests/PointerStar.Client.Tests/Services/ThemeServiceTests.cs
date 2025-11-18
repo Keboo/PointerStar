@@ -151,22 +151,6 @@ public partial class ThemeServiceTests
     }
 
     [Fact]
-    public async Task CycleThemeAsync_FromSystem_SwitchesToLight()
-    {
-        AutoMocker mocker = new();
-        mocker.GetMock<ICookie>()
-            .Setup(x => x.GetValueAsync("ThemePreference", ""))
-            .ReturnsAsync("System");
-
-        ThemeService service = mocker.CreateInstance<ThemeService>();
-        await service.InitializeAsync(() => Task.FromResult(false));
-
-        await service.CycleThemeAsync();
-
-        Assert.Equal(ThemePreference.Light, service.CurrentPreference);
-    }
-
-    [Fact]
     public async Task CycleThemeAsync_FromLight_SwitchesToDark()
     {
         AutoMocker mocker = new();
@@ -180,22 +164,6 @@ public partial class ThemeServiceTests
         await service.CycleThemeAsync();
 
         Assert.Equal(ThemePreference.Dark, service.CurrentPreference);
-    }
-
-    [Fact]
-    public async Task CycleThemeAsync_FromDark_SwitchesToSystem()
-    {
-        AutoMocker mocker = new();
-        mocker.GetMock<ICookie>()
-            .Setup(x => x.GetValueAsync("ThemePreference", ""))
-            .ReturnsAsync("Dark");
-
-        ThemeService service = mocker.CreateInstance<ThemeService>();
-        await service.InitializeAsync(() => Task.FromResult(false));
-
-        await service.CycleThemeAsync();
-
-        Assert.Equal(ThemePreference.System, service.CurrentPreference);
     }
 
     [Fact]
