@@ -11,26 +11,33 @@
                 <MudButtonGroup OverrideStyles="false">
                     <MudButton Color="Color.Primary"
                                Variant="@(ViewModel.SelectedRoleId == Role.TeamMember.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.TeamMember)">
+                               OnClick="() => ViewModel.SelectRole(Role.TeamMember)"
+                               Disabled="ViewModel.IsLoading">
                         Vote
                     </MudButton>
                     <MudButton Color="Color.Primary"
                                Variant="@(ViewModel.SelectedRoleId == Role.Facilitator.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.Facilitator)">
+                               OnClick="() => ViewModel.SelectRole(Role.Facilitator)"
+                               Disabled="ViewModel.IsLoading">
                         Facilitate
                     </MudButton>
                     <MudButton Color="Color.Primary"
                                Variant="@(ViewModel.SelectedRoleId == Role.Observer.Id ? Variant.Filled : Variant.Outlined)"
-                               OnClick="() => ViewModel.SelectRole(Role.Observer)">
+                               OnClick="() => ViewModel.SelectRole(Role.Observer)"
+                               Disabled="ViewModel.IsLoading">
                         Observe
                     </MudButton>
                 </MudButtonGroup>
+                @if (ViewModel.IsLoading)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                }
             </MudStack>
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Primary" OnClick="Submit">Ok</MudButton>
+        <MudButton OnClick="Cancel" Disabled="ViewModel.IsLoading">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="ViewModel.IsLoading">Ok</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -44,7 +51,11 @@
     [Parameter]
     public Guid? SelectedRoleId { get; set; }
 
-    private void Submit() => MudDialog?.Close(DialogResult.Ok(ViewModel));
+    private void Submit()
+    {
+        MudDialog?.Close(DialogResult.Ok(ViewModel));
+    }
+
     private void Cancel() => MudDialog?.Cancel();
 
     protected override async Task OnParametersSetAsync()

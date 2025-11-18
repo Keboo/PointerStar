@@ -70,4 +70,20 @@ public partial class UserDialogViewModelTests
 
         Assert.Equal(Role.Facilitator.Id, viewModel.SelectedRoleId);
     }
+
+    [Fact]
+    public async Task LoadRoomDataAsync_ResetsIsLoadingAfterOperation()
+    {
+        AutoMocker mocker = new();
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/1", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
+
+        UserDialogViewModel viewModel = mocker.CreateInstance<UserDialogViewModel>();
+
+        Assert.False(viewModel.IsLoading);
+
+        await viewModel.LoadRoomDataAsync("1");
+
+        Assert.False(viewModel.IsLoading);
+    }
 }

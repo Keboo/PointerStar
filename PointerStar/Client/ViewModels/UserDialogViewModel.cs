@@ -10,6 +10,9 @@ public partial class UserDialogViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _selectedRoleId;
 
+    [ObservableProperty]
+    private bool _isLoading;
+
     private HttpClient HttpClient { get; }
     private IRoomHubConnection RoomHubConnection { get; }
 
@@ -27,10 +30,20 @@ public partial class UserDialogViewModel : ViewModelBase
     public async Task LoadRoomDataAsync(string? roomId)
     {
         if (SelectedRoleId is null &&
-            roomId is not null &&
-            await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{roomId}") is { } newUserRole)
+            roomId is not null)
         {
-            SelectedRoleId = newUserRole.Id;
+            IsLoading = true;
+            try
+            {
+                if (await HttpClient.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{roomId}") is { } newUserRole)
+                {
+                    SelectedRoleId = newUserRole.Id;
+                }
+            }
+            finally
+            {
+                IsLoading = false;
+            }
         }
     }
 }
