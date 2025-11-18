@@ -1,5 +1,8 @@
 ﻿@using System.Reflection;
+@using PointerStar.Client.Services
 @inherits LayoutComponentBase
+@inject IThemeService ThemeService
+@implements IDisposable
 
 <Toolbelt.Blazor.PWA.Updater.PWAUpdater />
 <MudThemeProvider @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
@@ -11,6 +14,9 @@
     <MudAppBar Elevation="1">
         <MudText Typo="Typo.h5" Class="ml-3">Pointer*</MudText>
         <MudSpacer />
+        <MudTooltip Text="@GetThemeTooltip()">
+            <MudIconButton Icon="@GetThemeIcon()" Color="Color.Inherit" OnClick="@CycleThemeAsync" />
+        </MudTooltip>
         <MudText Typo="Typo.subtitle1" Align="Align.End">@Assembly.GetExecutingAssembly().GetName().Version?.ToString(3)</MudText>
     </MudAppBar>
     <MudMainContent>
@@ -26,16 +32,55 @@
     {
         if (firstRender && _mudThemeProvider is { } themeProvider)
         {
-            _isDarkMode = await themeProvider.GetSystemDarkModeAsync();
+            await ThemeService.InitializeAsync(() => themeProvider.GetSystemDarkModeAsync());
+            _isDarkMode = ThemeService.IsDarkMode;
             await themeProvider.WatchSystemDarkModeAsync(OnSystemPreferenceChanged);
+            ThemeService.ThemeChanged += OnThemeChanged;
             StateHasChanged();
         }
     }
 
-    private Task OnSystemPreferenceChanged(bool newValue)
+    private async Task OnSystemPreferenceChanged(bool newValue)
     {
-        _isDarkMode = newValue;
+        if (ThemeService is ThemeService themeService)
+        {
+            await themeService.UpdateSystemPreferenceAsync(newValue);
+        }
+    }
+
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        _isDarkMode = ThemeService.IsDarkMode;
         StateHasChanged();
-        return Task.CompletedTask;
+    }
+
+    private async Task CycleThemeAsync()
+    {
+        await ThemeService.CycleThemeAsync();
+    }
+
+    private string GetThemeIcon()
+    {
+        return ThemeService.CurrentPreference switch
+        {
+            ThemePreference.Light => Icons.Material.Filled.LightMode,
+            ThemePreference.Dark => Icons.Material.Filled.DarkMode,
+            _ => Icons.Material.Filled.Brightness4
+        };
+    }
+
+    private string GetThemeTooltip()
+    {
+        return ThemeService.CurrentPreference switch
+        {
+            ThemePreference.Light => "Theme: Light (click to switch to Dark)",
+            ThemePreference.Dark => "Theme: Dark (click to switch to Light)",
+            _ => "Toggle theme"
+        };
+    }
+
+    public void Dispose()
+    {
+        ThemeService.ThemeChanged -= OnThemeChanged;
     }
 }
