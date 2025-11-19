@@ -531,6 +531,65 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Single(roomState.TeamMembers);
     }
 
+    [Fact]
+    public async Task UpdateRoomAsync_WithVoteOptions_UpdatesVoteOptions()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+        string facilitator = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator);
+
+        string[] newVoteOptions = ["S", "M", "L", "XL"];
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VoteOptions = newVoteOptions
+        }, facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(newVoteOptions, roomState.VoteOptions);
+    }
+
+    [Fact]
+    public async Task UpdateRoomAsync_WithEmptyVoteOptions_DoesNotUpdateVoteOptions()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+        string facilitator = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator);
+        string[] originalVoteOptions = room.VoteOptions;
+
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VoteOptions = []
+        }, facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(originalVoteOptions, roomState.VoteOptions);
+    }
+
+    [Fact]
+    public async Task UpdateRoomAsync_WithVoteOptionsAsTeamMember_DoesNotUpdateVoteOptions()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+        string[] originalVoteOptions = room.VoteOptions;
+
+        string[] newVoteOptions = ["S", "M", "L", "XL"];
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VoteOptions = newVoteOptions
+        }, teamMember);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(originalVoteOptions, roomState.VoteOptions);
+    }
+
 
     protected async Task<RoomState> CreateRoom(IRoomManager sut, params string[] connectionIds)
     {

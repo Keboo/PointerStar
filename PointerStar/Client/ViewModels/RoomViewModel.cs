@@ -140,6 +140,16 @@ public partial class RoomViewModel : ViewModelBase
                 }
                 CurrentUserId = user.Id;
                 await RoomHubConnection.JoinRoomAsync(RoomId, user);
+
+                // If joining as facilitator, apply saved voting options
+                if (user.Role == Role.Facilitator)
+                {
+                    var savedVoteOptions = await Cookie.GetVoteOptionsAsync();
+                    if (savedVoteOptions is { Length: > 0 })
+                    {
+                        await UpdateVoteOptionsAsync(savedVoteOptions);
+                    }
+                }
             }
             else
             {
@@ -174,6 +184,18 @@ public partial class RoomViewModel : ViewModelBase
         if (RoomHubConnection.IsConnected)
         {
             await RoomHubConnection.RemoveUserAsync(userId);
+        }
+    }
+
+    public async Task UpdateVoteOptionsAsync(string[] voteOptions)
+    {
+        if (RoomHubConnection.IsConnected && voteOptions.Length > 0)
+        {
+            await RoomHubConnection.UpdateRoomAsync(new RoomOptions
+            {
+                VoteOptions = voteOptions
+            });
+            await Cookie.SetVoteOptionsAsync(voteOptions);
         }
     }
 
@@ -234,6 +256,20 @@ public partial class RoomViewModel : ViewModelBase
             Name = userViewModel.Name;
             SelectedRoleId = userViewModel.SelectedRoleId;
             await ConnectToRoomAsync();
+        }
+    }
+
+    public async Task ShowVotingOptionsDialogAsync()
+    {
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium };
+        var parameters = new DialogParameters<VotingOptionsDialog>
+        {
+            { x => x.CurrentVoteOptions, RoomState?.VoteOptions }
+        };
+        if (await DialogService.ShowAsync<VotingOptionsDialog>("Configure Voting Options", parameters, options) is { } dialogReference &&
+            await dialogReference.Result is { Canceled: false, Data: string[] voteOptions })
+        {
+            await UpdateVoteOptionsAsync(voteOptions);
         }
     }
 }

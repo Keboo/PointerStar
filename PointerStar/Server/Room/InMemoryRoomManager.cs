@@ -115,6 +115,11 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     room = room with { VotesShown = true };
                 }
+
+                if (roomOptions.VoteOptions is { Length: > 0 } voteOptions)
+                {
+                    room = room with { VoteOptions = voteOptions };
+                }
                 return room;
             }
             return room;

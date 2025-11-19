@@ -1,0 +1,95 @@
+@using PointerStar.Client.ViewModels;
+@using PointerStar.Shared;
+@inherits ComponentBase<VotingOptionsDialogViewModel>
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="4">
+            <MudText Typo="Typo.h6">Voting Options</MudText>
+            
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.body2">Select a preset:</MudText>
+                <MudButtonGroup OverrideStyles="false" Style="flex-wrap: wrap;">
+                    @foreach (var preset in VotingPresets.AllPresets)
+                    {
+                        bool isSelected = ViewModel.VoteOptions.SequenceEqual(preset.Options);
+                        <MudButton Color="Color.Primary"
+                                   Size="Size.Small"
+                                   Variant="@(isSelected ? Variant.Filled : Variant.Outlined)"
+                                   OnClick="() => ViewModel.SelectPreset(preset.Options)">
+                            @preset.Name
+                        </MudButton>
+                    }
+                </MudButtonGroup>
+            </MudStack>
+
+            <MudDivider />
+
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.body2">Or customize your options:</MudText>
+                <MudStack Spacing="1">
+                    @for (int i = 0; i < ViewModel.VoteOptions.Count; i++)
+                    {
+                        int index = i;
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudStack Spacing="0">
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" 
+                                               Color="Color.Default" 
+                                               Size="Size.Small"
+                                               OnClick="() => ViewModel.MoveOptionUp(index)"
+                                               Disabled="@(index == 0)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" 
+                                               Color="Color.Default" 
+                                               Size="Size.Small"
+                                               OnClick="() => ViewModel.MoveOptionDown(index)"
+                                               Disabled="@(index == ViewModel.VoteOptions.Count - 1)" />
+                            </MudStack>
+                            <MudTextField @bind-Value="ViewModel.VoteOptions[index]" 
+                                          Label="@($"Option {index + 1}")" 
+                                          Variant="Variant.Outlined" 
+                                          Margin="Margin.Dense"
+                                          Style="flex: 1;" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small"
+                                           OnClick="() => ViewModel.RemoveOption(index)"
+                                           Disabled="@(ViewModel.VoteOptions.Count <= 1)" />
+                        </MudStack>
+                    }
+                </MudStack>
+                <MudButton StartIcon="@Icons.Material.Filled.Add" 
+                           Color="Color.Primary" 
+                           Variant="Variant.Outlined"
+                           OnClick="ViewModel.AddOption"
+                           Size="Size.Small"
+                           Style="align-self: flex-start;">
+                    Add Option
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="Submit" Disabled="@(!ViewModel.IsValid)">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public string[]? CurrentVoteOptions { get; set; }
+
+    private void Submit() => MudDialog?.Close(DialogResult.Ok(ViewModel.VoteOptions.ToArray()));
+    private void Cancel() => MudDialog?.Cancel();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+        if (CurrentVoteOptions is { Length: > 0 })
+        {
+            ViewModel.VoteOptions = new List<string>(CurrentVoteOptions);
+        }
+    }
+}

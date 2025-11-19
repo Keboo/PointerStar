@@ -375,6 +375,48 @@ public partial class RoomViewModelTests
         mocker.Verify<IRoomHubConnection>(x => x.RemoveUserAsync(teamMember.Id), Times.Once);
     }
 
+    [Fact]
+    public async Task UpdateVoteOptionsAsync_WithOptions_UpdatesRoomAndSavesToCookie()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        string[] newOptions = ["S", "M", "L", "XL"];
+
+        await viewModel.UpdateVoteOptionsAsync(newOptions);
+
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateRoomAsync(It.Is<RoomOptions>(ro => ro.VoteOptions == newOptions)), Times.Once);
+        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("VoteOptions", It.IsAny<string>(), null), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateVoteOptionsAsync_WithEmptyOptions_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(true);
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        string[] emptyOptions = [];
+
+        await viewModel.UpdateVoteOptionsAsync(emptyOptions);
+
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateRoomAsync(It.IsAny<RoomOptions>()), Times.Never);
+        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("VoteOptions", It.IsAny<string>(), null), Times.Never);
+    }
+
+    [Fact]
+    public async Task UpdateVoteOptionsAsync_WithoutConnection_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        mocker.Setup<IRoomHubConnection, bool>(x => x.IsConnected).Returns(false);
+        RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        string[] newOptions = ["S", "M", "L", "XL"];
+
+        await viewModel.UpdateVoteOptionsAsync(newOptions);
+
+        mocker.Verify<IRoomHubConnection>(x => x.UpdateRoomAsync(It.IsAny<RoomOptions>()), Times.Never);
+        mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("VoteOptions", It.IsAny<string>(), null), Times.Never);
+    }
+
     private static void WithUserDialog(AutoMocker mocker, string? name, Guid? selectedRoleId)
     {
         UserDialogViewModel dialogViewModel = mocker.CreateInstance<UserDialogViewModel>();

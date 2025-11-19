@@ -60,6 +60,9 @@
                 <MudSwitch @bind-Value="@ViewModel.AutoShowVotes" Label="Automatically reveal votes" Color="Color.Info" />
                 <MudSwitch @bind-Value="@ViewModel.PreviewVotes" Label="Preview votes" Color="Color.Info" />
                 <MudButton Variant="Variant.Filled" Color="Color.Warning" OnClick="ViewModel.ResetVotesAsync">Reset Votes</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ViewModel.ShowVotingOptionsDialogAsync" StartIcon="@Icons.Material.Filled.Settings">
+                    Configure Options
+                </MudButton>
             </MudStack>
         </MudItem>
     }
