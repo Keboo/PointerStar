@@ -105,4 +105,86 @@ public partial class VotingOptionsDialogViewModelTests
 
         Assert.Equal(3, viewModel.VoteOptions.Count);
     }
+
+    [Fact]
+    public void MoveOptionUp_WithValidIndex_MovesOption()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionUp(1);
+
+        Assert.Equal("2", viewModel.VoteOptions[0]);
+        Assert.Equal("1", viewModel.VoteOptions[1]);
+        Assert.Equal("3", viewModel.VoteOptions[2]);
+    }
+
+    [Fact]
+    public void MoveOptionUp_WithFirstIndex_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionUp(0);
+
+        Assert.Equal("1", viewModel.VoteOptions[0]);
+        Assert.Equal("2", viewModel.VoteOptions[1]);
+        Assert.Equal("3", viewModel.VoteOptions[2]);
+    }
+
+    [Fact]
+    public void MoveOptionDown_WithValidIndex_MovesOption()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionDown(1);
+
+        Assert.Equal("1", viewModel.VoteOptions[0]);
+        Assert.Equal("3", viewModel.VoteOptions[1]);
+        Assert.Equal("2", viewModel.VoteOptions[2]);
+    }
+
+    [Fact]
+    public void MoveOptionDown_WithLastIndex_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionDown(2);
+
+        Assert.Equal("1", viewModel.VoteOptions[0]);
+        Assert.Equal("2", viewModel.VoteOptions[1]);
+        Assert.Equal("3", viewModel.VoteOptions[2]);
+    }
+
+    [Fact]
+    public void MoveOptionUp_WithInvalidIndex_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionUp(10);
+
+        Assert.Equal(3, viewModel.VoteOptions.Count);
+        Assert.Equal("1", viewModel.VoteOptions[0]);
+    }
+
+    [Fact]
+    public void MoveOptionDown_WithInvalidIndex_DoesNothing()
+    {
+        AutoMocker mocker = new();
+        VotingOptionsDialogViewModel viewModel = mocker.CreateInstance<VotingOptionsDialogViewModel>();
+        viewModel.VoteOptions = new List<string> { "1", "2", "3" };
+
+        viewModel.MoveOptionDown(10);
+
+        Assert.Equal(3, viewModel.VoteOptions.Count);
+        Assert.Equal("3", viewModel.VoteOptions[2]);
+    }
 }

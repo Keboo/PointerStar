@@ -32,6 +32,18 @@
                     {
                         int index = i;
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudStack Spacing="0">
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" 
+                                               Color="Color.Default" 
+                                               Size="Size.Small"
+                                               OnClick="() => ViewModel.MoveOptionUp(index)"
+                                               Disabled="@(index == 0)" />
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" 
+                                               Color="Color.Default" 
+                                               Size="Size.Small"
+                                               OnClick="() => ViewModel.MoveOptionDown(index)"
+                                               Disabled="@(index == ViewModel.VoteOptions.Count - 1)" />
+                            </MudStack>
                             <MudTextField @bind-Value="ViewModel.VoteOptions[index]" 
                                           Label="@($"Option {index + 1}")" 
                                           Variant="Variant.Outlined" 

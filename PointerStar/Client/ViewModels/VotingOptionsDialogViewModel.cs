@@ -28,4 +28,22 @@ public partial class VotingOptionsDialogViewModel : ViewModelBase
             OnPropertyChanged(nameof(VoteOptions));
         }
     }
+
+    public void MoveOptionUp(int index)
+    {
+        if (index > 0 && index < VoteOptions.Count)
+        {
+            (VoteOptions[index], VoteOptions[index - 1]) = (VoteOptions[index - 1], VoteOptions[index]);
+            OnPropertyChanged(nameof(VoteOptions));
+        }
+    }
+
+    public void MoveOptionDown(int index)
+    {
+        if (index >= 0 && index < VoteOptions.Count - 1)
+        {
+            (VoteOptions[index], VoteOptions[index + 1]) = (VoteOptions[index + 1], VoteOptions[index]);
+            OnPropertyChanged(nameof(VoteOptions));
+        }
+    }
 }
