@@ -1,0 +1,59 @@
+@using PointerStar.Client.Services
+@inject ICookieConsentService ConsentService
+@implements IDisposable
+
+@if (!ConsentService.HasUserResponded)
+{
+    <MudPaper Elevation="3" Class="cookie-consent-banner">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudStack Spacing="1">
+                    <MudText Typo="Typo.body1">
+                        <strong>This site uses cookies</strong>
+                    </MudText>
+                    <MudText Typo="Typo.body2">
+                        We use cookies to remember your preferences and improve your experience. 
+                        By clicking "Accept", you consent to the use of cookies.
+                    </MudText>
+                </MudStack>
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="RejectCookiesAsync">
+                        Reject
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AcceptCookiesAsync">
+                        Accept
+                    </MudButton>
+                </MudStack>
+            </MudStack>
+        </MudContainer>
+    </MudPaper>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ConsentService.InitializeAsync();
+        ConsentService.ConsentChanged += OnConsentChanged;
+        StateHasChanged();
+    }
+
+    private async Task AcceptCookiesAsync()
+    {
+        await ConsentService.AcceptCookiesAsync();
+    }
+
+    private async Task RejectCookiesAsync()
+    {
+        await ConsentService.RejectCookiesAsync();
+    }
+
+    private void OnConsentChanged(object? sender, EventArgs e)
+    {
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        ConsentService.ConsentChanged -= OnConsentChanged;
+    }
+}
