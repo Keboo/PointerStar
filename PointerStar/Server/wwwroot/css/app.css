@@ -1,0 +1,12 @@
+/* Ensure full viewport height for proper fixed positioning */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#app {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
