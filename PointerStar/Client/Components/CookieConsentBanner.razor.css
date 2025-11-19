@@ -1,0 +1,12 @@
+.cookie-consent-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1400;
+    padding: 16px;
+    background-color: var(--mud-palette-background-grey);
+    border-top: 1px solid var(--mud-palette-divider);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.JSInterop;
 using MudBlazor;
 using MudBlazor.Services;
 using PointerStar.Client;
@@ -33,7 +34,20 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddScoped<RoomViewModel>();
 builder.Services.AddScoped<UserDialogViewModel>();
-builder.Services.AddScoped<ICookie, Cookie>();
+builder.Services.AddScoped<ICookie>(sp =>
+{
+    var cookie = new ConsentAwareCookie(sp.GetRequiredService<IJSRuntime>());
+    var consentService = sp.GetRequiredService<ICookieConsentService>();
+    cookie.SetConsentService(consentService);
+    return cookie;
+});
+builder.Services.AddScoped<ICookieConsentService, CookieConsentService>(sp =>
+{
+    // Create a basic cookie for the consent service (not consent-aware to avoid circular dependency)
+    var jsRuntime = sp.GetRequiredService<IJSRuntime>();
+    var basicCookie = new Cookie(jsRuntime);
+    return new CookieConsentService(basicCookie);
+});
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
 
