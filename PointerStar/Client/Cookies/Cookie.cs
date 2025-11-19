@@ -1,6 +1,8 @@
 ﻿namespace PointerStar.Client.Cookies;
 
 using Microsoft.JSInterop;
+using System.Web;
+
 //Based on https://stackoverflow.com/a/69873060/3755169
 public interface ICookie
 {
@@ -22,7 +24,8 @@ public class Cookie : ICookie
     public async ValueTask SetValueAsync(string key, string value, int? days = null)
     {
         string expires = (days != null) ? (days > 0 ? DateToUTC(days.Value) : "") : Expires;
-        await SetCookieAsync($"{key}={value}; expires={expires}; path=/");
+        string encodedValue = HttpUtility.UrlEncode(value);
+        await SetCookieAsync($"{key}={encodedValue}; expires={expires}; path=/");
     }
 
     public async ValueTask<string> GetValueAsync(string key, string @default = "")
@@ -38,7 +41,8 @@ public class Cookie : ICookie
             {
                 if (val[..index].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return val[(index + 1)..];
+                    string encodedValue = val[(index + 1)..];
+                    return HttpUtility.UrlDecode(encodedValue);
                 }
             }
         }
