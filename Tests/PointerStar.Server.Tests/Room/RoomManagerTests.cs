@@ -535,6 +535,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_WithVoteOptions_UpdatesVoteOptions()
     {
         AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         await CreateRoom(sut, facilitator);
@@ -553,6 +554,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_WithEmptyVoteOptions_DoesNotUpdateVoteOptions()
     {
         AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
         string facilitator = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
         RoomState room = await CreateRoom(sut, facilitator);
@@ -571,6 +573,7 @@ public abstract class RoomManagerTests<TRoomManager>
     public async Task UpdateRoomAsync_WithVoteOptionsAsTeamMember_DoesNotUpdateVoteOptions()
     {
         AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
         string facilitator = Guid.NewGuid().ToString();
         string teamMember = Guid.NewGuid().ToString();
         IRoomManager sut = mocker.CreateInstance<TRoomManager>();
