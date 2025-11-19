@@ -1,17 +1,69 @@
 ﻿@page "/"
-@inject NavigationManager Navigation
-@inject HttpClient Http
+@inherits Components.ComponentBase<ViewModels.IndexViewModel>
 
 <PageTitle>Pointer*</PageTitle>
 
-<MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Row="true" Style="height:100px" >
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToRoom">Create Room</MudButton>
-</MudStack>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudStack Spacing="4">
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ViewModel.CreateNewRoomAsync" Size="Size.Large">
+                Create New Room
+            </MudButton>
+        </MudStack>
+
+        @if (ViewModel.RecentRooms.Any())
+        {
+            <MudDivider />
+            
+            <MudText Typo="Typo.h6" Align="Align.Center">Recent Rooms</MudText>
+            
+            <MudStack Spacing="2">
+                @foreach (var room in ViewModel.RecentRooms)
+                {
+                    <MudCard>
+                        <MudCardContent>
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                <MudStack Spacing="1">
+                                    <MudText Typo="Typo.body1">Room: @room.RoomId</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        Last accessed: @GetRelativeTime(room.LastAccessed)
+                                    </MudText>
+                                </MudStack>
+                                <MudStack Row="true" Spacing="2">
+                                    <MudButton Variant="Variant.Filled" 
+                                              Color="Color.Primary" 
+                                              Size="Size.Small"
+                                              OnClick="() => ViewModel.NavigateToRoom(room.RoomId)">
+                                        Open
+                                    </MudButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                 Color="Color.Error" 
+                                                 Size="Size.Small"
+                                                 OnClick="() => ViewModel.RemoveRoomAsync(room.RoomId)" />
+                                </MudStack>
+                            </MudStack>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudStack>
+        }
+    </MudStack>
+</MudContainer>
 
 @code {
-    private async Task NavigateToRoom()
+    private string GetRelativeTime(DateTime dateTime)
     {
-        string roomId = await Http.GetStringAsync("/api/room/generate");
-        Navigation.NavigateTo($"room/{roomId}");
+        var timeSpan = DateTime.UtcNow - dateTime;
+        
+        if (timeSpan.TotalMinutes < 1)
+            return "just now";
+        if (timeSpan.TotalMinutes < 60)
+            return $"{(int)timeSpan.TotalMinutes} minute{((int)timeSpan.TotalMinutes != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalHours < 24)
+            return $"{(int)timeSpan.TotalHours} hour{((int)timeSpan.TotalHours != 1 ? "s" : "")} ago";
+        if (timeSpan.TotalDays < 30)
+            return $"{(int)timeSpan.TotalDays} day{((int)timeSpan.TotalDays != 1 ? "s" : "")} ago";
+        
+        return dateTime.ToLocalTime().ToString("MMM dd, yyyy");
     }
 }
