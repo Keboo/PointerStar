@@ -1,12 +1,16 @@
 using System.Text.Json.Serialization;
 using HashidsNet;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
 using PointerStar.Server.Hubs;
 using PointerStar.Server.Room;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-#if !DEBUG
+#if DEBUG
+builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.CreateDefault()));
+#else
 builder.Services.AddApplicationInsightsTelemetry();
 #endif
 
