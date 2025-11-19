@@ -1,6 +1,7 @@
 using MudBlazor;
 using PointerStar.Client.Components;
 using PointerStar.Client.Cookies;
+using PointerStar.Client.Services;
 using PointerStar.Shared;
 
 namespace PointerStar.Client.ViewModels;
@@ -12,6 +13,7 @@ public partial class RoomViewModel : ViewModelBase
     private IClipboardService ClipboardService { get; }
     private IDialogService DialogService { get; }
     private ISnackbar Snackbar { get; }
+    private IRecentRoomsService RecentRoomsService { get; }
 
     private CancellationTokenSource? _timerCancellationSource;
 
@@ -84,13 +86,15 @@ public partial class RoomViewModel : ViewModelBase
         ICookie cookie,
         IClipboardService clipboardService,
         IDialogService dialogService,
-        ISnackbar snackbar)
+        ISnackbar snackbar,
+        IRecentRoomsService recentRoomsService)
     {
         RoomHubConnection = roomHubConnection ?? throw new ArgumentNullException(nameof(roomHubConnection));
         Cookie = cookie ?? throw new ArgumentNullException(nameof(cookie));
         ClipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
         DialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
         Snackbar = snackbar ?? throw new ArgumentNullException(nameof(snackbar));
+        RecentRoomsService = recentRoomsService ?? throw new ArgumentNullException(nameof(recentRoomsService));
         RoomHubConnection.RoomStateUpdated += RoomStateUpdated;
     }
 
@@ -167,6 +171,9 @@ public partial class RoomViewModel : ViewModelBase
             }
             await Cookie.SetRoomAsync(RoomId);
             await Cookie.SetRoleAsync(SelectedRoleId);
+            
+            // Record this room visit
+            await RecentRoomsService.AddRoomAsync(RoomId);
         }
 
     }
