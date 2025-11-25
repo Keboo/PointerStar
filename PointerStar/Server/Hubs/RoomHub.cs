@@ -27,9 +27,8 @@ public class RoomHub : Hub
     [HubMethodName(RoomHubConnection.JoinRoomMethodName)]
     public async Task JoinRoomAsync(string roomId, User user)
     {
+        string normalizedRoomId = NormalizeRoomId(roomId);
         RoomState roomState = await RoomManager.AddUserToRoomAsync(roomId, user, Context.ConnectionId);
-        // Use the normalized room ID from the returned state for SignalR groups
-        string normalizedRoomId = NormalizeRoomId(roomState.RoomId);
         await Groups.AddToGroupAsync(Context.ConnectionId, normalizedRoomId);
         await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
     }
