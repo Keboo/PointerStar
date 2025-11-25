@@ -18,7 +18,8 @@ public class InMemoryRoomManager : IRoomManager
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
     {
-        ConnectionsToRoom.AddOrUpdate(connectionId, roomId, (_, _) => roomId);
+        string normalizedRoomId = NormalizeRoomId(roomId);
+        ConnectionsToRoom.AddOrUpdate(connectionId, normalizedRoomId, (_, _) => normalizedRoomId);
         ConnectionsToUserId.AddOrUpdate(connectionId, user.Id, (_, _) => user.Id);
 
         if (user.Name.Length > User.MaxNameLength)
@@ -28,9 +29,10 @@ public class InMemoryRoomManager : IRoomManager
 
         return WithRoomLock(roomId, () =>
         {
-            bool isNewRoom = !Rooms.ContainsKey(roomId);
+            bool isNewRoom = !Rooms.ContainsKey(normalizedRoomId);
             
-            RoomState rv = Rooms.AddOrUpdate(roomId,
+            RoomState rv = Rooms.AddOrUpdate(normalizedRoomId,
+                // For new rooms, use the original roomId casing
                 new RoomState(roomId, [user]),
             (_, roomState) =>
             {
@@ -47,20 +49,20 @@ public class InMemoryRoomManager : IRoomManager
             {
                 TelemetryClient?.TrackEvent("RoomCreated", new Dictionary<string, string>
                 {
-                    { "RoomId", roomId }
+                    { "RoomId", rv.RoomId }
                 });
             }
 
             // Track user connection
             TelemetryClient?.TrackEvent("UserConnected", new Dictionary<string, string>
             {
-                { "RoomId", roomId },
+                { "RoomId", rv.RoomId },
                 { "UserId", user.Id.ToString() },
                 { "UserRole", user.Role.Name }
             });
 
             // Track room user count metric
-            TelemetryClient?.GetMetric("RoomUserCount", "RoomId").TrackValue(rv.Users.Length, roomId);
+            TelemetryClient?.GetMetric("RoomUserCount", "RoomId").TrackValue(rv.Users.Length, rv.RoomId);
 
             return Task.FromResult(rv);
         });
@@ -211,7 +213,8 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithRoomLock(roomId, () =>
         {
-            if (Rooms.TryGetValue(roomId, out RoomState? room) &&
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            if (Rooms.TryGetValue(normalizedRoomId, out RoomState? room) &&
                 room.Users.Any(x => x.Role == Role.Facilitator))
             {
                 return Task.FromResult(Role.TeamMember);
@@ -253,13 +256,14 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithRoomLock(roomId, () =>
         {
-            if (Rooms.TryGetValue(roomId, out RoomState? existingRoom) &&
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            if (Rooms.TryGetValue(normalizedRoomId, out RoomState? existingRoom) &&
                 existingRoom.Users.SingleOrDefault(x => x.Id == userId) is { } user)
             {
                 RoomState? updatedRoom = updateRoom(existingRoom, user);
                 if (updatedRoom is not null)
                 {
-                    if (Rooms.TryUpdate(roomId, updatedRoom, existingRoom))
+                    if (Rooms.TryUpdate(normalizedRoomId, updatedRoom, existingRoom))
                     {
                         return Task.FromResult<RoomState?>(updatedRoom);
                     }
@@ -270,7 +274,7 @@ public class InMemoryRoomManager : IRoomManager
                 }
                 else
                 {
-                    Rooms.TryRemove(roomId, out _);
+                    Rooms.TryRemove(normalizedRoomId, out _);
                 }
             }
             return Task.FromResult<RoomState?>(null);
@@ -279,7 +283,8 @@ public class InMemoryRoomManager : IRoomManager
 
     private async Task<T> WithRoomLock<T>(string roomId, Func<Task<T>> action)
     {
-        SemaphoreSlim roomLock = RoomLocks.AddOrUpdate(roomId, new SemaphoreSlim(1, 1), (_, existing) => existing);
+        string normalizedRoomId = NormalizeRoomId(roomId);
+        SemaphoreSlim roomLock = RoomLocks.AddOrUpdate(normalizedRoomId, new SemaphoreSlim(1, 1), (_, existing) => existing);
 
         await roomLock.WaitAsync();
 
@@ -304,6 +309,11 @@ public class InMemoryRoomManager : IRoomManager
             }
         }
         return false;
+    }
+
+    private static string NormalizeRoomId(string roomId)
+    {
+        return roomId.ToUpperInvariant();
     }
 
 }

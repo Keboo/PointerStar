@@ -590,6 +590,54 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Equal(originalVoteOptions, roomState.VoteOptions);
     }
 
+    [Fact]
+    public async Task AddUserToRoomAsync_WithDifferentCasing_JoinsSameRoom()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string roomId = "TestRoom123";
+        string roomIdLowerCase = "testroom123";
+        User user1 = new(Guid.NewGuid(), "User 1") { Role = Role.Facilitator };
+        User user2 = new(Guid.NewGuid(), "User 2");
+
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+
+        // Create room with one casing
+        RoomState roomState1 = await sut.AddUserToRoomAsync(roomId, user1, Guid.NewGuid().ToString());
+        Assert.Equal(roomId, roomState1.RoomId); // Should preserve original casing
+        Assert.Single(roomState1.Users);
+
+        // Join with lowercase - should join same room
+        RoomState roomState2 = await sut.AddUserToRoomAsync(roomIdLowerCase, user2, Guid.NewGuid().ToString());
+        Assert.Equal(2, roomState2.Users.Length);
+        Assert.Equal(roomId, roomState2.RoomId); // Should preserve original room ID casing
+
+        // Verify both users are in the same room
+        Assert.Contains(roomState2.Users, u => u.Id == user1.Id);
+        Assert.Contains(roomState2.Users, u => u.Id == user2.Id);
+    }
+
+    [Fact]
+    public async Task GetNewUserRoleAsync_WithDifferentCasing_ReturnsSameRole()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string roomId = "TestRoom456";
+        string roomIdLowerCase = "testroom456";
+        User facilitator = new(Guid.NewGuid(), "Facilitator") { Role = Role.Facilitator };
+
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+
+        // Create room with facilitator
+        await sut.AddUserToRoomAsync(roomId, facilitator, Guid.NewGuid().ToString());
+
+        // Check role with different casing - should recognize room exists and return TeamMember
+        Role role = await sut.GetNewUserRoleAsync(roomIdLowerCase);
+        Assert.Equal(Role.TeamMember, role);
+    }
+
 
     protected async Task<RoomState> CreateRoom(IRoomManager sut, params string[] connectionIds)
     {
