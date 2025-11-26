@@ -18,7 +18,8 @@ public class RoomHub : Hub
         RoomState? room = await RoomManager.DisconnectAsync(Context.ConnectionId);
         if (room?.RoomId is { } roomId)
         {
-            await Clients.Group(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Group(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
         }
         await base.OnDisconnectedAsync(exception);
     }
@@ -26,9 +27,10 @@ public class RoomHub : Hub
     [HubMethodName(RoomHubConnection.JoinRoomMethodName)]
     public async Task JoinRoomAsync(string roomId, User user)
     {
+        string normalizedRoomId = NormalizeRoomId(roomId);
         RoomState roomState = await RoomManager.AddUserToRoomAsync(roomId, user, Context.ConnectionId);
-        await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-        await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        await Groups.AddToGroupAsync(Context.ConnectionId, normalizedRoomId);
+        await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
     }
 
     [HubMethodName(RoomHubConnection.SubmitVoteMethodName)]
@@ -37,7 +39,8 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.SubmitVoteAsync(vote, Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
-            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
 
@@ -47,7 +50,8 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.UpdateRoomAsync(roomOptions, Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
-            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
 
@@ -57,7 +61,8 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.UpdateUserAsync(userOptions, Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
-            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
 
@@ -67,7 +72,8 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.ResetVotesAsync(Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
-            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
     }
 
@@ -77,7 +83,13 @@ public class RoomHub : Hub
         RoomState? roomState = await RoomManager.RemoveUserAsync(userId, Context.ConnectionId);
         if (roomState?.RoomId is { } roomId)
         {
-            await Clients.Groups(roomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
         }
+    }
+
+    private static string NormalizeRoomId(string roomId)
+    {
+        return roomId.ToUpperInvariant();
     }
 }
