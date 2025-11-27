@@ -1,4 +1,5 @@
 using Microsoft.JSInterop;
+using Microsoft.JSInterop.Infrastructure;
 using Moq;
 using Moq.AutoMock;
 using PointerStar.Client.Services;
@@ -20,7 +21,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackExceptionAsync(exception);
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackException",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -42,7 +43,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackExceptionAsync(exception, severityLevel: 4);
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackException",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -63,7 +64,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackExceptionAsync(exception);
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackException",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -80,7 +81,7 @@ public partial class ApplicationInsightsServiceTests
         AutoMocker mocker = new();
         var jsRuntimeMock = mocker.GetMock<IJSRuntime>();
         jsRuntimeMock
-            .Setup(x => x.InvokeAsync<object>(It.IsAny<string>(), It.IsAny<object[]>()))
+            .Setup(x => x.InvokeAsync<IJSVoidResult>(It.IsAny<string>(), It.IsAny<object[]>()))
             .ThrowsAsync(new JSException("JS error"));
 
         ApplicationInsightsService service = mocker.CreateInstance<ApplicationInsightsService>();
@@ -103,7 +104,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackEventAsync("TestEvent");
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackEvent",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -128,7 +129,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackEventAsync("TestEvent", properties);
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackEvent",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -143,7 +144,7 @@ public partial class ApplicationInsightsServiceTests
         AutoMocker mocker = new();
         var jsRuntimeMock = mocker.GetMock<IJSRuntime>();
         jsRuntimeMock
-            .Setup(x => x.InvokeAsync<object>(It.IsAny<string>(), It.IsAny<object[]>()))
+            .Setup(x => x.InvokeAsync<IJSVoidResult>(It.IsAny<string>(), It.IsAny<object[]>()))
             .ThrowsAsync(new JSException("JS error"));
 
         ApplicationInsightsService service = mocker.CreateInstance<ApplicationInsightsService>();
@@ -165,7 +166,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackTraceAsync("Test trace message");
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackTrace",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -185,7 +186,7 @@ public partial class ApplicationInsightsServiceTests
         await service.TrackTraceAsync("Warning message", severityLevel: 2);
 
         jsRuntimeMock.Verify(
-            x => x.InvokeAsync<object>(
+            x => x.InvokeAsync<IJSVoidResult>(
                 "appInsights.trackTrace",
                 It.Is<object[]>(args =>
                     args.Length == 2 &&
@@ -199,7 +200,7 @@ public partial class ApplicationInsightsServiceTests
         AutoMocker mocker = new();
         var jsRuntimeMock = mocker.GetMock<IJSRuntime>();
         jsRuntimeMock
-            .Setup(x => x.InvokeAsync<object>(It.IsAny<string>(), It.IsAny<object[]>()))
+            .Setup(x => x.InvokeAsync<IJSVoidResult>(It.IsAny<string>(), It.IsAny<object[]>()))
             .ThrowsAsync(new JSException("JS error"));
 
         ApplicationInsightsService service = mocker.CreateInstance<ApplicationInsightsService>();

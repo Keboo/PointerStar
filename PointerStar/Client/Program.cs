@@ -55,16 +55,4 @@ builder.Services.AddScoped<IThemeService, ThemeService>();
 builder.Services.AddScoped<IRecentRoomsService, LocalStorageRecentRoomsService>();
 builder.Services.AddScoped<IApplicationInsightsService, ApplicationInsightsService>();
 
-var host = builder.Build();
-
-// Set up global exception handling to capture unhandled exceptions
-var appInsights = host.Services.GetRequiredService<IApplicationInsightsService>();
-AppDomain.CurrentDomain.UnhandledException += async (sender, args) =>
-{
-    if (args.ExceptionObject is Exception exception)
-    {
-        await appInsights.TrackExceptionAsync(exception, severityLevel: 4); // Critical
-    }
-};
-
-await host.RunAsync();
+await builder.Build().RunAsync();
