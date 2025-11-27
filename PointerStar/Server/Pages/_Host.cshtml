@@ -1,5 +1,6 @@
 @page "/"
 @using System.Reflection
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 @namespace PointerStar.Server.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 
@@ -20,6 +21,32 @@
     <link rel='mask-icon' href='Pointer_Black_Apple_Mask_Icon.svg' color='black' />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    @{
+        var connectionString = Configuration["ApplicationInsights:ConnectionString"];
+    }
+    @if (!string.IsNullOrEmpty(connectionString))
+    {
+        <script src="https://js.monitor.azure.com/scripts/b/ai.3.gbl.min.js" data-cfg-sync="true"></script>
+        <script type="text/javascript">
+            (function() {
+                var sdkInstance = "appInsightsInstance";
+                window[sdkInstance] = new Microsoft.ApplicationInsights.ApplicationInsights({
+                    config: {
+                        connectionString: "@Html.Raw(connectionString)",
+                        enableAutoRouteTracking: true,
+                        disableExceptionTracking: false
+                    }
+                });
+                window[sdkInstance].loadAppInsights();
+                window[sdkInstance].trackPageView();
+                
+                // Mark our custom wrapper as initialized
+                if (window.appInsights) {
+                    window.appInsights.markInitialized();
+                }
+            })();
+        </script>
+    }
 </head>
 
 <body>
@@ -30,6 +57,7 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+    <script src="js/appInsights.js"></script>
     <script src="_framework/blazor.webassembly.js?v=@(Assembly.Load("PointerStar.Client").GetName().Version?.ToString() ?? "1.0.0")"></script>
     <script src="_content/Toolbelt.Blazor.PWA.Updater.Service/script.min.js"></script>
 
