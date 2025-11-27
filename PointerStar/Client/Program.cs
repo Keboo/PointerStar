@@ -34,13 +34,7 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 
 builder.Services.AddScoped<RoomViewModel>();
 builder.Services.AddScoped<UserDialogViewModel>();
-builder.Services.AddScoped<ICookie>(sp =>
-{
-    var cookie = new ConsentAwareCookie(sp.GetRequiredService<IJSRuntime>());
-    var consentService = sp.GetRequiredService<ICookieConsentService>();
-    cookie.SetConsentService(consentService);
-    return cookie;
-});
+builder.Services.AddScoped<ICookie, ConsentAwareCookie>();
 builder.Services.AddScoped<ICookieConsentService, CookieConsentService>(sp =>
 {
     // Create a basic cookie for the consent service (not consent-aware to avoid circular dependency)

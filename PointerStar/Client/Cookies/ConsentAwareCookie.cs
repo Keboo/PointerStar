@@ -1,5 +1,6 @@
 using Microsoft.JSInterop;
 using PointerStar.Client.Services;
+using System.Web;
 
 namespace PointerStar.Client.Cookies;
 
@@ -7,24 +8,14 @@ namespace PointerStar.Client.Cookies;
 /// Cookie implementation that respects user consent.
 /// Only sets non-essential cookies if user has consented.
 /// </summary>
-public class ConsentAwareCookie : ICookie
+public class ConsentAwareCookie(IJSRuntime jsRuntime, ICookieConsentService consentService) : ICookie
 {
     private const string ConsentCookieKey = "CookieConsent";
     
-    private readonly IJSRuntime _jsRuntime;
-    private readonly string _expires;
-    private ICookieConsentService? _consentService;
+    private readonly IJSRuntime _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
+    private readonly ICookieConsentService? _consentService = consentService ?? throw new ArgumentNullException(nameof(consentService));
+    private readonly string _expires = DateToUTC(30);
 
-    public ConsentAwareCookie(IJSRuntime jsRuntime)
-    {
-        _jsRuntime = jsRuntime ?? throw new ArgumentNullException(nameof(jsRuntime));
-        _expires = DateToUTC(30);
-    }
-
-    public void SetConsentService(ICookieConsentService consentService)
-    {
-        _consentService = consentService;
-    }
 
     public async ValueTask SetValueAsync(string key, string value, int? days = null)
     {
@@ -32,7 +23,8 @@ public class ConsentAwareCookie : ICookie
         if (key == ConsentCookieKey || _consentService == null || _consentService.HasConsent)
         {
             string expires = (days != null) ? (days > 0 ? DateToUTC(days.Value) : "") : _expires;
-            await SetCookieAsync($"{key}={value}; expires={expires}; path=/");
+            string encodedValue = HttpUtility.UrlEncode(value);
+            await SetCookieAsync($"{key}={encodedValue}; expires={expires}; path=/");
         }
         // If consent is not given, silently ignore the request
     }
@@ -50,7 +42,8 @@ public class ConsentAwareCookie : ICookie
             {
                 if (val[..index].Trim().Equals(key, StringComparison.OrdinalIgnoreCase))
                 {
-                    return val[(index + 1)..];
+                    string encodedValue = val[(index + 1)..];
+                    return HttpUtility.UrlDecode(encodedValue);
                 }
             }
         }
@@ -64,5 +57,5 @@ public class ConsentAwareCookie : ICookie
         => _jsRuntime.InvokeAsync<string>("eval", $"document.cookie");
 
     private static string DateToUTC(int days)
-        => DateTime.Now.AddDays(days).ToUniversalTime().ToString("R");
+        => DateTime.UtcNow.AddDays(days).ToString("R");
 }
