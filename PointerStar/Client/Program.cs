@@ -47,5 +47,6 @@ builder.Services.AddScoped<IndexViewModel>();
 builder.Services.AddScoped<IClipboardService, ClipboardService>();
 builder.Services.AddScoped<IThemeService, ThemeService>();
 builder.Services.AddScoped<IRecentRoomsService, LocalStorageRecentRoomsService>();
+builder.Services.AddScoped<IApplicationInsightsService, ApplicationInsightsService>();
 
 await builder.Build().RunAsync();
