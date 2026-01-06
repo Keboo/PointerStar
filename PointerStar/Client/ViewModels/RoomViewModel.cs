@@ -63,6 +63,30 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private Guid? _resetVotesRequestedBy;
 
+    public int ResetCountdownSeconds
+    {
+        get
+        {
+            if (ResetVotesRequestedAt is { } resetTime)
+            {
+                return Math.Max(0, (int)(resetTime - DateTime.UtcNow).TotalSeconds);
+            }
+            return 0;
+        }
+    }
+
+    public User? ResetRequestingUser
+    {
+        get
+        {
+            if (ResetVotesRequestedBy is { } userId)
+            {
+                return RoomState?.Users.FirstOrDefault(u => u.Id == userId);
+            }
+            return null;
+        }
+    }
+
     public string? RoomId { get; set; }
 
     async partial void OnVotesShownChanged(bool value)
@@ -245,8 +269,13 @@ public partial class RoomViewModel : ViewModelBase
             // Check if reset countdown has expired
             if (ResetVotesRequestedAt is { } resetTime && DateTime.UtcNow >= resetTime)
             {
-                // Trigger the actual reset
-                await ResetVotesAsync();
+                // Clear the field first to prevent duplicate reset attempts
+                var previousResetTime = ResetVotesRequestedAt;
+                if (previousResetTime == resetTime)
+                {
+                    // Trigger the actual reset (only if the reset time hasn't changed)
+                    await ResetVotesAsync();
+                }
                 shouldUpdate = true;
             }
             else if (ResetVotesRequestedAt is not null)

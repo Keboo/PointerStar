@@ -42,22 +42,20 @@
             </MudText>
         </MudItem>
     }
-    @if (ViewModel.ResetVotesRequestedAt is { } resetRequestedAt)
+    @if (ViewModel.ResetVotesRequestedAt is not null)
     {
-        var remainingSeconds = Math.Max(0, (int)(resetRequestedAt - DateTime.UtcNow).TotalSeconds);
-        var requestingUser = ViewModel.RoomState?.Users.FirstOrDefault(u => u.Id == ViewModel.ResetVotesRequestedBy);
         <MudItem xs="12">
             <MudAlert Severity="Severity.Warning">
-                @if (ViewModel.IsFacilitator && requestingUser is not null)
+                @if (ViewModel.IsFacilitator && ViewModel.ResetRequestingUser is not null)
                 {
-                    <MudText>@requestingUser.Name requested a reset. Resetting votes in @remainingSeconds second@(remainingSeconds == 1 ? "" : "s").</MudText>
+                    <MudText>@ViewModel.ResetRequestingUser.Name requested a reset. Resetting votes in @ViewModel.ResetCountdownSeconds second@(ViewModel.ResetCountdownSeconds == 1 ? "" : "s").</MudText>
                     <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ViewModel.CancelResetVotesAsync" Size="Size.Small" Style="margin-top: 8px;">
                         Cancel Reset
                     </MudButton>
                 }
                 else
                 {
-                    <MudText>Resetting votes in @remainingSeconds second@(remainingSeconds == 1 ? "" : "s").</MudText>
+                    <MudText>Resetting votes in @ViewModel.ResetCountdownSeconds second@(ViewModel.ResetCountdownSeconds == 1 ? "" : "s").</MudText>
                 }
             </MudAlert>
         </MudItem>
