@@ -12,7 +12,7 @@ PointerStar is a real-time pointing poker application built with:
 ## Development Environment Setup
 
 ### Prerequisites
-- .NET SDK (version specified in `global.json` if present, otherwise latest)
+- .NET SDK (latest version, currently .NET 10)
 - IDE: Visual Studio, Visual Studio Code, or Rider
 
 ### Building the Project
@@ -155,12 +155,12 @@ if (currentUser.Role == Role.Facilitator)
 ## Pull Request Guidelines
 
 ### PR Title Format
-Use conventional commit style:
-- `feat: Add new feature`
-- `fix: Fix bug description`  
-- `refactor: Refactor description`
-- `test: Add tests for feature`
-- `docs: Update documentation`
+Use conventional commit style with optional emoji prefix:
+- `feat: Add new feature` or `✨ Add new feature`
+- `fix: Fix bug description` or `🐛 Fix bug description`
+- `refactor: Refactor description` or `♻️ Refactor description`
+- `test: Add tests for feature` or `🧪 Add tests for feature`
+- `docs: Update documentation` or `📝 Update documentation`
 
 ### PR Checklist
 - [ ] All tests pass locally
@@ -173,12 +173,12 @@ Use conventional commit style:
 ## Additional Notes
 
 ### External Dependencies
-- **HashidsNet**: Used for room ID obfuscation
+- **Hashids.net**: Used for room ID obfuscation
 - **MudBlazor**: UI component library - check existing usage for snackbar configuration
 - **Toolbelt.Blazor.PWA.Updater**: Progressive Web App support
 
 ### Known TODOs
-- HashidsNet needs environment-specific salt configuration
+- Hashids.net needs environment-specific salt configuration
 
 ### When Stuck
 1. Check the existing `.github/copilot-instructions.md` for architectural patterns

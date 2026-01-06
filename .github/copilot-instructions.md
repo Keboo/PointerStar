@@ -102,6 +102,6 @@ if (currentUser.Role == Role.Facilitator)
 - **Real-time Updates**: All room changes propagate immediately via SignalR
 
 ### External Dependencies
-- **HashidsNet**: Room ID obfuscation (TODO: needs environment salt)
+- **Hashids.net**: Room ID obfuscation (TODO: needs environment salt)
 - **MudBlazor**: UI component library with specific snackbar configuration
 - **Toolbelt.Blazor.PWA.Updater**: Progressive Web App support
