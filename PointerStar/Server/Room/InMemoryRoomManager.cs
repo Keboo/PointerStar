@@ -203,6 +203,53 @@ public class InMemoryRoomManager : IRoomManager
                     Users = users,
                     VotesShown = false,
                     VoteStartTime = DateTime.UtcNow,
+                    ResetVotesRequestedAt = null,
+                    ResetVotesRequestedBy = null,
+                };
+            }
+            return room;
+        });
+    }
+
+    public Task<RoomState?> RequestResetVotesAsync(string connectionId)
+    {
+        return WithConnection(connectionId, (room, currentUser) =>
+        {
+            // Any user can request a reset
+            // Track reset request
+            TelemetryClient?.TrackEvent("VoteResetRequested", new Dictionary<string, string>
+            {
+                { "RoomId", room.RoomId },
+                { "UserId", currentUser.Id.ToString() },
+                { "UserRole", currentUser.Role.Name }
+            });
+
+            return room with
+            {
+                ResetVotesRequestedAt = DateTime.UtcNow.AddSeconds(10),
+                ResetVotesRequestedBy = currentUser.Id
+            };
+        });
+    }
+
+    public Task<RoomState?> CancelResetVotesAsync(string connectionId)
+    {
+        return WithConnection(connectionId, (room, currentUser) =>
+        {
+            // Only facilitators can cancel a reset request
+            if (currentUser.Role == Role.Facilitator)
+            {
+                // Track reset cancellation
+                TelemetryClient?.TrackEvent("VoteResetCancelled", new Dictionary<string, string>
+                {
+                    { "RoomId", room.RoomId },
+                    { "FacilitatorId", currentUser.Id.ToString() }
+                });
+
+                return room with
+                {
+                    ResetVotesRequestedAt = null,
+                    ResetVotesRequestedBy = null
                 };
             }
             return room;

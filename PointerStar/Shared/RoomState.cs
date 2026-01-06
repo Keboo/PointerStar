@@ -17,6 +17,9 @@ public sealed record class RoomState(string RoomId, User[] Users)
 
     public string[] VoteOptions { get; init; } = VotingPresets.Fibonacci;
     public DateTime? VoteStartTime { get; init; }
+    
+    public DateTime? ResetVotesRequestedAt { get; init; }
+    public Guid? ResetVotesRequestedBy { get; init; }
 }
 
 public sealed record class User(Guid Id, string Name)

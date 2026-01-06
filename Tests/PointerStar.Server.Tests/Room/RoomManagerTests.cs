@@ -653,4 +653,112 @@ public abstract class RoomManagerTests<TRoomManager>
         }
         return rv ?? throw new InvalidOperationException();
     }
+
+    [Fact]
+    public async Task RequestResetVotesAsync_WithTeamMember_SetsResetRequest()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+        User teamMemberUser = room.Users.First(u => u.Role == Role.TeamMember);
+
+        RoomState? roomState = await sut.RequestResetVotesAsync(teamMember);
+
+        Assert.NotNull(roomState);
+        Assert.NotNull(roomState.ResetVotesRequestedAt);
+        Assert.Equal(teamMemberUser.Id, roomState.ResetVotesRequestedBy);
+        // Should be approximately 10 seconds from now
+        Assert.True(roomState.ResetVotesRequestedAt > DateTime.UtcNow.AddSeconds(9));
+        Assert.True(roomState.ResetVotesRequestedAt < DateTime.UtcNow.AddSeconds(11));
+    }
+
+    [Fact]
+    public async Task RequestResetVotesAsync_WithFacilitator_SetsResetRequest()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string facilitator = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator);
+        User facilitatorUser = room.Users.First(u => u.Role == Role.Facilitator);
+
+        RoomState? roomState = await sut.RequestResetVotesAsync(facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.NotNull(roomState.ResetVotesRequestedAt);
+        Assert.Equal(facilitatorUser.Id, roomState.ResetVotesRequestedBy);
+    }
+
+    [Fact]
+    public async Task CancelResetVotesAsync_WithFacilitator_CancelsResetRequest()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator, teamMember);
+
+        // Team member requests reset
+        _ = await sut.RequestResetVotesAsync(teamMember);
+
+        // Facilitator cancels
+        RoomState? roomState = await sut.CancelResetVotesAsync(facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Null(roomState.ResetVotesRequestedAt);
+        Assert.Null(roomState.ResetVotesRequestedBy);
+    }
+
+    [Fact]
+    public async Task CancelResetVotesAsync_WithTeamMember_DoesNotCancelResetRequest()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember1 = Guid.NewGuid().ToString();
+        string teamMember2 = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember1, teamMember2);
+
+        // Team member 1 requests reset
+        RoomState? requestState = await sut.RequestResetVotesAsync(teamMember1);
+        Assert.NotNull(requestState?.ResetVotesRequestedAt);
+
+        // Team member 2 tries to cancel
+        RoomState? roomState = await sut.CancelResetVotesAsync(teamMember2);
+
+        Assert.NotNull(roomState);
+        Assert.NotNull(roomState.ResetVotesRequestedAt);
+        Assert.NotNull(roomState.ResetVotesRequestedBy);
+    }
+
+    [Fact]
+    public async Task ResetVotesAsync_WithFacilitator_ClearsResetRequest()
+    {
+        AutoMocker mocker = new();
+        mocker.WithApplicationInsights();
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator, teamMember);
+
+        // Team member requests reset
+        _ = await sut.RequestResetVotesAsync(teamMember);
+
+        // Facilitator does actual reset
+        RoomState? roomState = await sut.ResetVotesAsync(facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Null(roomState.ResetVotesRequestedAt);
+        Assert.Null(roomState.ResetVotesRequestedBy);
+    }
 }

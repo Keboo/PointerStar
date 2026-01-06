@@ -42,6 +42,26 @@
             </MudText>
         </MudItem>
     }
+    @if (ViewModel.ResetVotesRequestedAt is { } resetRequestedAt)
+    {
+        var remainingSeconds = Math.Max(0, (int)(resetRequestedAt - DateTime.UtcNow).TotalSeconds);
+        var requestingUser = ViewModel.RoomState?.Users.FirstOrDefault(u => u.Id == ViewModel.ResetVotesRequestedBy);
+        <MudItem xs="12">
+            <MudAlert Severity="Severity.Warning">
+                @if (ViewModel.IsFacilitator && requestingUser is not null)
+                {
+                    <MudText>@requestingUser.Name requested a reset. Resetting votes in @remainingSeconds second@(remainingSeconds == 1 ? "" : "s").</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ViewModel.CancelResetVotesAsync" Size="Size.Small" Style="margin-top: 8px;">
+                        Cancel Reset
+                    </MudButton>
+                }
+                else
+                {
+                    <MudText>Resetting votes in @remainingSeconds second@(remainingSeconds == 1 ? "" : "s").</MudText>
+                }
+            </MudAlert>
+        </MudItem>
+    }
     @if (ViewModel.IsTeamMember)
     {
         <MudItem xs="12">
@@ -49,6 +69,12 @@
             {
                 Color color = option == ViewModel.CurrentVote ? Color.Success : Color.Primary;
                 <MudButton Class="d-inline-flex pa-4 vote-button" Style="margin: 5px" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
+            }
+            @if (ViewModel.ResetVotesRequestedAt is null)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ViewModel.RequestResetVotesAsync" Style="margin: 5px;">
+                    Request Vote Reset
+                </MudButton>
             }
         </MudItem>
     }
