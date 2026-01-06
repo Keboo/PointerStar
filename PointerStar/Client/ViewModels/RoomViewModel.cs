@@ -235,6 +235,9 @@ public partial class RoomViewModel : ViewModelBase
             SelectedRoleId = lastRoleId;
             CurrentUserId = user.Id;
             await RoomHubConnection.JoinRoomAsync(RoomId, user);
+            
+            // Record this room visit
+            await RecentRoomsService.AddRoomAsync(RoomId);
         }
         else
         {

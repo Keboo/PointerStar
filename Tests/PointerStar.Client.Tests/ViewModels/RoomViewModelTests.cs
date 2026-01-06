@@ -2,6 +2,7 @@
 using MudBlazor;
 using PointerStar.Client.Components;
 using PointerStar.Client.Cookies;
+using PointerStar.Client.Services;
 using PointerStar.Client.ViewModels;
 using PointerStar.Shared;
 
@@ -86,6 +87,7 @@ public partial class RoomViewModelTests
         Assert.NotEqual(Guid.Empty, viewModel.CurrentUserId);
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId", It.Is<User>(u => u.Name == "Foo" && u.Id != Guid.Empty)), Times.Once);
         mocker.Verify<ICookie, ValueTask>(x => x.SetValueAsync("Name", "Foo", null), Times.Once);
+        mocker.Verify<IRecentRoomsService, ValueTask>(x => x.AddRoomAsync("RoomId"), Times.Once);
     }
 
     [Fact]
@@ -200,6 +202,7 @@ public partial class RoomViewModelTests
 
         mocker.Verify<IRoomHubConnection>(x => x.JoinRoomAsync("RoomId",
             It.Is<User>(u => u.Role.Id == roleId && u.Name == "User Name")), Times.Once);
+        mocker.Verify<IRecentRoomsService, ValueTask>(x => x.AddRoomAsync("RoomId"), Times.Once);
     }
 
     [Fact]
