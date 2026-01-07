@@ -39,6 +39,12 @@
         <MudItem xs="12">
             <MudText>
                 Vote Time: @((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))
+                @if (ViewModel.ResetVotesRequestedAt is null &&ViewModel.IsTeamMember)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="ViewModel.RequestResetVotesAsync" Style="margin: 5px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh" Title="Request Vote Reset" />
+                    </MudButton>
+                }
             </MudText>
         </MudItem>
     }
@@ -67,12 +73,6 @@
             {
                 Color color = option == ViewModel.CurrentVote ? Color.Success : Color.Primary;
                 <MudButton Class="d-inline-flex pa-4 vote-button" Style="margin: 5px" Variant="Variant.Filled" Color="color" OnClick="() => ViewModel.SubmitVoteAsync(option)">@option</MudButton>
-            }
-            @if (ViewModel.ResetVotesRequestedAt is null)
-            {
-                <MudButton Variant="Variant.Outlined" Color="Color.Warning" OnClick="ViewModel.RequestResetVotesAsync" Style="margin: 5px;">
-                    Request Vote Reset
-                </MudButton>
             }
         </MudItem>
     }

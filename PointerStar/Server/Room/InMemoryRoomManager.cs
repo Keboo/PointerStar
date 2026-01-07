@@ -189,7 +189,7 @@ public class InMemoryRoomManager : IRoomManager
         {
             if (currentUser.Role == Role.Facilitator)
             {
-                User[] users = room.Users.Select(u => u with { Vote = null }).ToArray();
+                User[] users = [.. room.Users.Select(u => u with { Vote = null })];
                 
                 // Track vote reset (indicates active pointing session)
                 TelemetryClient?.TrackEvent("VotesReset", new Dictionary<string, string>
@@ -280,10 +280,10 @@ public class InMemoryRoomManager : IRoomManager
             }
             return room with
             {
-                Users = room.Users.Select(u => u.Id == userId ? u with
+                Users = [.. room.Users.Select(u => u.Id == userId ? u with
                 {
                     Role = Role.Observer
-                } : u).ToArray()
+                } : u)]
             };
         });
     }
@@ -358,9 +358,6 @@ public class InMemoryRoomManager : IRoomManager
         return false;
     }
 
-    private static string NormalizeRoomId(string roomId)
-    {
-        return roomId.ToUpperInvariant();
-    }
+    private static string NormalizeRoomId(string roomId) => roomId.ToUpperInvariant();
 
 }
