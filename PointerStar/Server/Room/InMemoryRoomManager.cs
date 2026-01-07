@@ -189,7 +189,7 @@ public class InMemoryRoomManager : IRoomManager
         {
             if (currentUser.Role == Role.Facilitator)
             {
-                User[] users = room.Users.Select(u => u with { Vote = null }).ToArray();
+                User[] users = [.. room.Users.Select(u => u with { Vote = null })];
                 
                 // Track vote reset (indicates active pointing session)
                 TelemetryClient?.TrackEvent("VotesReset", new Dictionary<string, string>
@@ -203,6 +203,53 @@ public class InMemoryRoomManager : IRoomManager
                     Users = users,
                     VotesShown = false,
                     VoteStartTime = DateTime.UtcNow,
+                    ResetVotesRequestedAt = null,
+                    ResetVotesRequestedBy = null,
+                };
+            }
+            return room;
+        });
+    }
+
+    public Task<RoomState?> RequestResetVotesAsync(string connectionId)
+    {
+        return WithConnection(connectionId, (room, currentUser) =>
+        {
+            // Any user can request a reset
+            // Track reset request
+            TelemetryClient?.TrackEvent("VoteResetRequested", new Dictionary<string, string>
+            {
+                { "RoomId", room.RoomId },
+                { "UserId", currentUser.Id.ToString() },
+                { "UserRole", currentUser.Role.Name }
+            });
+
+            return room with
+            {
+                ResetVotesRequestedAt = DateTime.UtcNow.AddSeconds(10),
+                ResetVotesRequestedBy = currentUser.Id
+            };
+        });
+    }
+
+    public Task<RoomState?> CancelResetVotesAsync(string connectionId)
+    {
+        return WithConnection(connectionId, (room, currentUser) =>
+        {
+            // Only facilitators can cancel a reset request
+            if (currentUser.Role == Role.Facilitator)
+            {
+                // Track reset cancellation
+                TelemetryClient?.TrackEvent("VoteResetCancelled", new Dictionary<string, string>
+                {
+                    { "RoomId", room.RoomId },
+                    { "FacilitatorId", currentUser.Id.ToString() }
+                });
+
+                return room with
+                {
+                    ResetVotesRequestedAt = null,
+                    ResetVotesRequestedBy = null
                 };
             }
             return room;
@@ -233,10 +280,10 @@ public class InMemoryRoomManager : IRoomManager
             }
             return room with
             {
-                Users = room.Users.Select(u => u.Id == userId ? u with
+                Users = [.. room.Users.Select(u => u.Id == userId ? u with
                 {
                     Role = Role.Observer
-                } : u).ToArray()
+                } : u)]
             };
         });
     }
@@ -311,9 +358,6 @@ public class InMemoryRoomManager : IRoomManager
         return false;
     }
 
-    private static string NormalizeRoomId(string roomId)
-    {
-        return roomId.ToUpperInvariant();
-    }
+    private static string NormalizeRoomId(string roomId) => roomId.ToUpperInvariant();
 
 }

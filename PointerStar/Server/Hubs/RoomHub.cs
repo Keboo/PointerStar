@@ -77,6 +77,28 @@ public class RoomHub : Hub
         }
     }
 
+    [HubMethodName(RoomHubConnection.RequestResetVotesMethodName)]
+    public async Task RequestResetVotesAsync()
+    {
+        RoomState? roomState = await RoomManager.RequestResetVotesAsync(Context.ConnectionId);
+        if (roomState?.RoomId is { } roomId)
+        {
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        }
+    }
+
+    [HubMethodName(RoomHubConnection.CancelResetVotesMethodName)]
+    public async Task CancelResetVotesAsync()
+    {
+        RoomState? roomState = await RoomManager.CancelResetVotesAsync(Context.ConnectionId);
+        if (roomState?.RoomId is { } roomId)
+        {
+            string normalizedRoomId = NormalizeRoomId(roomId);
+            await Clients.Groups(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, roomState);
+        }
+    }
+
     [HubMethodName(RoomHubConnection.RemoveUserMethodName)]
     public async Task RemoveUserAsync(Guid userId)
     {

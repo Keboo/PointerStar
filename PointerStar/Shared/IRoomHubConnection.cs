@@ -12,5 +12,7 @@ public interface IRoomHubConnection
     Task UpdateRoomAsync(RoomOptions roomOptions);
     Task UpdateUserAsync(UserOptions userOptions);
     Task ResetVotesAsync();
+    Task RequestResetVotesAsync();
+    Task CancelResetVotesAsync();
     Task RemoveUserAsync(Guid userId);
 }

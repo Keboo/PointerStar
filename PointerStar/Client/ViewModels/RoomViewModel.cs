@@ -57,6 +57,36 @@ public partial class RoomViewModel : ViewModelBase
     [ObservableProperty]
     private DateTime? _voteStartTime;
 
+    [ObservableProperty]
+    private DateTime? _resetVotesRequestedAt;
+
+    [ObservableProperty]
+    private Guid? _resetVotesRequestedBy;
+
+    public int ResetCountdownSeconds
+    {
+        get
+        {
+            if (ResetVotesRequestedAt is { } resetTime)
+            {
+                return Math.Max(0, (int)(resetTime - DateTime.UtcNow).TotalSeconds);
+            }
+            return 0;
+        }
+    }
+
+    public User? ResetRequestingUser
+    {
+        get
+        {
+            if (ResetVotesRequestedBy is { } userId)
+            {
+                return RoomState?.Users.FirstOrDefault(u => u.Id == userId);
+            }
+            return null;
+        }
+    }
+
     public string? RoomId { get; set; }
 
     async partial void OnVotesShownChanged(bool value)
@@ -116,6 +146,8 @@ public partial class RoomViewModel : ViewModelBase
         _votesShown = roomState.VotesShown;
         _autoShowVotes = roomState.AutoShowVotes;
         _voteStartTime = roomState.VoteStartTime;
+        _resetVotesRequestedAt = roomState.ResetVotesRequestedAt;
+        _resetVotesRequestedBy = roomState.ResetVotesRequestedBy;
 #pragma warning restore MVVMTK0034 // Direct field reference to [ObservableProperty] backing field
 
         RoomState = roomState;
@@ -186,6 +218,22 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
+    public async Task RequestResetVotesAsync()
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.RequestResetVotesAsync();
+        }
+    }
+
+    public async Task CancelResetVotesAsync()
+    {
+        if (RoomHubConnection.IsConnected)
+        {
+            await RoomHubConnection.CancelResetVotesAsync();
+        }
+    }
+
     public async Task RemoveUserAsync(Guid userId)
     {
         if (RoomHubConnection.IsConnected)
@@ -211,7 +259,31 @@ public partial class RoomViewModel : ViewModelBase
         using PeriodicTimer votingTimer = new(TimeSpan.FromSeconds(0.5));
         while (await votingTimer.WaitForNextTickAsync(token).ConfigureAwait(false))
         {
+            bool shouldUpdate = false;
+            
             if (VoteStartTime is not null)
+            {
+                shouldUpdate = true;
+            }
+            
+            // Check if reset countdown has expired
+            if (ResetVotesRequestedAt is { } resetTime && DateTime.UtcNow >= resetTime)
+            {
+                // Clear the field first to prevent duplicate reset attempts
+                var previousResetTime = ResetVotesRequestedAt;
+                if (previousResetTime == resetTime)
+                {
+                    // Trigger the actual reset (only if the reset time hasn't changed)
+                    await ResetVotesAsync();
+                }
+                shouldUpdate = true;
+            }
+            else if (ResetVotesRequestedAt is not null)
+            {
+                shouldUpdate = true;
+            }
+            
+            if (shouldUpdate)
             {
                 base.NotifyStateChanged();
             }

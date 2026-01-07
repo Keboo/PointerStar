@@ -39,7 +39,31 @@
         <MudItem xs="12">
             <MudText>
                 Vote Time: @((DateTime.UtcNow - voteStartTime).ToString(@"mm\:ss"))
+                @if (ViewModel.ResetVotesRequestedAt is null &&ViewModel.IsTeamMember)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Warning" OnClick="ViewModel.RequestResetVotesAsync" Style="margin: 5px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh" Title="Request Vote Reset" />
+                    </MudButton>
+                }
             </MudText>
+        </MudItem>
+    }
+    @if (ViewModel.ResetVotesRequestedAt is not null)
+    {
+        <MudItem xs="12">
+            <MudAlert Severity="Severity.Warning">
+                @if (ViewModel.IsFacilitator && ViewModel.ResetRequestingUser is not null)
+                {
+                    <MudText>@ViewModel.ResetRequestingUser.Name requested a reset. Resetting votes in @ViewModel.ResetCountdownSeconds second@(ViewModel.ResetCountdownSeconds == 1 ? "" : "s").</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ViewModel.CancelResetVotesAsync" Size="Size.Small" Style="margin-top: 8px;">
+                        Cancel Reset
+                    </MudButton>
+                }
+                else
+                {
+                    <MudText>Resetting votes in @ViewModel.ResetCountdownSeconds second@(ViewModel.ResetCountdownSeconds == 1 ? "" : "s").</MudText>
+                }
+            </MudAlert>
         </MudItem>
     }
     @if (ViewModel.IsTeamMember)
