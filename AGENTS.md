@@ -160,7 +160,7 @@ if (currentUser.Role == Role.Facilitator)
 ### CI/CD Workflow
 All PRs trigger the "Build and deploy Pointer*" workflow which:
 1. Runs on .NET 10.x with PowerShell shell
-2. Builds in Release mode with version `2.0.{github.run_number}` (GitHub Actions run number)
+2. Builds in Release mode with version `2.0.${{ github.run_number }}` (auto-incremented)
 3. Runs all tests with code coverage collection
 4. Generates coverage reports using ReportGenerator
 5. Posts coverage summary as a PR comment via secondary workflow
