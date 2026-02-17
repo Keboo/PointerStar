@@ -9,7 +9,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 #if DEBUG
-builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.CreateDefault()));
+var telemetryConfig = new TelemetryConfiguration
+{
+    ConnectionString = "InstrumentationKey=00000000-0000-0000-0000-000000000000"
+};
+builder.Services.AddSingleton<TelemetryClient>(x => new(telemetryConfig));
 #else
 builder.Services.AddApplicationInsightsTelemetry();
 #endif

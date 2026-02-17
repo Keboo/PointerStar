@@ -769,7 +769,11 @@ public abstract class RoomManagerTests<TRoomManager>
     /// </summary>
     private static void SetupTelemetryClient(AutoMocker mocker)
     {
-        var telemetryConfig = new TelemetryConfiguration();
+        // Create a minimal TelemetryConfiguration for testing without Azure Monitor dependencies
+        var telemetryConfig = new TelemetryConfiguration
+        {
+            ConnectionString = "InstrumentationKey=00000000-0000-0000-0000-000000000000"
+        };
         var telemetryClient = new TelemetryClient(telemetryConfig);
         mocker.Use(telemetryClient);
     }
