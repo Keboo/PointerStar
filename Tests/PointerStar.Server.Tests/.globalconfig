@@ -1,0 +1,4 @@
+is_global = true
+
+# Disable Moq.AutoMocker ApplicationInsights source generator as it's incompatible with ApplicationInsights 3.0.0
+dotnet_diagnostic.MOQAM001.severity = none

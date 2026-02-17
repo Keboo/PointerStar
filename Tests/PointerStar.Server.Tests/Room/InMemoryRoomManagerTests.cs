@@ -1,4 +1,6 @@
-﻿using PointerStar.Server.Room;
+﻿using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Extensibility;
+using PointerStar.Server.Room;
 
 namespace PointerStar.Server.Tests.Room;
 
@@ -6,5 +8,9 @@ namespace PointerStar.Server.Tests.Room;
 public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomManager>
 {
     partial void AutoMockerTestSetup(AutoMocker mocker, string testName)
-        => mocker.WithApplicationInsights();
+    {
+        var telemetryConfig = new TelemetryConfiguration();
+        var telemetryClient = new TelemetryClient(telemetryConfig);
+        mocker.Use(telemetryClient);
+    }
 }
