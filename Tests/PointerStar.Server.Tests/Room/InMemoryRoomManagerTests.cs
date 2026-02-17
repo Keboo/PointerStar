@@ -4,13 +4,8 @@ using PointerStar.Server.Room;
 
 namespace PointerStar.Server.Tests.Room;
 
-[ConstructorTests(typeof(InMemoryRoomManager))]
-public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomManager>
+// ConstructorTests attribute removed due to incompatibility with ApplicationInsights 3.0.0
+// The Moq.AutoMocker.Generators source generator doesn't support ApplicationInsights 3.0.0
+public class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomManager>
 {
-    partial void AutoMockerTestSetup(AutoMocker mocker, string testName)
-    {
-        var telemetryConfig = new TelemetryConfiguration();
-        var telemetryClient = new TelemetryClient(telemetryConfig);
-        mocker.Use(telemetryClient);
-    }
 }

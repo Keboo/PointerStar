@@ -4,8 +4,9 @@ using PointerStar.Shared;
 
 namespace PointerStar.Server.Tests.Controllers;
 
-[ConstructorTests(typeof(RoomController))]
-public partial class RoomControllerTests(WebApplicationFactory factory) : IClassFixture<WebApplicationFactory>
+// ConstructorTests attribute removed due to incompatibility with ApplicationInsights 3.0.0
+// The Moq.AutoMocker.Generators source generator doesn't support ApplicationInsights 3.0.0
+public class RoomControllerTests(WebApplicationFactory factory) : IClassFixture<WebApplicationFactory>
 {
     private WebApplicationFactory Factory { get; } = factory;
 
