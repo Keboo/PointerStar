@@ -278,6 +278,7 @@ public partial class RoomViewModel : ViewModelBase
         catch
         {
             // If synchronization fails, fall back to no offset (zero)
+            // This maintains the original behavior of using the client's local time
             _clockOffset = TimeSpan.Zero;
         }
     }
