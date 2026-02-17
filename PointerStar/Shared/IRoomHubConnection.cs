@@ -15,4 +15,5 @@ public interface IRoomHubConnection
     Task RequestResetVotesAsync();
     Task CancelResetVotesAsync();
     Task RemoveUserAsync(Guid userId);
+    Task<DateTime> GetServerTimeAsync();
 }

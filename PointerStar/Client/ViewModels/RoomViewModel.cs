@@ -17,6 +17,9 @@ public partial class RoomViewModel : ViewModelBase
 
     private CancellationTokenSource? _timerCancellationSource;
 
+    // Track the clock offset between client and server (client time - server time)
+    private TimeSpan _clockOffset = TimeSpan.Zero;
+
     [ObservableProperty]
     private RoomState? _roomState;
 
@@ -69,7 +72,9 @@ public partial class RoomViewModel : ViewModelBase
         {
             if (ResetVotesRequestedAt is { } resetTime)
             {
-                return Math.Max(0, (int)(resetTime - DateTime.UtcNow).TotalSeconds);
+                // Adjust local time by the clock offset to match server time
+                DateTime adjustedNow = DateTime.UtcNow + _clockOffset;
+                return Math.Max(0, (int)(resetTime - adjustedNow).TotalSeconds);
             }
             return 0;
         }
@@ -254,6 +259,29 @@ public partial class RoomViewModel : ViewModelBase
         }
     }
 
+    private async Task SynchronizeClockAsync()
+    {
+        try
+        {
+            // Use a simple ping-based approach: measure round-trip time and assume symmetric latency
+            DateTime clientBefore = DateTime.UtcNow;
+            DateTime serverTime = await RoomHubConnection.GetServerTimeAsync();
+            DateTime clientAfter = DateTime.UtcNow;
+
+            // Estimate the one-way latency as half of the round-trip time
+            TimeSpan roundTripTime = clientAfter - clientBefore;
+            DateTime estimatedServerNow = serverTime + (roundTripTime / 2);
+
+            // Calculate the clock offset (server time - client time)
+            _clockOffset = estimatedServerNow - clientAfter;
+        }
+        catch
+        {
+            // If synchronization fails, fall back to no offset (zero)
+            _clockOffset = TimeSpan.Zero;
+        }
+    }
+
     private async Task ProcessVotingTimer(CancellationToken token)
     {
         using PeriodicTimer votingTimer = new(TimeSpan.FromSeconds(0.5));
@@ -267,7 +295,7 @@ public partial class RoomViewModel : ViewModelBase
             }
             
             // Check if reset countdown has expired
-            if (ResetVotesRequestedAt is { } resetTime && DateTime.UtcNow >= resetTime)
+            if (ResetVotesRequestedAt is { } resetTime && DateTime.UtcNow + _clockOffset >= resetTime)
             {
                 // Clear the field first to prevent duplicate reset attempts
                 var previousResetTime = ResetVotesRequestedAt;
@@ -295,6 +323,9 @@ public partial class RoomViewModel : ViewModelBase
         Name = await Cookie.GetNameAsync();
         await base.OnInitializedAsync();
         await RoomHubConnection.OpenAsync();
+
+        // Synchronize clock with server to handle clock drift
+        await SynchronizeClockAsync();
 
         string lastRoomId = await Cookie.GetRoomAsync();
         Guid? lastRoleId = await Cookie.GetRoleAsync();

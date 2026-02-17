@@ -110,6 +110,12 @@ public class RoomHub : Hub
         }
     }
 
+    [HubMethodName(RoomHubConnection.GetServerTimeMethodName)]
+    public Task<DateTime> GetServerTimeAsync()
+    {
+        return Task.FromResult(DateTime.UtcNow);
+    }
+
     private static string NormalizeRoomId(string roomId)
     {
         return roomId.ToUpperInvariant();
