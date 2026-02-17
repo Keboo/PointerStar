@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Update="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Moq" />
@@ -13,5 +14,12 @@
   <ItemGroup>
     <ProjectReference Include="..\..\PointerStar\Server\PointerStar.Server.csproj" />
   </ItemGroup>
+
+  <!-- Remove Moq.AutoMock analyzers that are incompatible with ApplicationInsights 3.0.0 -->
+  <Target Name="RemoveMoqAutoMockAnalyzers" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <Analyzer Remove="@(Analyzer)" Condition="$([System.String]::Copy('%(Identity)').Contains('Moq.AutoMocker.Generators'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>
