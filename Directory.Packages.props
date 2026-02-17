@@ -23,6 +23,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageVersion>
     <PackageVersion Include="Hashids.net" Version="1.7.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="3.0.0" />
     <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="3.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.3" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.3" PrivateAssets="all" />
