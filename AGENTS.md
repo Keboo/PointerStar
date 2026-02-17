@@ -17,13 +17,15 @@ PointerStar is a real-time pointing poker application built with:
 
 ### Building the Project
 ```bash
-# Build entire solution
+# Build entire solution (takes ~25-30 seconds)
 dotnet build --configuration Release
 
 # Build specific project
 dotnet build PointerStar/Server/PointerStar.Server.csproj
 dotnet build PointerStar/Client/PointerStar.Client.csproj
 ```
+
+**Important**: Always build in Release mode to catch all warnings. The build must produce zero warnings.
 
 ### Running the Application
 ```bash
@@ -35,7 +37,7 @@ dotnet run --project PointerStar/Server/PointerStar.Server.csproj
 
 ### Running Tests
 ```bash
-# Run all tests
+# Run all tests (takes ~60-90 seconds)
 dotnet test --configuration Release
 
 # Run all tests with code coverage
@@ -54,9 +56,10 @@ dotnet test Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj
 - Helper methods like `CreateRoom(sut, connectionIds)` are available for multi-user test scenarios
 
 ### Before Committing
-1. Ensure all tests pass: `dotnet test`
+1. Ensure all tests pass: `dotnet test --configuration Release`
 2. Build in Release mode: `dotnet build --configuration Release`
-3. Check that no new warnings are introduced
+3. Check that no new warnings are introduced (must have zero warnings)
+4. Verify code follows EditorConfig style preferences
 
 ## Project Structure & Dependencies
 
@@ -154,6 +157,15 @@ if (currentUser.Role == Role.Facilitator)
 
 ## Pull Request Guidelines
 
+### CI/CD Workflow
+All PRs trigger the "Build and deploy Pointer*" workflow which:
+1. Runs on .NET 10.x with PowerShell shell
+2. Builds in Release mode with version `2.0.$BUILD_NUMBER`
+3. Runs all tests with code coverage collection
+4. Generates coverage reports using ReportGenerator
+5. Posts coverage summary as a PR comment via secondary workflow
+6. Auto-merges dependabot PRs when checks pass
+
 ### PR Title Format
 Use conventional commit style with optional emoji prefix:
 - `feat: Add new feature` or `✨ Add new feature`
@@ -170,7 +182,28 @@ Use conventional commit style with optional emoji prefix:
 - [ ] No secrets or sensitive data committed
 - [ ] Thread-safety considered for shared state
 
+### Code Review
+- PRs are automatically posted with code coverage reports
+- Dependabot PRs auto-merge when checks pass
+- Manual review required for feature changes
+
 ## Additional Notes
+
+### Code Style
+The repository uses `.editorconfig` for consistent formatting:
+- 4 spaces for C# indentation, 2 for XML/JSON
+- Allman brace style (braces on new line)
+- Use `var` when type is apparent
+- No `this.` qualification
+- Prefer language keywords (`int` over `Int32`)
+- Interfaces must start with `I`
+- PascalCase for all types and members
+
+### Spell Checking
+Spell checking is enabled for strings, identifiers, and comments (en-us):
+- Custom dictionary: `exclusions.dic` in repository root
+- Spelling issues appear as warnings in Error List
+- Add project-specific terms to `exclusions.dic`
 
 ### External Dependencies
 - **Hashids.net**: Used for room ID obfuscation
@@ -179,6 +212,11 @@ Use conventional commit style with optional emoji prefix:
 
 ### Known TODOs
 - Hashids.net needs environment-specific salt configuration
+
+### Performance Notes
+- Build time: ~25-30 seconds for full solution
+- Test time: ~60-90 seconds for all tests
+- Use `--no-build` flag with `dotnet test` when already built to save time
 
 ### When Stuck
 1. Check the existing `.github/copilot-instructions.md` for architectural patterns

@@ -32,12 +32,28 @@ PointerStar is a **real-time pointing poker application** built with Blazor WebA
 
 ### Build & Test
 ```powershell
-# Build entire solution
+# Build entire solution (takes ~25-30 seconds)
 dotnet build --configuration Release
 
-# Run all tests with coverage
+# Run all tests with coverage (takes ~60-90 seconds)
 dotnet test --configuration Release --collect:"XPlat Code Coverage"
+
+# Run tests without building (faster when already built)
+dotnet test --configuration Release --no-build
 ```
+
+**Important**: Always run `dotnet build --configuration Release` before running tests to ensure all projects are compiled.
+
+### CI/CD Validation Pipeline
+The GitHub Actions workflow (`.github/workflows/main_pointerstar.yml`) runs the following steps on every PR and push to main:
+1. **Setup**: .NET 10.x SDK
+2. **Build**: `dotnet build --configuration Release -p:Version="2.0.$BUILD_NUMBER"`
+3. **Test**: `dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage"`
+4. **Coverage**: ReportGenerator creates HTML and Markdown coverage reports
+5. **Publish** (main only): `dotnet publish --configuration Release --no-build`
+6. **Deploy** (main only): Azure Web App deployment to production
+
+**Shell**: All CI commands use PowerShell (`shell: pwsh`)
 
 ### Project Structure Rules
 - **Central Package Management**: All NuGet versions in `Directory.Packages.props`
@@ -105,3 +121,33 @@ if (currentUser.Role == Role.Facilitator)
 - **Hashids.net**: Room ID obfuscation (TODO: needs environment salt)
 - **MudBlazor**: UI component library with specific snackbar configuration
 - **Toolbelt.Blazor.PWA.Updater**: Progressive Web App support
+
+## Code Style and Quality
+
+### EditorConfig Settings
+The repository uses `.editorconfig` for consistent code style:
+- **Indentation**: 4 spaces for C#, 2 spaces for XML/JSON
+- **New Lines**: Allman style (braces on new line), insert final newline, trim trailing whitespace
+- **C# Preferences**: 
+  - Use `var` when type is apparent
+  - No `this.` qualification for members
+  - Prefer language keywords over framework types (e.g., `int` vs `Int32`)
+  - Expression-bodied members for single-line accessors/properties/lambdas
+- **Naming**: Interfaces prefixed with `I`, PascalCase for types and members
+
+### Spell Checking
+The repository has spell checking enabled via Visual Studio's spell checker:
+- **Dictionary**: `exclusions.dic` at repository root
+- **Scope**: strings, identifiers, and comments
+- **Language**: en-us
+- Spelling issues appear as warnings in the Error List
+
+## Validation Before Committing
+
+**Always run these commands before committing changes:**
+1. Build in Release mode to catch all warnings: `dotnet build --configuration Release`
+2. Run all tests: `dotnet test --configuration Release --no-build`
+3. Verify zero warnings and zero errors
+4. Check that code follows EditorConfig style (Visual Studio will format on save)
+
+**Note**: The build must succeed with zero warnings in Release mode to pass CI validation.
