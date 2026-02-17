@@ -31,3 +31,4 @@ jobs:
         with:
           pr-number: ${{ inputs.pr-number }}
           action: ${{ inputs.action }}
+          github-token: ${{ secrets.GH_PAT }}

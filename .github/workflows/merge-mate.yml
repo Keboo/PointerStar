@@ -14,3 +14,4 @@ jobs:
         with:
           ai-provider: gitkraken
           ai-api-key: ${{ secrets.GK_AI_PROVISIONER_TOKEN }}
+          github-token: ${{ secrets.GH_PAT }}
