@@ -17,7 +17,7 @@ public partial class RoomViewModel : ViewModelBase
 
     private CancellationTokenSource? _timerCancellationSource;
 
-    // Track the clock offset between client and server (client time - server time)
+    // Track the clock offset between client and server (server time - client time)
     private TimeSpan _clockOffset = TimeSpan.Zero;
 
     [ObservableProperty]

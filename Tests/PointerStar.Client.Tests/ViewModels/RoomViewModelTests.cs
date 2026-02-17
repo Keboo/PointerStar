@@ -438,17 +438,25 @@ public partial class RoomViewModelTests
     }
 
     [Fact]
-    public void ResetCountdownSeconds_WithClockOffset_AdjustsCountdown()
+    public async Task ResetCountdownSeconds_WithClockOffset_AdjustsCountdown()
     {
         AutoMocker mocker = new();
         // Simulate a client clock that is 2 seconds ahead of server
-        DateTime serverTime = DateTime.UtcNow;
-        DateTime resetTime = serverTime.AddSeconds(10);
+        DateTime clientTime = DateTime.UtcNow;
+        DateTime serverTime = clientTime.AddSeconds(-2); // Server is 2 seconds behind client
+        DateTime resetTime = serverTime.AddSeconds(10); // Reset is 10 seconds after server time
         
         mocker.Setup<IRoomHubConnection, Task<DateTime>>(x => x.GetServerTimeAsync())
-            .ReturnsAsync(serverTime.AddSeconds(-2)); // Server is 2 seconds behind client
+            .ReturnsAsync(serverTime);
+        mocker.SetupHttpGet(new Uri("/api/room/GetNewUserRole/RoomId", UriKind.Relative))
+            .ReturnsJson(Role.TeamMember);
         
         RoomViewModel viewModel = mocker.CreateInstance<RoomViewModel>();
+        viewModel.RoomId = "RoomId";
+        
+        // Initialize to trigger clock synchronization
+        await viewModel.OnInitializedAsync();
+        
         User facilitator = new(Guid.NewGuid(), "Facilitator") { Role = Role.Facilitator };
         RoomState roomState = new(Guid.NewGuid().ToString(), [facilitator])
         {
@@ -458,11 +466,12 @@ public partial class RoomViewModelTests
         viewModel.CurrentUserId = facilitator.Id;
         WithRoomState(mocker, roomState);
 
-        // The countdown should be calculated correctly even with clock offset
+        // The countdown should be calculated correctly with clock offset compensation
+        // Expected: ~8 seconds (10 seconds from server perspective - 2 second offset)
         int countdown = viewModel.ResetCountdownSeconds;
 
-        // Should be between 8-12 seconds (accounting for test execution time and offset)
-        Assert.InRange(countdown, 8, 12);
+        // Should be between 6-10 seconds (accounting for test execution time and offset)
+        Assert.InRange(countdown, 6, 10);
     }
 
     private static void WithUserDialog(AutoMocker mocker, string? name, Guid? selectedRoleId)
