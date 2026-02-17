@@ -1,0 +1,16 @@
+name: Merge Mate Sync
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: gitkraken/merge-mate-action/sync@v0.1
+        with:
+          ai-provider: gitkraken
+          ai-api-key: ${{ secrets.GK_AI_PROVISIONER_TOKEN }}
