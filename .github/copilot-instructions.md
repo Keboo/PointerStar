@@ -47,14 +47,14 @@ dotnet test --configuration Release --no-build
 ### CI/CD Validation Pipeline
 The GitHub Actions workflow (`.github/workflows/main_pointerstar.yml`) runs the following steps on every PR and push to main:
 1. **Setup**: .NET 10.x SDK
-2. **Build**: `dotnet build --configuration Release -p:Version="2.0.{github.run_number}"`
+2. **Build**: `dotnet build --configuration Release -p:Version="${{ env.version }}"` where version is `2.0.${{ github.run_number }}`
 3. **Test**: `dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage"`
 4. **Coverage**: ReportGenerator creates HTML and Markdown coverage reports
 5. **Publish** (main only): `dotnet publish --configuration Release --no-build`
 6. **Deploy** (main only): Azure Web App deployment to production
 
 **Shell**: All CI commands use PowerShell (`shell: pwsh`)
-**Version**: Build version is set to `2.0.{github.run_number}` where `github.run_number` is the GitHub Actions run number
+**Versioning**: Build version is defined as environment variable `version: "2.0.${{ github.run_number }}"` and auto-increments with each workflow run
 
 ### Project Structure Rules
 - **Central Package Management**: All NuGet versions in `Directory.Packages.props`
