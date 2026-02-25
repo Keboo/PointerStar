@@ -6,6 +6,11 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write
+
+concurrency:                                                                                                                   
+  group: merge-mate-sync-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   sync:
     runs-on: ubuntu-latest
