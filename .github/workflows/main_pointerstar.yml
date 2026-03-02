@@ -35,7 +35,7 @@ jobs:
         run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
         
       - name: ReportGenerator
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.1
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.2
         with:
           reports: coverage/**/coverage.cobertura.xml
           targetdir: coveragereport
@@ -48,7 +48,7 @@ jobs:
           echo ${{ github.event.number }} > ./coveragereport/PullRequestNumber
 
       - name: Upload Code Coverage Report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: CodeCoverage
           path: coveragereport/
@@ -60,7 +60,7 @@ jobs:
 
       - name: Upload artifact for deployment job
         if: ${{ github.event_name != 'pull_request' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: app
           path: ${{env.DOTNET_ROOT}}/publish
@@ -88,7 +88,7 @@ jobs:
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: app
 
