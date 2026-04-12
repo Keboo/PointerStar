@@ -6,22 +6,12 @@ import {
 
 import type { RoomOptions, RoomState, User, UserOptions } from '../types/contracts'
 import { roomHubMethods } from '../types/contracts'
+import { getJitteredDelayMs, waitForDelay } from './retry'
 
-const pauseBetweenFailuresMs = 20_000
-
-function waitForRetry(signal?: AbortSignal) {
-  return new Promise<void>((resolve, reject) => {
-    const timeoutId = window.setTimeout(resolve, pauseBetweenFailuresMs)
-
-    signal?.addEventListener(
-      'abort',
-      () => {
-        window.clearTimeout(timeoutId)
-        reject(new DOMException('The connection retry was cancelled.', 'AbortError'))
-      },
-      { once: true },
-    )
-  })
+const hubRetryOptions = {
+  baseDelayMs: 500,
+  jitterRatio: 0.25,
+  maxDelayMs: 10_000,
 }
 
 export class RoomHubClient {
@@ -49,6 +39,8 @@ export class RoomHubClient {
   }
 
   public async open(signal?: AbortSignal) {
+    let failedAttempts = 0
+
     while (!signal?.aborted) {
       if (
         this.connection.state === HubConnectionState.Connected ||
@@ -62,8 +54,10 @@ export class RoomHubClient {
         await this.connection.start()
         return
       } catch (error) {
-        console.warn('Unable to connect to the room hub. Retrying.', error)
-        await waitForRetry(signal)
+        failedAttempts += 1
+        const delayMs = getJitteredDelayMs(failedAttempts, hubRetryOptions)
+        console.warn(`Unable to connect to the room hub. Retrying in ${delayMs}ms.`, error)
+        await waitForDelay(delayMs, signal)
       }
     }
   }
