@@ -1,4 +1,11 @@
 import { roleFromId } from '../types/contracts'
+import { fetchWithRetry } from './retry'
+
+const requestRetryOptions = {
+  baseDelayMs: 300,
+  maxAttempts: 4,
+  maxDelayMs: 3_000,
+}
 
 async function readJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
@@ -9,7 +16,7 @@ async function readJson<T>(response: Response): Promise<T> {
 }
 
 export async function generateRoomId() {
-  const response = await fetch('/api/room/generate')
+  const response = await fetchWithRetry('/api/room/generate', undefined, requestRetryOptions)
   if (!response.ok) {
     throw new Error(`Unable to generate a room: ${response.status} ${response.statusText}`)
   }
@@ -18,11 +25,11 @@ export async function generateRoomId() {
 }
 
 export async function getNewUserRole(roomId: string) {
-  const response = await fetch(`/api/room/GetNewUserRole/${encodeURIComponent(roomId)}`, {
+  const response = await fetchWithRetry(`/api/room/GetNewUserRole/${encodeURIComponent(roomId)}`, {
     headers: {
       Accept: 'application/json',
     },
-  })
+  }, requestRetryOptions)
 
   const role = await readJson<{ id: string; name: string }>(response)
   return roleFromId(role.id) ?? role
