@@ -14,7 +14,7 @@ builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.C
 builder.Services.AddApplicationInsightsTelemetry();
 #endif
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 
 //TODO: Make these configurable settings
@@ -40,11 +40,7 @@ builder.Services.AddSingleton<IRoomManager, InMemoryRoomManager>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseWebAssemblyDebugging();
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -52,19 +48,16 @@ else
 }
 
 app.UseHttpsRedirection();
-
-app.UseBlazorFrameworkFiles();
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 
 app.MapRazorPages();
 app.MapControllers();
 
 app.MapHub<RoomHub>($"/{nameof(RoomHub)}");
 
-app.MapFallbackToPage("/_Host");
+app.MapFallbackToFile("index.html");
 
 app.Run();
-

@@ -12,16 +12,31 @@ on:
 defaults:
   run:
     shell: pwsh
-    
+
 env:
   version: "2.0.${{ github.run_number }}"
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: PointerStar/ClientApp/package-lock.json
+
+      - name: Install React app dependencies
+        run: npm ci
+        working-directory: PointerStar/ClientApp
+
+      - name: Run React app tests
+        run: npm run test:run
+        working-directory: PointerStar/ClientApp
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v5
@@ -33,7 +48,7 @@ jobs:
 
       - name: dotnet test
         run: dotnet test --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
-        
+
       - name: ReportGenerator
         uses: danielpalme/ReportGenerator-GitHub-Action@5.5.4
         with:
@@ -53,10 +68,10 @@ jobs:
           name: CodeCoverage
           path: coveragereport/
           if-no-files-found: error
-        
+
       - name: dotnet publish
         if: ${{ github.event_name != 'pull_request' }}
-        run: dotnet publish --configuration Release --no-build -p:Version="${{ env.version }}" -p:PublishDir=${{env.DOTNET_ROOT}}/publish
+        run: dotnet publish PointerStar/Server/PointerStar.Server.csproj --configuration Release --no-build -p:Version="${{ env.version }}" -p:PublishDir=${{env.DOTNET_ROOT}}/publish
 
       - name: Upload artifact for deployment job
         if: ${{ github.event_name != 'pull_request' }}

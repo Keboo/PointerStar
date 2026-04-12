@@ -2,16 +2,46 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <SpaRoot>..\ClientApp\</SpaRoot>
+    <SpaDist>$(SpaRoot)dist\</SpaDist>
+    <EnableClientAppBuild Condition="'$(EnableClientAppBuild)' == ''">true</EnableClientAppBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Hashids.net" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Client\PointerStar.Client.csproj" />
     <ProjectReference Include="..\Shared\PointerStar.Shared.csproj" />
   </ItemGroup>
+
+  <Target Name="RestoreClientApp" BeforeTargets="Build" Condition="'$(EnableClientAppBuild)' == 'true' and !Exists('$(SpaRoot)node_modules')">
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+  </Target>
+
+  <Target Name="BuildClientApp" BeforeTargets="Build" Condition="'$(EnableClientAppBuild)' == 'true'">
+    <Exec WorkingDirectory="$(SpaRoot)" Command="npm run build" />
+  </Target>
+
+  <Target Name="CopyClientAppToOutput" AfterTargets="Build" Condition="'$(EnableClientAppBuild)' == 'true'">
+    <ItemGroup>
+      <ClientAppDistFiles Include="$(SpaDist)**\*" />
+    </ItemGroup>
+
+    <Copy
+      DestinationFiles="@(ClientAppDistFiles->'$(OutDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true"
+      SourceFiles="@(ClientAppDistFiles)" />
+  </Target>
+
+  <Target Name="PublishClientApp" BeforeTargets="ComputeFilesToPublish" Condition="'$(EnableClientAppBuild)' == 'true'">
+    <ItemGroup>
+      <ClientAppDistFiles Include="$(SpaDist)**\*" />
+      <ResolvedFileToPublish Include="@(ClientAppDistFiles->'%(FullPath)')">
+        <RelativePath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 </Project>

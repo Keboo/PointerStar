@@ -3,9 +3,9 @@
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
-      "applicationUrl": "https://pointerstar.dev.localhost:7017;http://pointerstar.dev.localhost:5290",
+      "applicationUrl": "https://localhost:7017;http://localhost:5290",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
@@ -13,7 +13,7 @@
     "test-room": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
+      "launchBrowser": false,
       "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
       "applicationUrl": "https://localhost:7234;http://localhost:5225",
       "launchUrl": "https://localhost:7234/room/testing-room",
@@ -24,8 +24,8 @@
     "https-no-debug": {
       "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://pointerstar.dev.localhost:7017;http://pointerstar.dev.localhost:5290",
+      "launchBrowser": false,
+      "applicationUrl": "https://localhost:7017;http://localhost:5290",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

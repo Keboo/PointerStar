@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Solution Items/">
+    <File Path="aspire.config.json" />
     <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Build.targets" />
@@ -17,11 +18,11 @@
   </Folder>
   <Folder Name="/Test/">
     <File Path="Tests/Directory.Build.props" />
-    <Project Path="Tests/PointerStar.Client.Tests/PointerStar.Client.Tests.csproj" />
     <Project Path="Tests/PointerStar.Server.Tests/PointerStar.Server.Tests.csproj" />
     <Project Path="Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj" />
   </Folder>
-  <Project Path="PointerStar/Client/PointerStar.Client.csproj" />
+  <Project Path="PointerStar/AppHost/PointerStar.AppHost.csproj" />
+  <Project Path="PointerStar/ClientApp/PointerStar.ClientApp.esproj" />
   <Project Path="PointerStar/Server/PointerStar.Server.csproj" />
   <Project Path="PointerStar/Shared/PointerStar.Shared.csproj" />
 </Solution>
