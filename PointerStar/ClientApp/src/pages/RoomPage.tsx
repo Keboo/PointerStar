@@ -54,6 +54,7 @@ import {
   type User,
   type UserOptions,
 } from '../types/contracts'
+import { getElapsedTimeLabel } from './roomTime'
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError'
@@ -61,22 +62,6 @@ function isAbortError(error: unknown) {
 
 function isRole(user: User | null | undefined, role: Role) {
   return user?.role.id === role.id
-}
-
-function getElapsedTimeLabel(startAt?: string | null, offsetMs = 0) {
-  if (!startAt) {
-    return ''
-  }
-
-  const elapsedMs = Math.max(0, Date.now() + offsetMs - new Date(startAt).getTime())
-  const minutes = Math.floor(elapsedMs / 60_000)
-    .toString()
-    .padStart(2, '0')
-  const seconds = Math.floor((elapsedMs % 60_000) / 1_000)
-    .toString()
-    .padStart(2, '0')
-
-  return `${minutes}:${seconds}`
 }
 
 export function RoomPage() {
