@@ -27,7 +27,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.issue.pull_request
     runs-on: ubuntu-latest
     steps:
-      - uses: gitkraken/merge-mate-action/review@v0.2
+      - uses: gitkraken/merge-mate-action/review@v0.3
         with:
           pr-number: ${{ inputs.pr-number }}
           action: ${{ inputs.action }}
