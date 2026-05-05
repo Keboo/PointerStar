@@ -15,11 +15,10 @@ public class RoomHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        RoomState? room = await RoomManager.DisconnectAsync(Context.ConnectionId);
-        if (room?.RoomId is { } roomId)
+        if (RoomManager.TryReleaseConnection(Context.ConnectionId, out string? roomId, out Guid userId) &&
+            roomId is not null)
         {
-            string normalizedRoomId = NormalizeRoomId(roomId);
-            await Clients.Group(normalizedRoomId).SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
+            await RoomManager.ScheduleDisconnectAsync(userId, roomId, TimeSpan.FromSeconds(30));
         }
         await base.OnDisconnectedAsync(exception);
     }
@@ -27,6 +26,7 @@ public class RoomHub : Hub
     [HubMethodName(RoomHubConnection.JoinRoomMethodName)]
     public async Task JoinRoomAsync(string roomId, User user)
     {
+        RoomManager.CancelPendingDisconnect(user.Id);
         string normalizedRoomId = NormalizeRoomId(roomId);
         RoomState roomState = await RoomManager.AddUserToRoomAsync(roomId, user, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, normalizedRoomId);

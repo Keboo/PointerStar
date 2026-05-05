@@ -44,6 +44,7 @@ import {
 } from '../services/cookies'
 import { addRecentRoom } from '../services/recentRooms'
 import { RoomHubClient } from '../services/roomHubClient'
+import { getOrCreateUserId } from '../services/userIdentity'
 import {
   defaultVoteOptions,
   roleFromId,
@@ -96,6 +97,18 @@ export function RoomPage() {
 
   const clientRef = useRef<RoomHubClient | null>(null)
   const lastProcessedResetAtRef = useRef<string | null>(null)
+
+  // Refs for latest values needed inside stable callbacks (avoid stale closures).
+  const nameRef = useRef(name)
+  const selectedRoleIdRef = useRef(selectedRoleId)
+
+  useEffect(() => {
+    nameRef.current = name
+  }, [name])
+
+  useEffect(() => {
+    selectedRoleIdRef.current = selectedRoleId
+  }, [selectedRoleId])
 
   const currentUser = useMemo(
     () => roomState?.users.find((user) => user.id === currentUserId) ?? null,
@@ -193,7 +206,7 @@ export function RoomPage() {
           const role = roleFromId(nextRoleId) ?? roles.teamMember
           const resolvedName = nextName.trim() || `User ${Math.floor(Math.random() * 100_000)}`
           const user: User = {
-            id: crypto.randomUUID(),
+            id: getOrCreateUserId(),
             name: resolvedName,
             role,
           }
@@ -271,6 +284,28 @@ export function RoomPage() {
 
     let cancelled = false
 
+    // Rejoins the room using the stable user identity. Called by:
+    //   - onreconnected (SignalR built-in reconnect succeeded)
+    //   - onclose (reconnect exhausted; this also re-opens the connection)
+    //   - visibilitychange (tab foregrounded while fully disconnected)
+    const rejoinRoom = async () => {
+      try {
+        await client.open(controller.signal)
+        const userId = getOrCreateUserId()
+        const resolvedName = nameRef.current
+        if (!resolvedName || !roomId) return
+        const role = roleFromId(selectedRoleIdRef.current) ?? roles.teamMember
+        const user: User = { id: userId, name: resolvedName, role }
+        await callHub((roomClient) => roomClient.joinRoom(roomId, user))
+      } catch (error) {
+        if (!isAbortError(error)) {
+          console.error('Failed to rejoin room after reconnect.', error)
+        }
+      }
+    }
+
+    client.setReconnectHandler(rejoinRoom)
+
     void (async () => {
       try {
         await client.open(controller.signal)
@@ -294,7 +329,7 @@ export function RoomPage() {
       }
 
       const rememberedName = preferredName || getStoredName()
-      if (rememberedName && !name) {
+      if (rememberedName && !nameRef.current) {
         setName(rememberedName)
       }
 
@@ -304,7 +339,7 @@ export function RoomPage() {
 
       if (rememberedRoomId === roomId && rememberedRole && rememberedName.trim()) {
         const user: User = {
-          id: crypto.randomUUID(),
+          id: getOrCreateUserId(),
           name: rememberedName,
           role: rememberedRole,
         }
@@ -322,16 +357,26 @@ export function RoomPage() {
       }
     })()
 
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return
+      // Only act when fully disconnected; Reconnecting is already being handled by SignalR.
+      if (!client.isDisconnected) return
+      await rejoinRoom()
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
     return () => {
       cancelled = true
       controller.abort()
       unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       void client.stop()
       if (clientRef.current === client) {
         clientRef.current = null
       }
     }
-  }, [callHub, name, preferredName, roomId, showSnackbar])
+  }, [callHub, preferredName, roomId, showSnackbar])
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {

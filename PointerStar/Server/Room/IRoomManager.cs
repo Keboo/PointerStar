@@ -6,6 +6,9 @@ public interface IRoomManager
 {
     Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId);
     Task<RoomState?> DisconnectAsync(string connectionId);
+    bool TryReleaseConnection(string connectionId, out string? roomId, out Guid userId);
+    Task ScheduleDisconnectAsync(Guid userId, string roomId, TimeSpan delay);
+    void CancelPendingDisconnect(Guid userId);
     Task<RoomState?> UpdateRoomAsync(RoomOptions roomOptions, string connectionId);
     Task<RoomState?> UpdateUserAsync(UserOptions userOptions, string connectionId);
     Task<RoomState?> SubmitVoteAsync(string vote, string connectionId);

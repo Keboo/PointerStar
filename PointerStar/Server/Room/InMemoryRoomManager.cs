@@ -1,6 +1,9 @@
-﻿using PointerStar.Shared;
-using Microsoft.ApplicationInsights;
+﻿using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using PointerStar.Server.Hubs;
+using PointerStar.Shared;
 
 namespace PointerStar.Server.Room;
 public class InMemoryRoomManager : IRoomManager
@@ -9,11 +12,16 @@ public class InMemoryRoomManager : IRoomManager
     private ConcurrentDictionary<string, RoomState> Rooms { get; } = new();
     private ConcurrentDictionary<string, string> ConnectionsToRoom { get; } = new();
     private ConcurrentDictionary<string, Guid> ConnectionsToUserId { get; } = new();
+    private ConcurrentDictionary<Guid, CancellationTokenSource> PendingDisconnects { get; } = new();
     private TelemetryClient TelemetryClient { get; }
+    private IHubContext<RoomHub> HubContext { get; }
+    private ILogger<InMemoryRoomManager> Logger { get; }
 
-    public InMemoryRoomManager(TelemetryClient telemetryClient)
+    public InMemoryRoomManager(TelemetryClient telemetryClient, IHubContext<RoomHub> hubContext, ILogger<InMemoryRoomManager> logger)
     {
         TelemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
+        HubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
+        Logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
@@ -91,6 +99,55 @@ public class InMemoryRoomManager : IRoomManager
             }
             return null;
         });
+    }
+
+    public bool TryReleaseConnection(string connectionId, out string? roomId, out Guid userId)
+    {
+        bool hadRoom = ConnectionsToRoom.TryRemove(connectionId, out roomId);
+        bool hadUser = ConnectionsToUserId.TryRemove(connectionId, out userId);
+        return hadRoom && hadUser;
+    }
+
+    public Task ScheduleDisconnectAsync(Guid userId, string roomId, TimeSpan delay)
+    {
+        CancelPendingDisconnect(userId);
+
+        var cts = new CancellationTokenSource();
+        PendingDisconnects[userId] = cts;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(delay, cts.Token);
+                RoomState? room = await RemoveUserFromRoomAsync(NormalizeRoomId(roomId), userId);
+                if (room is not null)
+                {
+                    await HubContext.Clients.Group(NormalizeRoomId(room.RoomId))
+                        .SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error during deferred disconnect for user {UserId} in room {RoomId}", userId, roomId);
+            }
+            finally
+            {
+                PendingDisconnects.TryRemove(userId, out _);
+            }
+        });
+
+        return Task.CompletedTask;
+    }
+
+    public void CancelPendingDisconnect(Guid userId)
+    {
+        if (PendingDisconnects.TryRemove(userId, out CancellationTokenSource? cts))
+        {
+            cts.Cancel();
+            cts.Dispose();
+        }
     }
 
     public Task<RoomState?> UpdateRoomAsync(RoomOptions roomOptions, string connectionId)
@@ -288,6 +345,28 @@ public class InMemoryRoomManager : IRoomManager
         });
     }
 
+
+    private Task<RoomState?> RemoveUserFromRoomAsync(string roomId, Guid userId)
+    {
+        return WithExistingRoom(roomId, userId, (room, currentUser) =>
+        {
+            User[] users = [..room.Users.Where(x => x.Id != currentUser.Id)];
+
+            TelemetryClient?.TrackEvent("UserDisconnected", new Dictionary<string, string>
+            {
+                { "RoomId", room.RoomId },
+                { "UserId", currentUser.Id.ToString() },
+                { "UserRole", currentUser.Role.Name }
+            });
+
+            if (users.Length != 0)
+            {
+                TelemetryClient?.GetMetric("RoomUserCount", "RoomId").TrackValue(users.Length, room.RoomId);
+                return room with { Users = users };
+            }
+            return null;
+        });
+    }
 
     private Task<RoomState?> WithConnection(string connectionId, Func<RoomState, User, RoomState?> updateRoom)
     {

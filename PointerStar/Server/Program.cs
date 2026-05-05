@@ -31,7 +31,7 @@ builder.Services.AddSignalR(hubOptions => hubOptions.EnableDetailedErrors = true
                     options =>
                     {
                         options.KeepAliveInterval = TimeSpan.FromSeconds(15);
-                        options.ClientTimeoutInterval = TimeSpan.FromMinutes(1);
+                        options.ClientTimeoutInterval = TimeSpan.FromMinutes(3);
                     });
 
 builder.Services.AddScoped(_ => new Hashids("TODO: Environment Salt"));
