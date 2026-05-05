@@ -12,8 +12,7 @@ public sealed record class RoomState(string RoomId, User[] Users)
         => [.. Users.Where(u => u.Role == Role.Observer)];
 
     public bool VotesShown { get; init; }
-    //We want the default to be true so new facilitators have this on by default
-    public bool AutoShowVotes { get; init; } = true;
+    public bool AutoShowVotes { get; init; }
 
     public string[] VoteOptions { get; init; } = VotingPresets.Fibonacci;
     public DateTime? VoteStartTime { get; init; } = DateTime.UtcNow;
