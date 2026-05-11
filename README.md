@@ -17,10 +17,10 @@ Visual Studio users can open the client as its own JavaScript project in Solutio
 
 ```powershell
 # Install frontend dependencies
-npm ci --prefix PointerStar/ClientApp
+pnpm install --prefix PointerStar/ClientApp
 
 # Run frontend tests
-npm run test:run --prefix PointerStar/ClientApp
+pnpm run test:run --prefix PointerStar/ClientApp
 
 # Build the full solution, including the AppHost
 dotnet build --configuration Release
@@ -42,7 +42,7 @@ dotnet publish PointerStar/Server/PointerStar.Server.csproj --configuration Rele
 
 ```powershell
 # Frontend
-npm run test:run --prefix PointerStar/ClientApp
+pnpm run test:run --prefix PointerStar/ClientApp
 
 # Backend and shared projects
 dotnet test --configuration Release
@@ -53,5 +53,5 @@ dotnet test --configuration Release
 ```powershell
 # If you run the backend directly, point Vite at that server URL
 $env:VITE_BACKEND_URL = "https://localhost:7017"
-npm run dev --prefix PointerStar/ClientApp
+pnpm run dev --prefix PointerStar/ClientApp
 ```

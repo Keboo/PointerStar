@@ -40,10 +40,10 @@ The ASP.NET Core server continues to host the built SPA and the backend APIs fro
 
 ```powershell
 # Frontend dependencies
-npm ci --prefix PointerStar/ClientApp
+pnpm install --prefix PointerStar/ClientApp
 
 # Frontend tests
-npm run test:run --prefix PointerStar/ClientApp
+pnpm run test:run --prefix PointerStar/ClientApp
 
 # Full build
 dotnet build --configuration Release

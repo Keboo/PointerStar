@@ -19,8 +19,8 @@ The ASP.NET Core server still hosts the built frontend assets and the backend en
 
 ### Build
 ```powershell
-npm ci --prefix PointerStar/ClientApp
-npm run test:run --prefix PointerStar/ClientApp
+pnpm install --prefix PointerStar/ClientApp
+pnpm run test:run --prefix PointerStar/ClientApp
 dotnet build --configuration Release
 ```
 
