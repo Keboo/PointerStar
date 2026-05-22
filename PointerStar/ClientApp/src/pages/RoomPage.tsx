@@ -32,6 +32,8 @@ import { QRCodeSVG } from 'qrcode.react'
 
 import { UserDialog } from '../components/UserDialog'
 import { VotingOptionsDialog } from '../components/VotingOptionsDialog'
+import { GiphyVotingPanel } from '../components/GiphyVotingPanel'
+import { GiphyVoteDisplay } from '../components/GiphyVoteDisplay'
 import {
   getStoredName,
   getStoredRoleId,
@@ -54,6 +56,7 @@ import {
   type RoomState,
   type User,
   type UserOptions,
+  VotingMode,
 } from '../types/contracts'
 import { getElapsedTimeLabel } from './roomTime'
 
@@ -527,23 +530,41 @@ export function RoomPage() {
         ) : null}
 
         {isRole(currentUser, roles.teamMember) ? (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-            {(roomState?.voteOptions ?? defaultVoteOptions).map((option) => (
-              <Button
-                color={option === currentUser?.vote ? 'success' : 'primary'}
-                key={option}
-                onClick={() => {
-                  void callHub(async (client) => {
-                    await client.submitVote(option)
-                  })
-                }}
-                sx={{ height: 70, m: 0.5, minWidth: 70, px: 2.5 }}
-                variant="contained"
-              >
-                {option}
-              </Button>
-            ))}
-          </Box>
+          <>
+            {roomState?.votingMode === VotingMode.Giphy ? (
+              <Card>
+                <CardHeader title="Select a GIF" />
+                <CardContent>
+                  <GiphyVotingPanel
+                    disabled={votesShown}
+                    onVoteSubmit={(giphyId) => {
+                      void callHub(async (client) => {
+                        await client.submitVote(giphyId)
+                      })
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            ) : (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
+                {(roomState?.voteOptions ?? defaultVoteOptions).map((option) => (
+                  <Button
+                    color={option === currentUser?.vote ? 'success' : 'primary'}
+                    key={option}
+                    onClick={() => {
+                      void callHub(async (client) => {
+                        await client.submitVote(option)
+                      })
+                    }}
+                    sx={{ height: 70, m: 0.5, minWidth: 70, px: 2.5 }}
+                    variant="contained"
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </Box>
+            )}
+          </>
         ) : null}
 
         {isRole(currentUser, roles.facilitator) ? (
@@ -609,32 +630,43 @@ export function RoomPage() {
         ) : null}
 
         {votesShown && roomState ? (
-          <Card>
-            <CardHeader title="Results" />
-            <CardContent>
-              <Stack spacing={1}>
-                {groupedVotes.map((entry) => {
-                  const percentage = teamMembers.length === 0 ? 0 : entry.count / teamMembers.length
-                  const isHighestCount = entry.count === maxVoteCount
-                  const label = `${entry.vote.trim() ? entry.vote : '…'} - ${entry.count} Vote${entry.count === 1 ? '' : 's'} (${percentage.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 })})`
+          <>
+            {roomState.votingMode === VotingMode.Giphy ? (
+              <Card>
+                <CardHeader title="Votes" />
+                <CardContent>
+                  <GiphyVoteDisplay users={teamMembers} showVotes={votesShown} />
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardHeader title="Results" />
+                <CardContent>
+                  <Stack spacing={1}>
+                    {groupedVotes.map((entry) => {
+                      const percentage = teamMembers.length === 0 ? 0 : entry.count / teamMembers.length
+                      const isHighestCount = entry.count === maxVoteCount
+                      const label = `${entry.vote.trim() ? entry.vote : '…'} - ${entry.count} Vote${entry.count === 1 ? '' : 's'} (${percentage.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 })})`
 
-                  return (
-                    <Box key={entry.vote || 'blank'}>
-                      <Typography variant={isHighestCount ? 'body1' : 'body2'}>{label}</Typography>
-                      <Box
-                        sx={(theme) => ({
-                          backgroundColor: isHighestCount ? theme.palette.primary.dark : theme.palette.primary.light,
-                          height: 10,
-                          mt: 0.5,
-                          width: `${percentage * 100}%`,
-                        })}
-                      />
-                    </Box>
-                  )
-                })}
-              </Stack>
-            </CardContent>
-          </Card>
+                      return (
+                        <Box key={entry.vote || 'blank'}>
+                          <Typography variant={isHighestCount ? 'body1' : 'body2'}>{label}</Typography>
+                          <Box
+                            sx={(theme) => ({
+                              backgroundColor: isHighestCount ? theme.palette.primary.dark : theme.palette.primary.light,
+                              height: 10,
+                              mt: 0.5,
+                              width: `${percentage * 100}%`,
+                            })}
+                          />
+                        </Box>
+                      )
+                    })}
+                  </Stack>
+                </CardContent>
+              </Card>
+            )}
+          </>
         ) : null}
 
         <Card>
@@ -737,11 +769,16 @@ export function RoomPage() {
 
       <VotingOptionsDialog
         currentVoteOptions={roomState?.voteOptions}
+        currentVotingMode={roomState?.votingMode}
         onCancel={() => setShowVotingOptionsDialog(false)}
-        onSave={(nextVoteOptions) => {
+        onSave={(nextVoteOptions, nextVotingMode) => {
           setShowVotingOptionsDialog(false)
           setStoredVoteOptions(nextVoteOptions)
-          void requestRoomUpdate({ voteOptions: nextVoteOptions })
+          const update: RoomOptions = { voteOptions: nextVoteOptions }
+          if (nextVotingMode !== undefined) {
+            update.votingMode = nextVotingMode
+          }
+          void requestRoomUpdate(update)
         }}
         open={showVotingOptionsDialog}
       />

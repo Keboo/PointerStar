@@ -57,7 +57,8 @@ public class InMemoryRoomManager : IRoomManager
             {
                 TelemetryClient?.TrackEvent("RoomCreated", new Dictionary<string, string>
                 {
-                    { "RoomId", rv.RoomId }
+                    { "RoomId", rv.RoomId },
+                    { "VotingMode", rv.VotingMode.ToString() }
                 });
             }
 
@@ -179,6 +180,13 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     room = room with { VoteOptions = voteOptions };
                 }
+
+                // Prevent voting mode changes mid-session (mode is immutable after room creation)
+                if (roomOptions.VotingMode.HasValue && roomOptions.VotingMode != room.VotingMode)
+                {
+                    Logger.LogWarning("Attempt to change voting mode mid-session for room {RoomId} (not allowed)", room.RoomId);
+                }
+
                 return room;
             }
             return room;
@@ -216,10 +224,12 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, currentUser) =>
         {
-            if (!room.VoteOptions.Contains(vote))
+            // Validate vote based on voting mode
+            if (!IsValidVote(vote, room.VotingMode, room.VoteOptions))
             {
                 return room;
             }
+
             var roomState = room with
             {
                 Users = [..room.Users.Select(u => u.Id == currentUser.Id ? u with
@@ -435,6 +445,36 @@ public class InMemoryRoomManager : IRoomManager
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// Validates a vote based on the current voting mode.
+    /// </summary>
+    private static bool IsValidVote(string vote, VotingMode votingMode, string[] voteOptions)
+    {
+        return votingMode switch
+        {
+            VotingMode.Standard => voteOptions.Contains(vote),
+            VotingMode.Giphy => IsValidGiphyId(vote),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Validates that a vote is a properly formatted Giphy ID.
+    /// Giphy IDs are alphanumeric strings, typically 16-20 characters.
+    /// Pattern: base62-encoded (A-Za-z0-9) identifiers.
+    /// </summary>
+    private static bool IsValidGiphyId(string giphyId)
+    {
+        if (string.IsNullOrWhiteSpace(giphyId))
+        {
+            return false;
+        }
+
+        // Giphy IDs are 16-20 alphanumeric characters
+        return giphyId.Length >= 14 && giphyId.Length <= 25 &&
+               System.Text.RegularExpressions.Regex.IsMatch(giphyId, "^[a-zA-Z0-9]+$");
     }
 
     private static string NormalizeRoomId(string roomId) => roomId.ToUpperInvariant();

@@ -19,6 +19,8 @@ else
 
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 //TODO: Make these configurable settings
 builder.Services.AddSignalR(hubOptions => hubOptions.EnableDetailedErrors = true)
