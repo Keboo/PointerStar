@@ -3,10 +3,12 @@ export interface Role {
   name: string
 }
 
-export enum VotingMode {
-  Standard = 0,
-  Giphy = 1,
-}
+export const VotingMode = {
+  Standard: 0,
+  Giphy: 1,
+} as const
+
+export type VotingMode = typeof VotingMode[keyof typeof VotingMode]
 
 export interface User {
   id: string

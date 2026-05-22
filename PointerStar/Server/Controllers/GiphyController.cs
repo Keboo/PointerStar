@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Collections.Concurrent;
 using System.Net.Http;
+using System.Text.Json;
 
 namespace PointerStar.Server.Controllers;
 
@@ -63,12 +64,13 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
             }
 
             var content = await response.Content.ReadAsStringAsync();
-            var giphyResponse = System.Text.Json.JsonSerializer.Deserialize<dynamic>(content);
+            using var jsonDoc = JsonDocument.Parse(content);
+            var root = jsonDoc.RootElement;
 
             // Parse the response and extract GIFs
             var result = new GiphySearchResponse
             {
-                Data = ExtractGiphyIds(giphyResponse),
+                Data = ExtractGiphyIds(root),
                 Pagination = new PaginationInfo { Count = 20 }
             };
 
@@ -81,7 +83,7 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
 
             return Ok(result);
         }
-        catch (Exception ex)
+        catch
         {
             // Log the exception and return empty results
             // In production, this should be logged properly
@@ -122,32 +124,57 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
     /// <summary>
     /// Extracts Giphy IDs from the API response.
     /// </summary>
-    private static List<GiphyItem> ExtractGiphyIds(dynamic? giphyResponse)
+    private static List<GiphyItem> ExtractGiphyIds(JsonElement root)
     {
         var items = new List<GiphyItem>();
 
         try
         {
-            if (giphyResponse?.data is System.Collections.IEnumerable data)
+            if (root.TryGetProperty("data", out var dataArray))
             {
-                foreach (var gif in data)
+                foreach (var gif in dataArray.EnumerateArray())
                 {
-                    if (gif is not null)
-                    {
-                        // Try to access the ID safely
-                        string? id = gif.id?.ToString();
-                        string? title = gif.title?.ToString() ?? gif.slug?.ToString() ?? "Untitled";
-                        string? imageUrl = gif.images?.fixed_height?.url?.ToString();
+                    string? id = null;
+                    string? title = null;
+                    string? imageUrl = null;
 
-                        if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(imageUrl))
+                    // Extract ID
+                    if (gif.TryGetProperty("id", out var idElement))
+                    {
+                        id = idElement.GetString();
+                    }
+
+                    // Extract title (prefer 'title', fallback to 'slug')
+                    if (gif.TryGetProperty("title", out var titleElement) && titleElement.ValueKind != JsonValueKind.Null)
+                    {
+                        title = titleElement.GetString();
+                    }
+                    else if (gif.TryGetProperty("slug", out var slugElement) && slugElement.ValueKind != JsonValueKind.Null)
+                    {
+                        title = slugElement.GetString();
+                    }
+                    
+                    if (string.IsNullOrEmpty(title))
+                    {
+                        title = "Untitled";
+                    }
+
+                    // Extract image URL from images.fixed_height.url
+                    if (gif.TryGetProperty("images", out var imagesElement) &&
+                        imagesElement.TryGetProperty("fixed_height", out var fixedHeightElement) &&
+                        fixedHeightElement.TryGetProperty("url", out var urlElement))
+                    {
+                        imageUrl = urlElement.GetString();
+                    }
+
+                    if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(imageUrl))
+                    {
+                        items.Add(new GiphyItem
                         {
-                            items.Add(new GiphyItem
-                            {
-                                Id = id,
-                                Title = title,
-                                ImageUrl = imageUrl
-                            });
-                        }
+                            Id = id,
+                            Title = title ?? "Untitled",
+                            ImageUrl = imageUrl
+                        });
                     }
                 }
             }

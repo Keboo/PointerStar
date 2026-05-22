@@ -4,7 +4,6 @@ import {
   TextField,
   CircularProgress,
   Alert,
-  Grid2 as Grid,
   Paper,
   Typography,
   ImageList,
@@ -12,7 +11,7 @@ import {
   ImageListItemBar,
 } from '@mui/material'
 import SearchIcon from '@mui/icons-material/Search'
-import { GiphyItem } from '../types/contracts'
+import type { GiphyItem } from '../types/contracts'
 import { searchGiphy } from '../services/giphyApi'
 
 interface GiphyVotingPanelProps {
@@ -80,8 +79,10 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ onVoteSubmit
           value={searchQuery}
           onChange={handleSearchChange}
           disabled={disabled || loading}
-          InputProps={{
-            startAdornment: <SearchIcon sx={{ marginRight: 1, color: 'action.active' }} />,
+          slotProps={{
+            input: {
+              startAdornment: <SearchIcon sx={{ marginRight: 1, color: 'action.active' }} />,
+            },
           }}
         />
       </Box>

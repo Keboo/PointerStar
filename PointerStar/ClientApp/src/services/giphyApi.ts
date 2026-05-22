@@ -1,4 +1,4 @@
-import { GiphySearchResponse } from '../types/contracts'
+import type { GiphySearchResponse } from '../types/contracts'
 
 /**
  * Service for interacting with the Giphy API endpoint.

@@ -9,7 +9,7 @@ import {
   CircularProgress,
 } from '@mui/material'
 import ErrorIcon from '@mui/icons-material/Error'
-import { User } from '../types/contracts'
+import type { User } from '../types/contracts'
 
 interface GiphyVoteDisplayProps {
   users: User[]
