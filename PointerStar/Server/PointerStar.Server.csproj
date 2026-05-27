@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <Target Name="RestoreClientApp" BeforeTargets="Build" Condition="'$(EnableClientAppBuild)' == 'true' and !Exists('$(SpaRoot)node_modules')">
-    <Exec WorkingDirectory="$(SpaRoot)" Command="npm ci" />
+    <Exec WorkingDirectory="$(SpaRoot)" Command="pnpm install --frozen-lockfile" />
   </Target>
 
   <Target Name="BuildClientApp" BeforeTargets="Build" Condition="'$(EnableClientAppBuild)' == 'true'">

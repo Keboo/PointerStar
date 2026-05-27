@@ -8,11 +8,14 @@ using PointerStar.Server.Room;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-#if DEBUG
-builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.CreateDefault()));
-#else
-builder.Services.AddApplicationInsightsTelemetry();
-#endif
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.CreateDefault()));
+}
+else
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
