@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Moq;
 using PointerStar.Server.Hubs;
 using PointerStar.Server.Room;
@@ -11,7 +11,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
 {
     partial void AutoMockerTestSetup(AutoMocker mocker, string testName)
     {
-        mocker.WithApplicationInsights();
+        UseTestTelemetry(mocker);
         SetupHubContext(mocker);
     }
 
@@ -32,7 +32,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     public async Task TryReleaseConnection_WithConnectedUser_RemovesConnectionAndReturnsRoomAndUser()
     {
         AutoMocker mocker = new();
-        mocker.WithApplicationInsights();
+        UseTestTelemetry(mocker);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();
@@ -52,7 +52,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     public void TryReleaseConnection_WithUnknownConnection_ReturnsFalse()
     {
         AutoMocker mocker = new();
-        mocker.WithApplicationInsights();
+        UseTestTelemetry(mocker);
         SetupHubContext(mocker);
 
         IRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
@@ -68,7 +68,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     public async Task ScheduleDisconnectAsync_AfterDelay_RemovesUserFromRoom()
     {
         AutoMocker mocker = new();
-        mocker.WithApplicationInsights();
+        UseTestTelemetry(mocker);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();
@@ -93,7 +93,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     public async Task CancelPendingDisconnect_BeforeDelay_KeepsUserInRoom()
     {
         AutoMocker mocker = new();
-        mocker.WithApplicationInsights();
+        UseTestTelemetry(mocker);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();

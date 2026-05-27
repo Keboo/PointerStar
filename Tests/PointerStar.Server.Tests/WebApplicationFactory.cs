@@ -16,13 +16,16 @@ public class WebApplicationFactory : WebApplicationFactory<Program>
     {
         base.ConfigureWebHost(builder);
 
+        // Ensure the Development environment is used so Program.cs skips
+        // AddApplicationInsightsTelemetry() and its shutdown-blocking OTel exporter.
+        builder.UseEnvironment("Development");
+
         builder.ConfigureServices(services =>
         {
             foreach(var service in AdditionalServices)
             {
                 services.Add(service);
             }
-            // Add any required services to the services container.
         });
     }
 }

@@ -22,7 +22,10 @@
     <Project Path="Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj" />
   </Folder>
   <Project Path="PointerStar/AppHost/PointerStar.AppHost.csproj" />
-  <Project Path="PointerStar/ClientApp/PointerStar.ClientApp.esproj" />
+  <Project Path="PointerStar/ClientApp/PointerStar.ClientApp.esproj">
+    <Build />
+    <Deploy />
+  </Project>
   <Project Path="PointerStar/Server/PointerStar.Server.csproj" />
   <Project Path="PointerStar/Shared/PointerStar.Shared.csproj" />
 </Solution>
