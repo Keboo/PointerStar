@@ -532,19 +532,14 @@ export function RoomPage() {
         {isRole(currentUser, roles.teamMember) ? (
           <>
             {roomState?.votingMode === VotingMode.Giphy ? (
-              <Card>
-                <CardHeader title="Select a GIF" />
-                <CardContent>
-                  <GiphyVotingPanel
-                    disabled={votesShown}
-                    onVoteSubmit={(giphyId) => {
-                      void callHub(async (client) => {
-                        await client.submitVote(giphyId)
-                      })
-                    }}
-                  />
-                </CardContent>
-              </Card>
+              <GiphyVotingPanel
+                currentVote={currentUser?.vote}
+                onVoteSubmit={(giphyId) => {
+                  void callHub(async (client) => {
+                    await client.submitVote(giphyId)
+                  })
+                }}
+              />
             ) : (
               <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
                 {(roomState?.voteOptions ?? defaultVoteOptions).map((option) => (
@@ -694,23 +689,62 @@ export function RoomPage() {
                     ) : null}
                     {user.name}
                     {votesShown && user.vote ? (
-                      <>
-                        {' - '}
-                        {user.originalVote && user.originalVote !== user.vote ? (
-                          <Box component="span" sx={{ fontStyle: 'italic' }}>
-                            ({user.originalVote}){' '}
-                          </Box>
-                        ) : null}
-                        <Box component="span" sx={{ fontWeight: 700 }}>
-                          {user.vote}
+                      roomState?.votingMode === VotingMode.Giphy ? (
+                        <Box component="span" sx={{ display: 'inline-flex', ml: 0.75, verticalAlign: 'middle' }}>
+                          <img
+                            alt={`${user.name} vote`}
+                            loading="lazy"
+                            src={`https://media.giphy.com/media/${user.vote}/giphy.gif`}
+                            style={{
+                              borderRadius: 4,
+                              height: 24,
+                              objectFit: 'cover',
+                              width: 24,
+                            }}
+                          />
                         </Box>
-                      </>
+                      ) : (
+                        <>
+                          {' - '}
+                          {user.originalVote && user.originalVote !== user.vote ? (
+                            <Box component="span" sx={{ fontStyle: 'italic' }}>
+                              ({user.originalVote}){' '}
+                            </Box>
+                          ) : null}
+                          <Box component="span" sx={{ fontWeight: 700 }}>
+                            {user.vote}
+                          </Box>
+                        </>
+                      )
                     ) : isRole(currentUser, roles.facilitator) || isRole(currentUser, roles.observer) ? (
                       previewVotes ? (
-                        <Box component="span" sx={{ fontStyle: 'italic' }}>
-                          {' '}
-                          - {user.vote || '…'}
-                        </Box>
+                        roomState?.votingMode === VotingMode.Giphy ? (
+                          user.vote ? (
+                            <Box component="span" sx={{ display: 'inline-flex', ml: 0.75, verticalAlign: 'middle' }}>
+                              <img
+                                alt={`${user.name} vote`}
+                                loading="lazy"
+                                src={`https://media.giphy.com/media/${user.vote}/giphy.gif`}
+                                style={{
+                                  borderRadius: 4,
+                                  height: 24,
+                                  objectFit: 'cover',
+                                  width: 24,
+                                }}
+                              />
+                            </Box>
+                          ) : (
+                            <Box component="span" sx={{ fontStyle: 'italic' }}>
+                              {' '}
+                              - …
+                            </Box>
+                          )
+                        ) : (
+                          <Box component="span" sx={{ fontStyle: 'italic' }}>
+                            {' '}
+                            - {user.vote || '…'}
+                          </Box>
+                        )
                       ) : (
                         <Box component="span"> - {user.vote ? '✓' : '…'}</Box>
                       )

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Text.Json;
@@ -12,21 +13,21 @@ namespace PointerStar.Server.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache) : ControllerBase
+public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IConfiguration configuration) : ControllerBase
 {
-    private const string GiphyApiKey = "YOUR_GIPHY_API_KEY"; // TODO: Use user secrets in production
     private const string GiphyApiBaseUrl = "https://api.giphy.com/v1";
     private const int RateLimitPerMinute = 10;
-    private const int CacheDurationMinutes = 5;
+    private const int CacheDurationMinutes = 30;
 
     private static readonly ConcurrentDictionary<string, DateTime[]> UserSearchTimestamps = new();
     private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
     private IMemoryCache MemoryCache { get; } = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
+    private IConfiguration Configuration { get; } = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
     /// <summary>
     /// Search Giphy for images matching the query.
     /// Rate-limited to 10 searches per user per minute.
-    /// Results cached for 5 minutes.
+    /// Results cached for 30 minutes.
     /// </summary>
     [HttpGet("Search")]
     public async Task<ActionResult<GiphySearchResponse>> Search([FromQuery] string query)
@@ -50,10 +51,16 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
             return cachedResult!;
         }
 
+        string? giphyApiKey = Configuration["Giphy:ApiKey"] ?? Configuration["GIPHY_API_KEY"];
+        if (string.IsNullOrWhiteSpace(giphyApiKey))
+        {
+            return Ok(new GiphySearchResponse { Data = [], Pagination = null });
+        }
+
         try
         {
             using var httpClient = HttpClientFactory.CreateClient();
-            string url = $"{GiphyApiBaseUrl}/gifs/search?api_key={GiphyApiKey}&q={Uri.EscapeDataString(query)}&limit=20&offset=0&rating=g&lang=en";
+            string url = $"{GiphyApiBaseUrl}/gifs/search?api_key={giphyApiKey}&q={Uri.EscapeDataString(query)}&limit=21&offset=0&rating=g&lang=en";
 
             using var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
@@ -71,7 +78,7 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
             var result = new GiphySearchResponse
             {
                 Data = ExtractGiphyIds(root),
-                Pagination = new PaginationInfo { Count = 20 }
+                Pagination = new PaginationInfo { Count = 21 }
             };
 
             // Cache the result

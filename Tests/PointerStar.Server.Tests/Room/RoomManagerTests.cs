@@ -165,6 +165,33 @@ public abstract class RoomManagerTests<TRoomManager>
         Assert.Null(roomState.Users.Single().OriginalVote);
     }
 
+    [Theory]
+    [InlineData("abc123xyz0")]
+    [InlineData("giphy_id-123")]
+    [InlineData("xT9IgDEI1iZyb2wqo8")]
+    public async Task SubmitVoteAsync_WithGiphyModeAndValidGiphyId_UpdatesVote(string giphyId)
+    {
+        AutoMocker mocker = new();
+        UseTestTelemetry(mocker);
+
+        string facilitatorConnectionId = Guid.NewGuid().ToString();
+        string teamMemberConnectionId = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitatorConnectionId, teamMemberConnectionId);
+
+        _ = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VotingMode = VotingMode.Giphy
+        }, facilitatorConnectionId);
+
+        RoomState? roomState = await sut.SubmitVoteAsync(giphyId, teamMemberConnectionId);
+
+        Assert.NotNull(roomState);
+        Assert.Single(roomState.TeamMembers);
+        Assert.Equal(giphyId, roomState.TeamMembers.Single().Vote);
+        Assert.Equal(giphyId, roomState.TeamMembers.Single().OriginalVote);
+    }
+
     [Fact]
     public async Task SubmitVoteAsync_AfterVotesShown_UpdatesVote()
     {
@@ -591,6 +618,58 @@ public abstract class RoomManagerTests<TRoomManager>
 
         Assert.NotNull(roomState);
         Assert.Equal(originalVoteOptions, roomState.VoteOptions);
+    }
+
+    [Fact]
+    public async Task UpdateRoomAsync_WithVotingModeChangeByFacilitator_ChangesModeAndResetsVotesAndTimer()
+    {
+        AutoMocker mocker = new();
+        UseTestTelemetry(mocker);
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        RoomState room = await CreateRoom(sut, facilitator, teamMember);
+
+        _ = await sut.SubmitVoteAsync(room.VoteOptions.First(), teamMember);
+        _ = await sut.UpdateRoomAsync(new RoomOptions { VotesShown = true }, facilitator);
+
+        DateTime startedBeforeModeChange = DateTime.UtcNow;
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VotingMode = VotingMode.Giphy
+        }, facilitator);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(VotingMode.Giphy, roomState.VotingMode);
+        Assert.False(roomState.VotesShown);
+        Assert.All(roomState.Users, user =>
+        {
+            Assert.Null(user.Vote);
+            Assert.Null(user.OriginalVote);
+        });
+        Assert.True(roomState.VoteStartTime.HasValue);
+        Assert.True(roomState.VoteStartTime.Value >= startedBeforeModeChange);
+    }
+
+    [Fact]
+    public async Task UpdateRoomAsync_WithVotingModeChangeByTeamMember_DoesNotChangeMode()
+    {
+        AutoMocker mocker = new();
+        UseTestTelemetry(mocker);
+
+        string facilitator = Guid.NewGuid().ToString();
+        string teamMember = Guid.NewGuid().ToString();
+        IRoomManager sut = mocker.CreateInstance<TRoomManager>();
+        await CreateRoom(sut, facilitator, teamMember);
+
+        RoomState? roomState = await sut.UpdateRoomAsync(new RoomOptions
+        {
+            VotingMode = VotingMode.Giphy
+        }, teamMember);
+
+        Assert.NotNull(roomState);
+        Assert.Equal(VotingMode.Standard, roomState.VotingMode);
     }
 
     [Fact]

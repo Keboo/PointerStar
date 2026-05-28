@@ -5,6 +5,7 @@
     <SpaRoot>..\ClientApp\</SpaRoot>
     <SpaDist>$(SpaRoot)dist\</SpaDist>
     <EnableClientAppBuild Condition="'$(EnableClientAppBuild)' == ''">true</EnableClientAppBuild>
+    <UserSecretsId>c5e9061f-fc62-4169-a348-2523a3570224</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>

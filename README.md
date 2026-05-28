@@ -32,6 +32,15 @@ dotnet build --configuration Release
 dotnet run --project PointerStar/AppHost/PointerStar.AppHost.csproj
 ```
 
+For local Giphy search support, set the API key in **user secrets** for the server project:
+
+```powershell
+cd PointerStar/Server
+dotnet user-secrets set "Giphy:ApiKey" "<your-giphy-api-key>"
+```
+
+Production deployments read `GIPHY_API_KEY` from the app's environment, which is set by the GitHub Actions `GIPHY_API_KEY` secret during deploy.
+
 ## Publish the hosted app
 
 ```powershell

@@ -1,12 +1,12 @@
 import React, { useState } from 'react'
 import {
-  ImageList,
-  ImageListItem,
-  ImageListItemBar,
-  Paper,
   Box,
-  Typography,
   CircularProgress,
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  Paper,
+  Typography,
 } from '@mui/material'
 import ErrorIcon from '@mui/icons-material/Error'
 import type { User } from '../types/contracts'
@@ -22,6 +22,7 @@ interface GiphyVoteDisplayProps {
  */
 export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showVotes }) => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+  const [selectedGif, setSelectedGif] = useState<{ name: string; url: string } | null>(null)
 
   // Filter users who have voted with Giphy IDs
   const votedUsers = users.filter((user) => user.vote && showVotes)
@@ -51,51 +52,115 @@ export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showV
 
   return (
     <Paper sx={{ padding: 2 }}>
-      <ImageList cols={Math.min(3, Math.max(1, votedUsers.length))} gap={16}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
         {votedUsers.map((user) => {
           const giphyId = user.vote || ''
           const isErrored = imageErrors.has(giphyId)
+          const hasChangedVote = Boolean(user.originalVote && user.originalVote !== user.vote)
           const imageUrl = `https://media.giphy.com/media/${giphyId}/giphy.gif`
 
           return (
-            <ImageListItem key={user.id}>
+            <Box
+              key={user.id}
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                width: 180,
+              }}
+            >
               {isErrored ? (
                 <Box
                   sx={{
-                    width: '100%',
-                    aspectRatio: '1/1',
-                    backgroundColor: '#f5f5f5',
-                    display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: 1,
+                    display: 'flex',
                     flexDirection: 'column',
+                    height: 120,
+                    justifyContent: 'center',
+                    width: '100%',
                   }}
                 >
-                  <ErrorIcon sx={{ fontSize: 48, color: 'error.main', marginBottom: 1 }} />
+                  <ErrorIcon sx={{ fontSize: 32, color: 'error.main', marginBottom: 1 }} />
                   <Typography variant="caption" color="error">
                     Image failed to load
                   </Typography>
                 </Box>
               ) : (
-                <img
-                  src={imageUrl}
-                  alt={`Vote by ${user.name}`}
-                  loading="lazy"
-                  onError={() => handleImageError(giphyId)}
-                  style={{ width: '100%', height: 'auto', minHeight: 200 }}
-                />
+                <Box
+                  component="button"
+                  onClick={() => setSelectedGif({ name: user.name, url: imageUrl })}
+                  sx={{
+                    alignItems: 'center',
+                    appearance: 'none',
+                    backgroundColor: 'transparent',
+                    borderRadius: 1,
+                    border: hasChangedVote ? '2px dashed' : 0,
+                    borderColor: hasChangedVote ? 'error.main' : 'transparent',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    height: 120,
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    p: 0,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                    width: '100%',
+                  }}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={`Vote by ${user.name}`}
+                    loading="lazy"
+                    onError={() => handleImageError(giphyId)}
+                    style={{
+                      borderRadius: 4,
+                      display: 'block',
+                      height: 'auto',
+                      maxHeight: '100%',
+                      maxWidth: '100%',
+                      width: 'auto',
+                    }}
+                  />
+                </Box>
               )}
-              <ImageListItemBar
-                title={user.name}
-                position="bottom"
+              <Typography
+                variant="caption"
                 sx={{
-                  background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
+                  display: 'block',
+                  lineHeight: 1.3,
+                  mt: 0.75,
                 }}
-              />
-            </ImageListItem>
+              >
+                {user.name}
+              </Typography>
+            </Box>
           )
         })}
-      </ImageList>
+      </Box>
+      <Dialog
+        maxWidth={false}
+        onClose={() => setSelectedGif(null)}
+        open={selectedGif !== null}
+      >
+        {selectedGif ? <DialogTitle>{selectedGif.name}'s vote</DialogTitle> : null}
+        <DialogContent sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', p: 2 }}>
+          {selectedGif ? (
+            <img
+              alt={`${selectedGif.name} vote`}
+              src={selectedGif.url}
+              style={{
+                height: 'auto',
+                maxHeight: '85vh',
+                maxWidth: '90vw',
+                width: 'auto',
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </Paper>
   )
 }

@@ -7,17 +7,12 @@ import {
 } from '@mui/icons-material'
 import {
   Button,
-  ButtonGroup,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
-  FormControl,
   IconButton,
-  InputLabel,
-  MenuItem,
-  Select,
   Stack,
   TextField,
   Typography,
@@ -49,7 +44,6 @@ export function VotingOptionsDialog({
 }: VotingOptionsDialogProps) {
   const [voteOptions, setVoteOptions] = useState<string[]>(currentVoteOptions ?? [...defaultVoteOptions])
   const [votingMode, setVotingMode] = useState<VotingMode>(currentVotingMode ?? VotingMode.Standard)
-  const isModeImmutable = currentVotingMode !== undefined
 
   useEffect(() => {
     if (!open) {
@@ -73,45 +67,40 @@ export function VotingOptionsDialog({
   return (
     <Dialog fullWidth maxWidth="md" onClose={onCancel} open={open}>
       <DialogTitle>Configure Voting Options</DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={3}>
-          <FormControl fullWidth>
-            <InputLabel>Voting Mode</InputLabel>
-            <Select
-              disabled={isModeImmutable}
-              label="Voting Mode"
-              onChange={(e) => setVotingMode(e.target.value as VotingMode)}
-              value={votingMode}
-            >
-              <MenuItem value={VotingMode.Standard}>Standard (Numbers/Text)</MenuItem>
-              <MenuItem value={VotingMode.Giphy}>Giphy Mode (Images)</MenuItem>
-            </Select>
-          </FormControl>
-
-          {isModeImmutable && (
-            <Typography variant="caption" color="textSecondary">
-              Note: Voting mode cannot be changed after room creation
-            </Typography>
-          )}
+          <Stack spacing={1}>
+            <Typography variant="body2">Select a preset:</Typography>
+            <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
+              {votingPresets.map((preset) => (
+                <Button
+                  key={preset.name}
+                  onClick={() => {
+                    setVotingMode(VotingMode.Standard)
+                    setVoteOptions([...preset.options])
+                  }}
+                  size="small"
+                  variant={
+                    votingMode === VotingMode.Standard && isPresetSelected(voteOptions, preset.options)
+                      ? 'contained'
+                      : 'outlined'
+                  }
+                >
+                  {preset.name}
+                </Button>
+              ))}
+              <Button
+                onClick={() => setVotingMode(VotingMode.Giphy)}
+                size="small"
+                variant={votingMode === VotingMode.Giphy ? 'contained' : 'outlined'}
+              >
+                Giphy Mode
+              </Button>
+            </Stack>
+          </Stack>
 
           {votingMode === VotingMode.Standard ? (
             <>
-              <Stack spacing={1}>
-                <Typography variant="body2">Select a preset:</Typography>
-                <ButtonGroup sx={{ flexWrap: 'wrap', gap: 1 }}>
-                  {votingPresets.map((preset) => (
-                    <Button
-                      key={preset.name}
-                      onClick={() => setVoteOptions([...preset.options])}
-                      size="small"
-                      variant={isPresetSelected(voteOptions, preset.options) ? 'contained' : 'outlined'}
-                    >
-                      {preset.name}
-                    </Button>
-                  ))}
-                </ButtonGroup>
-              </Stack>
-
               <Divider />
 
               <Stack spacing={1}>

@@ -116,6 +116,20 @@ jobs:
         with:
           name: app
 
+      - name: Configure app settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'pointerstar'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          app-settings-json: |
+            [
+              {
+                "name": "GIPHY_API_KEY",
+                "value": "${{ secrets.GIPHY_API_KEY }}",
+                "slotSetting": false
+              }
+            ]
+
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3

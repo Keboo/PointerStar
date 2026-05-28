@@ -181,10 +181,17 @@ public class InMemoryRoomManager : IRoomManager
                     room = room with { VoteOptions = voteOptions };
                 }
 
-                // Prevent voting mode changes mid-session (mode is immutable after room creation)
                 if (roomOptions.VotingMode.HasValue && roomOptions.VotingMode != room.VotingMode)
                 {
-                    Logger.LogWarning("Attempt to change voting mode mid-session for room {RoomId} (not allowed)", room.RoomId);
+                    room = room with
+                    {
+                        VotingMode = roomOptions.VotingMode.Value,
+                        Users = [.. room.Users.Select(u => u with { Vote = null, OriginalVote = null })],
+                        VotesShown = false,
+                        VoteStartTime = DateTime.UtcNow,
+                        ResetVotesRequestedAt = null,
+                        ResetVotesRequestedBy = null,
+                    };
                 }
 
                 return room;
@@ -461,9 +468,8 @@ public class InMemoryRoomManager : IRoomManager
     }
 
     /// <summary>
-    /// Validates that a vote is a properly formatted Giphy ID.
-    /// Giphy IDs are alphanumeric strings, typically 16-20 characters.
-    /// Pattern: base62-encoded (A-Za-z0-9) identifiers.
+    /// Validates that a vote is a reasonably formatted Giphy ID.
+    /// Giphy IDs returned by the API vary in length, so avoid strict length assumptions.
     /// </summary>
     private static bool IsValidGiphyId(string giphyId)
     {
@@ -472,9 +478,11 @@ public class InMemoryRoomManager : IRoomManager
             return false;
         }
 
-        // Giphy IDs are 16-20 alphanumeric characters
-        return giphyId.Length >= 14 && giphyId.Length <= 25 &&
-               System.Text.RegularExpressions.Regex.IsMatch(giphyId, "^[a-zA-Z0-9]+$");
+        string normalizedId = giphyId.Trim();
+
+        // Accept a practical max length and common identifier characters from API responses.
+        return normalizedId.Length <= 128 &&
+               System.Text.RegularExpressions.Regex.IsMatch(normalizedId, "^[a-zA-Z0-9_-]+$");
     }
 
     private static string NormalizeRoomId(string roomId) => roomId.ToUpperInvariant();
