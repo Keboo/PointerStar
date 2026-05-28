@@ -16,12 +16,14 @@ public class InMemoryRoomManager : IRoomManager
     private TelemetryClient TelemetryClient { get; }
     private IHubContext<RoomHub> HubContext { get; }
     private ILogger<InMemoryRoomManager> Logger { get; }
+    private TimeProvider TimeProvider { get; }
 
-    public InMemoryRoomManager(TelemetryClient telemetryClient, IHubContext<RoomHub> hubContext, ILogger<InMemoryRoomManager> logger)
+    public InMemoryRoomManager(TelemetryClient telemetryClient, IHubContext<RoomHub> hubContext, ILogger<InMemoryRoomManager> logger, TimeProvider timeProvider)
     {
         TelemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
         HubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        TimeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
@@ -116,30 +118,34 @@ public class InMemoryRoomManager : IRoomManager
         var cts = new CancellationTokenSource();
         PendingDisconnects[userId] = cts;
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(delay, cts.Token);
-                RoomState? room = await RemoveUserFromRoomAsync(NormalizeRoomId(roomId), userId);
-                if (room is not null)
-                {
-                    await HubContext.Clients.Group(NormalizeRoomId(room.RoomId))
-                        .SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
-                }
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error during deferred disconnect for user {UserId} in room {RoomId}", userId, roomId);
-            }
-            finally
-            {
-                PendingDisconnects.TryRemove(userId, out _);
-            }
-        });
+        // Start the deferred disconnect. The method executes synchronously until the first
+        // await, so the timer is registered with TimeProvider before this method returns.
+        _ = RunDeferredDisconnectAsync(userId, roomId, delay, cts);
 
         return Task.CompletedTask;
+    }
+
+    private async Task RunDeferredDisconnectAsync(Guid userId, string roomId, TimeSpan delay, CancellationTokenSource cts)
+    {
+        try
+        {
+            await Task.Delay(delay, TimeProvider, cts.Token);
+            RoomState? room = await RemoveUserFromRoomAsync(NormalizeRoomId(roomId), userId);
+            if (room is not null)
+            {
+                await HubContext.Clients.Group(NormalizeRoomId(room.RoomId))
+                    .SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during deferred disconnect for user {UserId} in room {RoomId}", userId, roomId);
+        }
+        finally
+        {
+            PendingDisconnects.TryRemove(userId, out _);
+        }
     }
 
     public void CancelPendingDisconnect(Guid userId)

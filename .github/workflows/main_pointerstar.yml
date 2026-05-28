@@ -41,6 +41,7 @@ jobs:
       - name: Run React app tests
         run: pnpm run test:run
         working-directory: PointerStar/ClientApp
+        timeout-minutes: 5
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v5
@@ -52,9 +53,11 @@ jobs:
 
       - name: dotnet test (shared)
         run: dotnet test Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+        timeout-minutes: 5
 
       - name: dotnet test (server)
         run: dotnet test Tests/PointerStar.Server.Tests/PointerStar.Server.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+        timeout-minutes: 5
 
       - name: ReportGenerator
         uses: danielpalme/ReportGenerator-GitHub-Action@5.5.10

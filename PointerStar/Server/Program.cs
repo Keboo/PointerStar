@@ -28,6 +28,7 @@ else
     });
 }
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpClient();
