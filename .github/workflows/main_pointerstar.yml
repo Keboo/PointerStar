@@ -91,7 +91,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/publish
 
   automerge:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' }}
     needs: build
     runs-on: ubuntu-latest
 
