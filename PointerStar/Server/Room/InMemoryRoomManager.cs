@@ -16,12 +16,14 @@ public class InMemoryRoomManager : IRoomManager
     private TelemetryClient TelemetryClient { get; }
     private IHubContext<RoomHub> HubContext { get; }
     private ILogger<InMemoryRoomManager> Logger { get; }
+    private TimeProvider TimeProvider { get; }
 
-    public InMemoryRoomManager(TelemetryClient telemetryClient, IHubContext<RoomHub> hubContext, ILogger<InMemoryRoomManager> logger)
+    public InMemoryRoomManager(TelemetryClient telemetryClient, IHubContext<RoomHub> hubContext, ILogger<InMemoryRoomManager> logger, TimeProvider timeProvider)
     {
         TelemetryClient = telemetryClient ?? throw new ArgumentNullException(nameof(telemetryClient));
         HubContext = hubContext ?? throw new ArgumentNullException(nameof(hubContext));
         Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        TimeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
     }
 
     public Task<RoomState> AddUserToRoomAsync(string roomId, User user, string connectionId)
@@ -57,7 +59,8 @@ public class InMemoryRoomManager : IRoomManager
             {
                 TelemetryClient?.TrackEvent("RoomCreated", new Dictionary<string, string>
                 {
-                    { "RoomId", rv.RoomId }
+                    { "RoomId", rv.RoomId },
+                    { "VotingMode", rv.VotingMode.ToString() }
                 });
             }
 
@@ -115,30 +118,34 @@ public class InMemoryRoomManager : IRoomManager
         var cts = new CancellationTokenSource();
         PendingDisconnects[userId] = cts;
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(delay, cts.Token);
-                RoomState? room = await RemoveUserFromRoomAsync(NormalizeRoomId(roomId), userId);
-                if (room is not null)
-                {
-                    await HubContext.Clients.Group(NormalizeRoomId(room.RoomId))
-                        .SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
-                }
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error during deferred disconnect for user {UserId} in room {RoomId}", userId, roomId);
-            }
-            finally
-            {
-                PendingDisconnects.TryRemove(userId, out _);
-            }
-        });
+        // Start the deferred disconnect. The method executes synchronously until the first
+        // await, so the timer is registered with TimeProvider before this method returns.
+        _ = RunDeferredDisconnectAsync(userId, roomId, delay, cts);
 
         return Task.CompletedTask;
+    }
+
+    private async Task RunDeferredDisconnectAsync(Guid userId, string roomId, TimeSpan delay, CancellationTokenSource cts)
+    {
+        try
+        {
+            await Task.Delay(delay, TimeProvider, cts.Token);
+            RoomState? room = await RemoveUserFromRoomAsync(NormalizeRoomId(roomId), userId);
+            if (room is not null)
+            {
+                await HubContext.Clients.Group(NormalizeRoomId(room.RoomId))
+                    .SendAsync(RoomHubConnection.RoomUpdatedMethodName, room);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during deferred disconnect for user {UserId} in room {RoomId}", userId, roomId);
+        }
+        finally
+        {
+            PendingDisconnects.TryRemove(userId, out _);
+        }
     }
 
     public void CancelPendingDisconnect(Guid userId)
@@ -179,6 +186,20 @@ public class InMemoryRoomManager : IRoomManager
                 {
                     room = room with { VoteOptions = voteOptions };
                 }
+
+                if (roomOptions.VotingMode.HasValue && roomOptions.VotingMode != room.VotingMode)
+                {
+                    room = room with
+                    {
+                        VotingMode = roomOptions.VotingMode.Value,
+                        Users = [.. room.Users.Select(u => u with { Vote = null, OriginalVote = null })],
+                        VotesShown = false,
+                        VoteStartTime = DateTime.UtcNow,
+                        ResetVotesRequestedAt = null,
+                        ResetVotesRequestedBy = null,
+                    };
+                }
+
                 return room;
             }
             return room;
@@ -216,10 +237,12 @@ public class InMemoryRoomManager : IRoomManager
     {
         return WithConnection(connectionId, (room, currentUser) =>
         {
-            if (!room.VoteOptions.Contains(vote))
+            // Validate vote based on voting mode
+            if (!IsValidVote(vote, room.VotingMode, room.VoteOptions))
             {
                 return room;
             }
+
             var roomState = room with
             {
                 Users = [..room.Users.Select(u => u.Id == currentUser.Id ? u with
@@ -435,6 +458,37 @@ public class InMemoryRoomManager : IRoomManager
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// Validates a vote based on the current voting mode.
+    /// </summary>
+    private static bool IsValidVote(string vote, VotingMode votingMode, string[] voteOptions)
+    {
+        return votingMode switch
+        {
+            VotingMode.Standard => voteOptions.Contains(vote),
+            VotingMode.Giphy => IsValidGiphyId(vote),
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Validates that a vote is a reasonably formatted Giphy ID.
+    /// Giphy IDs returned by the API vary in length, so avoid strict length assumptions.
+    /// </summary>
+    private static bool IsValidGiphyId(string giphyId)
+    {
+        if (string.IsNullOrWhiteSpace(giphyId))
+        {
+            return false;
+        }
+
+        string normalizedId = giphyId.Trim();
+
+        // Accept a practical max length and common identifier characters from API responses.
+        return normalizedId.Length <= 128 &&
+               System.Text.RegularExpressions.Regex.IsMatch(normalizedId, "^[a-zA-Z0-9_-]+$");
     }
 
     private static string NormalizeRoomId(string roomId) => roomId.ToUpperInvariant();

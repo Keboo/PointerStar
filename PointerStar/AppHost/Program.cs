@@ -5,6 +5,7 @@ var server = builder.AddProject<Projects.PointerStar_Server>("server")
     .WithEnvironment("EnableClientAppBuild", "false");
 
 builder.AddViteApp("frontend", "..\\ClientApp")
+    .WithPnpm()
     .WithReference(server)
     .WithEnvironment("VITE_BACKEND_URL", server.GetEndpoint("https"));
 

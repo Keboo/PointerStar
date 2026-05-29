@@ -19,6 +19,8 @@ public sealed record class RoomState(string RoomId, User[] Users)
     
     public DateTime? ResetVotesRequestedAt { get; init; }
     public Guid? ResetVotesRequestedBy { get; init; }
+
+    public VotingMode VotingMode { get; init; } = VotingMode.Standard;
 }
 
 public sealed record class User(Guid Id, string Name)

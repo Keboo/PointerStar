@@ -41,6 +41,7 @@ jobs:
       - name: Run React app tests
         run: pnpm run test:run
         working-directory: PointerStar/ClientApp
+        timeout-minutes: 5
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v5
@@ -52,9 +53,11 @@ jobs:
 
       - name: dotnet test (shared)
         run: dotnet test Tests/PointerStar.Shared.Tests/PointerStar.Shared.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+        timeout-minutes: 5
 
       - name: dotnet test (server)
         run: dotnet test Tests/PointerStar.Server.Tests/PointerStar.Server.Tests.csproj --configuration Release --no-build --collect:"XPlat Code Coverage" --results-directory ./coverage
+        timeout-minutes: 5
 
       - name: ReportGenerator
         uses: danielpalme/ReportGenerator-GitHub-Action@5.5.10
@@ -88,7 +91,7 @@ jobs:
           path: ${{env.DOTNET_ROOT}}/publish
 
   automerge:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' && github.actor == 'dependabot[bot]' }}
     needs: build
     runs-on: ubuntu-latest
 
@@ -115,6 +118,20 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: app
+
+      - name: Configure app settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: 'pointerstar'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
+          app-settings-json: |
+            [
+              {
+                "name": "GIPHY_API_KEY",
+                "value": "${{ secrets.GIPHY_API_KEY }}",
+                "slotSetting": false
+              }
+            ]
 
       - name: Deploy to Azure Web App
         id: deploy-to-webapp

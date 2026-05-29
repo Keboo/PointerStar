@@ -1,11 +1,13 @@
-﻿using PointerStar.Server.Controllers;
+﻿using Microsoft.Extensions.DependencyInjection;
+using PointerStar.Server.Controllers;
 using PointerStar.Server.Room;
 using PointerStar.Shared;
 
 namespace PointerStar.Server.Tests.Controllers;
 
+[Collection(WebAppCollection.Name)]
 [ConstructorTests(typeof(RoomController))]
-public partial class RoomControllerTests(WebApplicationFactory factory) : IClassFixture<WebApplicationFactory>
+public partial class RoomControllerTests(WebApplicationFactory factory)
 {
     private WebApplicationFactory Factory { get; } = factory;
 
@@ -25,14 +27,15 @@ public partial class RoomControllerTests(WebApplicationFactory factory) : IClass
     [Fact]
     public async Task GetNewUserRole_GetsRoleFromManager()
     {
-        AutoMocker mocker = new();
-        mocker.Setup<IRoomManager, Task<Role>>(x => x.GetNewUserRoleAsync("room"))
-            .ReturnsAsync(Role.TeamMember);
-        Factory.UseService(mocker.Get<IRoomManager>());
-        HttpClient client = Factory.CreateClient();
+        string roomId = Guid.NewGuid().ToString();
+        var roomManager = Factory.Services.GetRequiredService<IRoomManager>();
+        await roomManager.AddUserToRoomAsync(roomId,
+            new User(Guid.NewGuid(), "Facilitator") { Role = Role.Facilitator },
+            Guid.NewGuid().ToString());
 
-        var role = await client.GetFromJsonAsync<Role>("/api/room/GetNewUserRole/room");
-        
+        HttpClient client = Factory.CreateClient();
+        var role = await client.GetFromJsonAsync<Role>($"/api/room/GetNewUserRole/{roomId}");
+
         Assert.Equal(Role.TeamMember, role);
     }
 }

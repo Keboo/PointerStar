@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Time.Testing;
 using Moq;
 using PointerStar.Server.Hubs;
 using PointerStar.Server.Room;
@@ -12,6 +13,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     partial void AutoMockerTestSetup(AutoMocker mocker, string testName)
     {
         UseTestTelemetry(mocker);
+        mocker.Use(TimeProvider.System);
         SetupHubContext(mocker);
     }
 
@@ -33,6 +35,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     {
         AutoMocker mocker = new();
         UseTestTelemetry(mocker);
+        mocker.Use(TimeProvider.System);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();
@@ -53,6 +56,7 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     {
         AutoMocker mocker = new();
         UseTestTelemetry(mocker);
+        mocker.Use(TimeProvider.System);
         SetupHubContext(mocker);
 
         IRoomManager sut = mocker.CreateInstance<InMemoryRoomManager>();
@@ -69,6 +73,8 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     {
         AutoMocker mocker = new();
         UseTestTelemetry(mocker);
+        var fakeTimeProvider = new FakeTimeProvider();
+        mocker.Use<TimeProvider>(fakeTimeProvider);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();
@@ -80,8 +86,9 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
         sut.TryReleaseConnection(connectionId, out string? roomId, out Guid userId);
         Assert.NotNull(roomId);
 
-        await sut.ScheduleDisconnectAsync(userId, roomId, TimeSpan.FromMilliseconds(50));
-        await Task.Delay(500);
+        await sut.ScheduleDisconnectAsync(userId, roomId, TimeSpan.FromMinutes(1));
+        fakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
 
         // After the grace period, the facilitator should be removed.
         // Disconnecting the team member now leaves an empty room (returns null).
@@ -94,6 +101,8 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
     {
         AutoMocker mocker = new();
         UseTestTelemetry(mocker);
+        var fakeTimeProvider = new FakeTimeProvider();
+        mocker.Use<TimeProvider>(fakeTimeProvider);
         SetupHubContext(mocker);
 
         string connectionId = Guid.NewGuid().ToString();
@@ -105,9 +114,10 @@ public partial class InMemoryRoomManagerTests : RoomManagerTests<InMemoryRoomMan
         sut.TryReleaseConnection(connectionId, out string? roomId, out Guid userId);
         Assert.NotNull(roomId);
 
-        await sut.ScheduleDisconnectAsync(userId, roomId, TimeSpan.FromMilliseconds(300));
+        await sut.ScheduleDisconnectAsync(userId, roomId, TimeSpan.FromMinutes(1));
         sut.CancelPendingDisconnect(userId);
-        await Task.Delay(500);
+        fakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
+        await Task.Delay(TimeSpan.FromMilliseconds(100));
 
         // Grace period was cancelled so facilitator should still be in the room.
         // Disconnecting the team member should return the room still containing the facilitator.

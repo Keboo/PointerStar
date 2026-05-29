@@ -3,6 +3,13 @@ export interface Role {
   name: string
 }
 
+export const VotingMode = {
+  Standard: 0,
+  Giphy: 1,
+} as const
+
+export type VotingMode = typeof VotingMode[keyof typeof VotingMode]
+
 export interface User {
   id: string
   name: string
@@ -20,12 +27,14 @@ export interface RoomState {
   voteOptions: string[]
   voteStartTime?: string | null
   votesShown: boolean
+  votingMode?: VotingMode
 }
 
 export interface RoomOptions {
   autoShowVotes?: boolean
   voteOptions?: string[]
   votesShown?: boolean
+  votingMode?: VotingMode
 }
 
 export interface UserOptions {
@@ -112,3 +121,21 @@ export const votingPresets = [
 
 export const defaultVoteOptions = [...votingPresets[0].options]
 export const userNameMaxLength = 40
+
+// Giphy API response types
+export interface GiphyItem {
+  id: string
+  title: string
+  imageUrl: string
+}
+
+export interface PaginationInfo {
+  count: number
+  offset: number
+  totalCount: number
+}
+
+export interface GiphySearchResponse {
+  data: GiphyItem[]
+  pagination?: PaginationInfo | null
+}

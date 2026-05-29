@@ -2,8 +2,9 @@ using PointerStar.Server.Controllers;
 
 namespace PointerStar.Server.Tests.Controllers;
 
+[Collection(WebAppCollection.Name)]
 [ConstructorTests(typeof(ClientConfigController))]
-public partial class ClientConfigControllerTests(WebApplicationFactory factory) : IClassFixture<WebApplicationFactory>
+public partial class ClientConfigControllerTests(WebApplicationFactory factory)
 {
     private sealed record ClientConfigResponse(
         string? ApplicationInsightsConnectionString,

@@ -8,17 +8,31 @@ using PointerStar.Server.Room;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-if (builder.Environment.IsDevelopment())
+string? appInsightsConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"]
+    ?? builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
+if (string.IsNullOrWhiteSpace(appInsightsConnectionString))
 {
-    builder.Services.AddSingleton<TelemetryClient>(x => new(TelemetryConfiguration.CreateDefault()));
+    builder.Services.AddSingleton(_ =>
+    {
+        var telemetryConfiguration = TelemetryConfiguration.CreateDefault();
+        telemetryConfiguration.DisableTelemetry = true;
+        return new TelemetryClient(telemetryConfiguration);
+    });
 }
 else
 {
-    builder.Services.AddApplicationInsightsTelemetry();
+    builder.Services.AddApplicationInsightsTelemetry(options =>
+    {
+        options.ConnectionString = appInsightsConnectionString;
+    });
 }
 
+builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddControllers();
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
+builder.Services.AddMemoryCache();
 
 //TODO: Make these configurable settings
 builder.Services.AddSignalR(hubOptions => hubOptions.EnableDetailedErrors = true)
