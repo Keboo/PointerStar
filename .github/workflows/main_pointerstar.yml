@@ -119,11 +119,17 @@ jobs:
         with:
           name: app
 
+      - name: Azure Login (for app settings)
+        if: ${{ secrets.AZURE_CREDENTIALS != '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Configure app settings
+        if: ${{ secrets.AZURE_CREDENTIALS != '' }}
         uses: azure/appservice-settings@v1
         with:
           app-name: 'pointerstar'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
           app-settings-json: |
             [
               {
