@@ -17,7 +17,9 @@ export function CookieConsentBanner() {
         borderTop: `1px solid ${theme.palette.divider}`,
         bottom: 0,
         left: 0,
-        padding: 2,
+        pb: 'max(1rem, env(safe-area-inset-bottom))',
+        pt: 2,
+        px: 2,
         position: 'fixed',
         right: 0,
         width: '100%',
@@ -42,11 +44,16 @@ export function CookieConsentBanner() {
               &quot;Accept&quot;, you consent to the use of cookies.
             </Typography>
           </Box>
-          <Stack direction="row" spacing={2}>
-            <Button color="inherit" onClick={consent.reject} variant="outlined">
+          <Stack direction={{ sm: 'row', xs: 'column-reverse' }} spacing={1.5} sx={{ minWidth: { sm: 196, xs: '100%' } }}>
+            <Button
+              color="inherit"
+              onClick={consent.reject}
+              sx={{ minHeight: 44, width: { sm: 'auto', xs: '100%' } }}
+              variant="outlined"
+            >
               Reject
             </Button>
-            <Button onClick={consent.accept} variant="contained">
+            <Button onClick={consent.accept} sx={{ minHeight: 44, width: { sm: 'auto', xs: '100%' } }} variant="contained">
               Accept
             </Button>
           </Stack>

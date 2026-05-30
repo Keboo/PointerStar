@@ -11,6 +11,8 @@ import {
   Paper,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
@@ -28,6 +30,10 @@ interface GiphyVotingPanelProps {
  * Searches are debounced to avoid API calls on every keystroke.
  */
 export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote, onVoteSubmit }) => {
+  const theme = useTheme()
+  const isSmUp = useMediaQuery(theme.breakpoints.up('sm'))
+  const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
+
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<GiphyItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -163,6 +169,8 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
     void handleSearch(activeQuery, nextOffset, true)
   }, [activeQuery, handleSearch, hasMoreResults, loading, loadingMore, nextOffset])
 
+  const giphyColumns = isMdUp ? 4 : isSmUp ? 3 : 2
+
   return (
     <Box>
       {!isSearchExpanded ? (
@@ -222,11 +230,24 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
 
           {!loading && results.length > 0 && (
             <Paper sx={{ padding: 1 }}>
-              <ImageList variant="masonry" cols={3} gap={8}>
+              <ImageList cols={giphyColumns} gap={8} variant="masonry">
                 {results.map((gif) => (
                   <ImageListItem
+                    aria-label={`Select GIF: ${gif.title}`}
+                    aria-pressed={selectedId === gif.id}
                     key={gif.id}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        handleSelectGif(gif.id)
+                      }
+                    }}
                     sx={{
+                      '&:focus-visible': {
+                        outline: '2px solid',
+                        outlineColor: 'primary.main',
+                        outlineOffset: 2,
+                      },
                       cursor: 'pointer',
                       opacity: selectedId === gif.id ? 1 : 0.8,
                       border: selectedId === gif.id ? '3px solid' : '1px solid',
@@ -239,6 +260,8 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
                       },
                     }}
                     onClick={() => handleSelectGif(gif.id)}
+                    role="button"
+                    tabIndex={0}
                   >
                     <img
                       src={gif.imageUrl}

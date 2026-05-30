@@ -3,6 +3,7 @@ import {
   AppBar,
   Box,
   IconButton,
+  Stack,
   Toolbar,
   Tooltip,
   Typography,
@@ -12,9 +13,11 @@ import {
   DarkMode as DarkModeIcon,
   LightMode as LightModeIcon,
 } from '@mui/icons-material'
+import { Link as RouterLink } from 'react-router-dom'
 
 import { CookieConsentBanner } from './CookieConsentBanner'
 import type { ThemePreference } from '../hooks/useThemePreference'
+import { useCookieConsent } from '../hooks/useCookieConsent'
 
 interface AppLayoutProps {
   appVersion?: string | null
@@ -51,6 +54,9 @@ export function AppLayout({
   onCycleTheme,
   themePreference,
 }: AppLayoutProps) {
+  const consent = useCookieConsent()
+  const hasConsentBanner = !consent.hasUserResponded
+
   return (
     <Box
       sx={(theme) => ({
@@ -68,13 +74,35 @@ export function AppLayout({
           borderBottom: `1px solid ${theme.palette.divider}`,
         })}
       >
-        <Toolbar>
-          <Typography sx={{ ml: 1 }} variant="h5">
-            Pointer*
-          </Typography>
+        <Toolbar sx={{ gap: 1 }}>
+          <RouterLink
+            style={{
+              alignItems: 'center',
+              color: 'inherit',
+              display: 'inline-flex',
+              textDecoration: 'none',
+            }}
+            to="/"
+          >
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+              <img
+                alt="Pointer* logo"
+                src={`${import.meta.env.BASE_URL}favicon.svg`}
+                style={{
+                  borderRadius: 4,
+                  display: 'block',
+                  height: 28,
+                  width: 28,
+                }}
+              />
+              <Typography sx={{ fontWeight: 700 }} variant="h6">
+                Pointer*
+              </Typography>
+            </Stack>
+          </RouterLink>
           <Box sx={{ flexGrow: 1 }} />
           <Tooltip title={getThemeTooltip(themePreference)}>
-            <IconButton color="inherit" onClick={onCycleTheme}>
+            <IconButton aria-label={getThemeTooltip(themePreference)} color="inherit" onClick={onCycleTheme}>
               {getThemeIcon(themePreference)}
             </IconButton>
           </Tooltip>
@@ -92,7 +120,14 @@ export function AppLayout({
           ) : null}
         </Toolbar>
       </AppBar>
-      <Box component="main" sx={{ backgroundColor: 'background.default', flexGrow: 1, pb: 12 }}>
+      <Box
+        component="main"
+        sx={{
+          backgroundColor: 'background.default',
+          flexGrow: 1,
+          pb: hasConsentBanner ? { md: 12, xs: 'calc(9rem + env(safe-area-inset-bottom))' } : { md: 6, xs: 4 },
+        }}
+      >
         {children}
       </Box>
       <CookieConsentBanner />
