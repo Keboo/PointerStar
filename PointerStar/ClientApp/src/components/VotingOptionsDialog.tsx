@@ -7,11 +7,13 @@ import {
 } from '@mui/icons-material'
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
+  FormControlLabel,
   IconButton,
   Stack,
   TextField,
@@ -21,10 +23,11 @@ import {
 import { defaultVoteOptions, votingPresets, VotingMode } from '../types/contracts'
 
 interface VotingOptionsDialogProps {
+  currentFacilitatorCanVote?: boolean
   currentVoteOptions?: string[]
   currentVotingMode?: VotingMode
   onCancel: () => void
-  onSave: (voteOptions: string[], votingMode?: VotingMode) => void
+  onSave: (voteOptions: string[], votingMode?: VotingMode, facilitatorCanVote?: boolean) => void
   open: boolean
 }
 
@@ -36,6 +39,7 @@ function isPresetSelected(currentVoteOptions: string[], preset: readonly string[
 }
 
 export function VotingOptionsDialog({
+  currentFacilitatorCanVote,
   currentVoteOptions,
   currentVotingMode,
   onCancel,
@@ -44,6 +48,7 @@ export function VotingOptionsDialog({
 }: VotingOptionsDialogProps) {
   const [voteOptions, setVoteOptions] = useState<string[]>(currentVoteOptions ?? [...defaultVoteOptions])
   const [votingMode, setVotingMode] = useState<VotingMode>(currentVotingMode ?? VotingMode.Standard)
+  const [facilitatorCanVote, setFacilitatorCanVote] = useState(currentFacilitatorCanVote ?? false)
 
   useEffect(() => {
     if (!open) {
@@ -52,7 +57,8 @@ export function VotingOptionsDialog({
 
     setVoteOptions(currentVoteOptions ? [...currentVoteOptions] : [...defaultVoteOptions])
     setVotingMode(currentVotingMode ?? VotingMode.Standard)
-  }, [currentVoteOptions, currentVotingMode, open])
+    setFacilitatorCanVote(currentFacilitatorCanVote ?? false)
+  }, [currentFacilitatorCanVote, currentVoteOptions, currentVotingMode, open])
 
   const isValid = useMemo(
     () => {
@@ -69,6 +75,16 @@ export function VotingOptionsDialog({
       <DialogTitle>Configure Voting Options</DialogTitle>
       <DialogContent sx={{ pt: 2 }}>
         <Stack spacing={3}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={facilitatorCanVote}
+                onChange={(event) => setFacilitatorCanVote(event.target.checked)}
+              />
+            }
+            label="Allow facilitator to vote"
+          />
+
           <Stack spacing={1}>
             <Typography variant="body2">Select a preset:</Typography>
             <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 1 }}>
@@ -185,7 +201,7 @@ export function VotingOptionsDialog({
         <Button onClick={onCancel}>Cancel</Button>
         <Button
           disabled={!isValid}
-          onClick={() => onSave(votingMode === VotingMode.Giphy ? [] : voteOptions.map((option) => option.trim()), votingMode)}
+          onClick={() => onSave(votingMode === VotingMode.Giphy ? [] : voteOptions.map((option) => option.trim()), votingMode, facilitatorCanVote)}
           variant="contained"
         >
           Save

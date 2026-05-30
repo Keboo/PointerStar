@@ -20,6 +20,7 @@ export interface User {
 
 export interface RoomState {
   autoShowVotes: boolean
+  facilitatorCanVote: boolean
   resetVotesRequestedAt?: string | null
   resetVotesRequestedBy?: string | null
   roomId: string
@@ -32,6 +33,7 @@ export interface RoomState {
 
 export interface RoomOptions {
   autoShowVotes?: boolean
+  facilitatorCanVote?: boolean
   voteOptions?: string[]
   votesShown?: boolean
   votingMode?: VotingMode

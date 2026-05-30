@@ -13,6 +13,7 @@ public sealed record class RoomState(string RoomId, User[] Users)
 
     public bool VotesShown { get; init; }
     public bool AutoShowVotes { get; init; }
+    public bool FacilitatorCanVote { get; init; }
 
     public string[] VoteOptions { get; init; } = VotingPresets.Fibonacci;
     public DateTime? VoteStartTime { get; init; } = DateTime.UtcNow;

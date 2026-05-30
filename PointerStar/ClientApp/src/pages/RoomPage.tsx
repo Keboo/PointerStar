@@ -80,6 +80,7 @@ export function RoomPage() {
   const [votesShown, setVotesShown] = useState(false)
   const [previewVotes, setPreviewVotes] = useState(true)
   const [autoShowVotes, setAutoShowVotes] = useState(false)
+  const [facilitatorCanVote, setFacilitatorCanVote] = useState(false)
   const [voteStartTime, setVoteStartTime] = useState<string | null>(null)
   const [resetVotesRequestedAt, setResetVotesRequestedAt] = useState<string | null>(null)
   const [resetVotesRequestedBy, setResetVotesRequestedBy] = useState<string | null>(null)
@@ -125,6 +126,10 @@ export function RoomPage() {
     () => roomState?.users.filter((user) => user.role.id === roles.facilitator.id) ?? [],
     [roomState],
   )
+  const votingMembers = useMemo(
+    () => (facilitatorCanVote ? [...teamMembers, ...facilitators] : teamMembers),
+    [facilitatorCanVote, teamMembers, facilitators],
+  )
   const observers = useMemo(
     () => roomState?.users.filter((user) => user.role.id === roles.observer.id) ?? [],
     [roomState],
@@ -152,7 +157,7 @@ export function RoomPage() {
     }
 
     const counts = new Map<string, number>()
-    for (const member of teamMembers) {
+    for (const member of votingMembers) {
       const vote = member.vote ?? ''
       counts.set(vote, (counts.get(vote) ?? 0) + 1)
     }
@@ -165,7 +170,7 @@ export function RoomPage() {
         return (leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex) -
           (rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex)
       })
-  }, [roomState, teamMembers, votesShown])
+  }, [roomState, votingMembers, votesShown])
 
   const maxVoteCount = useMemo(
     () => groupedVotes.reduce((max, entry) => Math.max(max, entry.count), 0),
@@ -278,6 +283,7 @@ export function RoomPage() {
 
     const unsubscribe = client.subscribe((nextRoomState) => {
       setAutoShowVotes(nextRoomState.autoShowVotes)
+      setFacilitatorCanVote(nextRoomState.facilitatorCanVote)
       setResetVotesRequestedAt(nextRoomState.resetVotesRequestedAt ?? null)
       setResetVotesRequestedBy(nextRoomState.resetVotesRequestedBy ?? null)
       setRoomState(nextRoomState)
@@ -529,7 +535,7 @@ export function RoomPage() {
           </Alert>
         ) : null}
 
-        {isRole(currentUser, roles.teamMember) ? (
+        {isRole(currentUser, roles.teamMember) || (facilitatorCanVote && isRole(currentUser, roles.facilitator)) ? (
           <>
             {roomState?.votingMode === VotingMode.Giphy ? (
               <GiphyVotingPanel
@@ -592,16 +598,18 @@ export function RoomPage() {
               }
               label="Automatically reveal votes"
             />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={previewVotes}
-                  color="info"
-                  onChange={(event) => setPreviewVotes(event.target.checked)}
-                />
-              }
-              label="Preview votes"
-            />
+            {!facilitatorCanVote ? (
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={previewVotes}
+                    color="info"
+                    onChange={(event) => setPreviewVotes(event.target.checked)}
+                  />
+                }
+                label="Preview votes"
+              />
+            ) : null}
             <Button color="warning" onClick={() => void handleResetVotes()} variant="contained">
               Reset Votes
             </Button>
@@ -630,7 +638,7 @@ export function RoomPage() {
               <Card>
                 <CardHeader title="Votes" />
                 <CardContent>
-                  <GiphyVoteDisplay users={teamMembers} showVotes={votesShown} />
+                  <GiphyVoteDisplay users={votingMembers} showVotes={votesShown} />
                 </CardContent>
               </Card>
             ) : (
@@ -639,7 +647,7 @@ export function RoomPage() {
                 <CardContent>
                   <Stack spacing={1}>
                     {groupedVotes.map((entry) => {
-                      const percentage = teamMembers.length === 0 ? 0 : entry.count / teamMembers.length
+                      const percentage = votingMembers.length === 0 ? 0 : entry.count / votingMembers.length
                       const isHighestCount = entry.count === maxVoteCount
                       const label = `${entry.vote.trim() ? entry.vote : '…'} - ${entry.count} Vote${entry.count === 1 ? '' : 's'} (${percentage.toLocaleString(undefined, { style: 'percent', maximumFractionDigits: 0 })})`
 
@@ -667,24 +675,27 @@ export function RoomPage() {
         <Card>
           <CardHeader title="Team Members" />
           <CardContent>
-            {teamMembers.length > 0 ? (
+            {votingMembers.length > 0 ? (
               <Stack spacing={1}>
-                {teamMembers.map((user) => (
+                {votingMembers.map((user) => (
                   <Typography key={user.id}>
                     {isRole(currentUser, roles.facilitator) ? (
-                      <Tooltip title={`Make ${user.name} an Observer`}>
-                        <IconButton
-                          color="inherit"
-                          onClick={() => {
-                            void callHub(async (client) => {
-                              await client.removeUser(user.id)
-                            })
-                          }}
-                          size="small"
-                          sx={{ mr: 0.5 }}
-                        >
-                          <RemoveUserIcon fontSize="small" />
-                        </IconButton>
+                      <Tooltip title={isRole(user, roles.facilitator) ? `${user.name} is a facilitator` : `Make ${user.name} an Observer`}>
+                        <span>
+                          <IconButton
+                            color="inherit"
+                            disabled={isRole(user, roles.facilitator)}
+                            onClick={() => {
+                              void callHub(async (client) => {
+                                await client.removeUser(user.id)
+                              })
+                            }}
+                            size="small"
+                            sx={{ mr: 0.5 }}
+                          >
+                            <RemoveUserIcon fontSize="small" />
+                          </IconButton>
+                        </span>
                       </Tooltip>
                     ) : null}
                     {user.name}
@@ -802,13 +813,17 @@ export function RoomPage() {
       />
 
       <VotingOptionsDialog
+        currentFacilitatorCanVote={facilitatorCanVote}
         currentVoteOptions={roomState?.voteOptions}
         currentVotingMode={roomState?.votingMode}
         onCancel={() => setShowVotingOptionsDialog(false)}
-        onSave={(nextVoteOptions, nextVotingMode) => {
+        onSave={(nextVoteOptions, nextVotingMode, nextFacilitatorCanVote) => {
           setShowVotingOptionsDialog(false)
           setStoredVoteOptions(nextVoteOptions)
-          const update: RoomOptions = { voteOptions: nextVoteOptions }
+          const update: RoomOptions = {
+            voteOptions: nextVoteOptions,
+            facilitatorCanVote: nextFacilitatorCanVote,
+          }
           if (nextVotingMode !== undefined) {
             update.votingMode = nextVotingMode
           }

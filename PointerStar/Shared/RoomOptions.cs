@@ -4,6 +4,7 @@ public record class RoomOptions
 {
     public bool? VotesShown { get; init; }
     public bool? AutoShowVotes { get; init; }
+    public bool? FacilitatorCanVote { get; init; }
     public string[]? VoteOptions { get; init; }
     public VotingMode? VotingMode { get; init; }
 }
