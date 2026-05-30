@@ -16,6 +16,7 @@ namespace PointerStar.Server.Controllers;
 public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache memoryCache, IConfiguration configuration) : ControllerBase
 {
     private const string GiphyApiBaseUrl = "https://api.giphy.com/v1";
+    private const int PageSize = 20;
     private const int RateLimitPerMinute = 10;
     private const int CacheDurationMinutes = 30;
 
@@ -30,11 +31,16 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
     /// Results cached for 30 minutes.
     /// </summary>
     [HttpGet("Search")]
-    public async Task<ActionResult<GiphySearchResponse>> Search([FromQuery] string query)
+    public async Task<ActionResult<GiphySearchResponse>> Search([FromQuery] string query, [FromQuery] int offset = 0)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
             return BadRequest(new { error = "Query parameter is required" });
+        }
+
+        if (offset < 0)
+        {
+            return BadRequest(new { error = "Offset must be zero or greater." });
         }
 
         // Rate limiting: check if user has exceeded the limit
@@ -45,7 +51,7 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
         }
 
         // Check cache first
-        string cacheKey = $"giphy_search_{query.ToLower()}";
+        string cacheKey = $"giphy_search_{query.ToLower()}_{offset}";
         if (MemoryCache.TryGetValue(cacheKey, out GiphySearchResponse? cachedResult))
         {
             return cachedResult!;
@@ -60,7 +66,7 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
         try
         {
             using var httpClient = HttpClientFactory.CreateClient();
-            string url = $"{GiphyApiBaseUrl}/gifs/search?api_key={giphyApiKey}&q={Uri.EscapeDataString(query)}&limit=21&offset=0&rating=g&lang=en";
+            string url = $"{GiphyApiBaseUrl}/gifs/search?api_key={giphyApiKey}&q={Uri.EscapeDataString(query)}&limit={PageSize}&offset={offset}&rating=g&lang=en";
 
             using var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
@@ -78,7 +84,7 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
             var result = new GiphySearchResponse
             {
                 Data = ExtractGiphyIds(root),
-                Pagination = new PaginationInfo { Count = 21 }
+                Pagination = ExtractPaginationInfo(root, offset)
             };
 
             // Cache the result
@@ -126,6 +132,50 @@ public class GiphyController(IHttpClientFactory httpClientFactory, IMemoryCache 
         UserSearchTimestamps[userId] = newTimestamps;
 
         return true;
+    }
+
+    private static PaginationInfo ExtractPaginationInfo(JsonElement root, int requestedOffset)
+    {
+        if (root.TryGetProperty("pagination", out var paginationElement))
+        {
+            int count = 0;
+            int offset = requestedOffset;
+            int totalCount = 0;
+
+            if (paginationElement.TryGetProperty("count", out var countElement))
+            {
+                count = countElement.GetInt32();
+            }
+
+            if (paginationElement.TryGetProperty("offset", out var offsetElement))
+            {
+                offset = offsetElement.GetInt32();
+            }
+
+            if (paginationElement.TryGetProperty("total_count", out var totalCountElement))
+            {
+                totalCount = totalCountElement.GetInt32();
+            }
+
+            if (totalCount == 0 && count > 0)
+            {
+                totalCount = offset + count;
+            }
+
+            return new PaginationInfo
+            {
+                Count = count,
+                Offset = offset,
+                TotalCount = totalCount
+            };
+        }
+
+        return new PaginationInfo
+        {
+            Count = 0,
+            Offset = requestedOffset,
+            TotalCount = 0
+        };
     }
 
     /// <summary>

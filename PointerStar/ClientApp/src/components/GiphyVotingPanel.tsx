@@ -15,7 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import SearchIcon from '@mui/icons-material/Search'
 import type { GiphyItem } from '../types/contracts'
-import { searchGiphy } from '../services/giphyApi'
+import { GIPHY_PAGE_SIZE, searchGiphy } from '../services/giphyApi'
 
 interface GiphyVotingPanelProps {
   currentVote?: string | null
@@ -31,40 +31,81 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
   const [searchQuery, setSearchQuery] = useState('')
   const [results, setResults] = useState<GiphyItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [isSearchExpanded, setIsSearchExpanded] = useState(!currentVote)
+  const [activeQuery, setActiveQuery] = useState('')
+  const [nextOffset, setNextOffset] = useState(0)
+  const [hasMoreResults, setHasMoreResults] = useState(false)
   const requestIdRef = useRef(0)
 
   const handleSearch = useCallback(
-    async (query: string) => {
-      if (!query.trim()) {
+    async (query: string, offset = 0, append = false) => {
+      const trimmedQuery = query.trim()
+      if (!trimmedQuery) {
         setResults([])
         setError(null)
+        setActiveQuery('')
+        setNextOffset(0)
+        setHasMoreResults(false)
         return
       }
 
-      setLoading(true)
+      if (append) {
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+        setResults([])
+        setNextOffset(0)
+        setHasMoreResults(false)
+        setActiveQuery(trimmedQuery)
+      }
       setError(null)
 
       try {
         const requestId = ++requestIdRef.current
-        const response = await searchGiphy(query)
+        const response = await searchGiphy({
+          query: trimmedQuery,
+          offset,
+        })
         if (requestId !== requestIdRef.current) {
           return
         }
 
-        setResults(response.data || [])
+        const nextPageResults = response.data ?? []
+        const responseCount = response.pagination?.count ?? nextPageResults.length
+        const responseOffset = response.pagination?.offset ?? offset
+        const calculatedNextOffset = responseOffset + responseCount
+        const knownTotal = response.pagination?.totalCount
 
-        if (response.data?.length === 0) {
+        setNextOffset(calculatedNextOffset)
+        setHasMoreResults(
+          knownTotal !== undefined
+            ? calculatedNextOffset < knownTotal
+            : nextPageResults.length === GIPHY_PAGE_SIZE,
+        )
+
+        if (append) {
+          setResults((currentResults) => [...currentResults, ...nextPageResults])
+        } else {
+          setResults(nextPageResults)
+        }
+
+        if (!append && nextPageResults.length === 0) {
           setError('No GIFs found. Try a different search.')
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Search failed'
         setError(errorMessage)
-        setResults([])
+        if (!append) {
+          setResults([])
+          setNextOffset(0)
+          setHasMoreResults(false)
+        }
       } finally {
         setLoading(false)
+        setLoadingMore(false)
       }
     },
     []
@@ -76,6 +117,10 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
     setResults([])
     setError(null)
     setLoading(false)
+    setLoadingMore(false)
+    setActiveQuery('')
+    setNextOffset(0)
+    setHasMoreResults(false)
   }, [])
 
   useEffect(() => {
@@ -109,6 +154,14 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
     setIsSearchExpanded(false)
     onVoteSubmit(giphyId)
   }
+
+  const handleShowMore = useCallback(() => {
+    if (loading || loadingMore || !hasMoreResults || !activeQuery) {
+      return
+    }
+
+    void handleSearch(activeQuery, nextOffset, true)
+  }, [activeQuery, handleSearch, hasMoreResults, loading, loadingMore, nextOffset])
 
   return (
     <Box>
@@ -201,6 +254,17 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
                   </ImageListItem>
                 ))}
               </ImageList>
+              {hasMoreResults ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', pb: 1, pt: 2 }}>
+                  <Button
+                    onClick={handleShowMore}
+                    disabled={loadingMore}
+                    variant="outlined"
+                  >
+                    {loadingMore ? 'Loading…' : 'Show More'}
+                  </Button>
+                </Box>
+              ) : null}
             </Paper>
           )}
 
