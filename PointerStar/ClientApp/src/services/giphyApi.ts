@@ -1,13 +1,33 @@
 import type { GiphySearchResponse } from '../types/contracts'
 
+export const GIPHY_PAGE_SIZE = 20
+
 /**
  * Service for interacting with the Giphy API endpoint.
  * Handles searching for Giphy images and error handling.
  */
 
-export async function searchGiphy(query: string): Promise<GiphySearchResponse> {
+interface SearchGiphyOptions {
+  query: string
+  offset?: number
+}
+
+export async function searchGiphy({ query, offset = 0 }: SearchGiphyOptions): Promise<GiphySearchResponse> {
+  const trimmedQuery = query.trim()
+  if (!trimmedQuery) {
+    return {
+      data: [],
+      pagination: null,
+    }
+  }
+
   try {
-    const response = await fetch(`/api/giphy/search?query=${encodeURIComponent(query)}`, {
+    const params = new URLSearchParams({
+      query: trimmedQuery,
+      offset: String(offset),
+    })
+
+    const response = await fetch(`/api/giphy/search?${params.toString()}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -25,7 +45,6 @@ export async function searchGiphy(query: string): Promise<GiphySearchResponse> {
     return data
   } catch (error) {
     console.error('Giphy search failed:', error)
-    // Return empty results on failure for graceful degradation
     return {
       data: [],
       pagination: null,
