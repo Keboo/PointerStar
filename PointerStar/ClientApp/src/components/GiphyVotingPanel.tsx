@@ -169,7 +169,7 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
 
           {!loading && results.length > 0 && (
             <Paper sx={{ padding: 1 }}>
-              <ImageList cols={Math.min(3, Math.max(1, results.length))} gap={8}>
+              <ImageList variant="masonry" cols={3} gap={8}>
                 {results.map((gif) => (
                   <ImageListItem
                     key={gif.id}
@@ -191,14 +191,12 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
                       src={gif.imageUrl}
                       alt={gif.title}
                       loading="lazy"
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', display: 'block', width: '100%' }}
                     />
                     <ImageListItemBar
                       title={gif.title}
-                      position="bottom"
-                      sx={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
-                      }}
+                      position="below"
+                      sx={{ fontSize: '0.7rem' }}
                     />
                   </ImageListItem>
                 ))}
