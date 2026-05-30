@@ -11,6 +11,10 @@ import {
   Container,
   FormControlLabel,
   IconButton,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+  MenuItem,
   Paper,
   Snackbar,
   Stack,
@@ -24,6 +28,7 @@ import {
   Edit as EditIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
+  MoreVert as MoreVertIcon,
   PersonRemove as RemoveUserIcon,
   Refresh as RefreshIcon,
   Settings as SettingsIcon,
@@ -86,6 +91,8 @@ export function RoomPage() {
   const [resetVotesRequestedBy, setResetVotesRequestedBy] = useState<string | null>(null)
   const [serverClockOffsetMs, setServerClockOffsetMs] = useState(0)
   const [showQrCode, setShowQrCode] = useState(false)
+  const [showAdvancedFacilitatorControls, setShowAdvancedFacilitatorControls] = useState(false)
+  const [mobileActionsAnchorEl, setMobileActionsAnchorEl] = useState<HTMLElement | null>(null)
   const [showUserDialog, setShowUserDialog] = useState(false)
   const [showVotingOptionsDialog, setShowVotingOptionsDialog] = useState(false)
   const [timerTick, setTimerTick] = useState(0)
@@ -176,6 +183,7 @@ export function RoomPage() {
     () => groupedVotes.reduce((max, entry) => Math.max(max, entry.count), 0),
     [groupedVotes],
   )
+  const isMobileActionsOpen = Boolean(mobileActionsAnchorEl)
 
   const showSnackbar = useCallback((message: string, severity: AlertColor = 'success') => {
     setSnackbar({
@@ -436,23 +444,41 @@ export function RoomPage() {
             p: theme.palette.mode === 'dark' ? 1.5 : 0,
           })}
         >
-          <Button
-            color="inherit"
-            onClick={() => {
-              void navigator.clipboard
-                .writeText(window.location.href)
-                .then(() => showSnackbar('Link Copied'))
-                .catch((error) => {
-                  console.error('Unable to copy the invitation link.', error)
-                  showSnackbar('Unable to copy the invitation link.', 'error')
-                })
-            }}
-            startIcon={<CopyIcon />}
-            variant="outlined"
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: 'center', flexGrow: { md: 0, xs: 1 }, width: { md: 'auto', xs: '100%' } }}
           >
-            Copy Invitation URL
-          </Button>
-          <Stack>
+            <Button
+              color="primary"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(window.location.href)
+                  .then(() => showSnackbar('Link Copied'))
+                  .catch((error) => {
+                    console.error('Unable to copy the invitation link.', error)
+                    showSnackbar('Unable to copy the invitation link.', 'error')
+                  })
+              }}
+              startIcon={<CopyIcon />}
+              sx={{ flexGrow: { md: 0, xs: 1 }, minHeight: 48 }}
+              variant="contained"
+            >
+              Copy Invitation URL
+            </Button>
+            <IconButton
+              aria-controls={isMobileActionsOpen ? 'room-mobile-actions-menu' : undefined}
+              aria-expanded={isMobileActionsOpen ? 'true' : undefined}
+              aria-haspopup="menu"
+              aria-label="Open room actions"
+              onClick={(event) => setMobileActionsAnchorEl(event.currentTarget)}
+              sx={{ display: { md: 'none', xs: 'inline-flex' } }}
+            >
+              <MoreVertIcon />
+            </IconButton>
+          </Stack>
+
+          <Box sx={{ display: { md: 'inline-flex', xs: 'none' }, gap: 1 }}>
             <Button
               color="inherit"
               onClick={() => setShowQrCode((current) => !current)}
@@ -461,30 +487,55 @@ export function RoomPage() {
             >
               {showQrCode ? 'Hide' : 'Show'} QR Code
             </Button>
-            <Collapse in={showQrCode}>
-              <Box
-                sx={(theme) => ({
-                  backgroundColor: '#ffffff',
-                  border: `2px solid ${theme.palette.divider}`,
-                  borderRadius: 1,
-                  display: 'inline-flex',
-                  mt: 1,
-                  p: 1,
-                })}
-              >
-                <QRCodeSVG value={window.location.href} />
-              </Box>
-            </Collapse>
-          </Stack>
-          <Button
-            color="inherit"
-            onClick={() => setShowUserDialog(true)}
-            startIcon={<EditIcon />}
-            variant="outlined"
+            <Button color="inherit" onClick={() => setShowUserDialog(true)} startIcon={<EditIcon />} variant="outlined">
+              {name || currentUser?.name || 'Edit user'}
+            </Button>
+          </Box>
+
+          <Menu
+            anchorEl={mobileActionsAnchorEl}
+            id="room-mobile-actions-menu"
+            onClose={() => setMobileActionsAnchorEl(null)}
+            open={isMobileActionsOpen}
           >
-            {name || currentUser?.name || 'Edit user'}
-          </Button>
+            <MenuItem
+              onClick={() => {
+                setShowQrCode((current) => !current)
+                setMobileActionsAnchorEl(null)
+              }}
+            >
+              <ListItemIcon>{showQrCode ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}</ListItemIcon>
+              <ListItemText>{showQrCode ? 'Hide' : 'Show'} QR Code</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setShowUserDialog(true)
+                setMobileActionsAnchorEl(null)
+              }}
+            >
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>{name || currentUser?.name || 'Edit user'}</ListItemText>
+            </MenuItem>
+          </Menu>
         </Paper>
+
+        <Collapse in={showQrCode}>
+          <Box
+            sx={(theme) => ({
+              alignItems: 'center',
+              backgroundColor: '#ffffff',
+              border: `2px solid ${theme.palette.divider}`,
+              borderRadius: 1,
+              display: 'inline-flex',
+              maxWidth: '100%',
+              p: 1,
+            })}
+          >
+            <QRCodeSVG value={window.location.href} />
+          </Box>
+        </Collapse>
 
         {voteStartTime ? (
           <Typography>
@@ -547,17 +598,23 @@ export function RoomPage() {
                 }}
               />
             ) : (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap' }}>
-                {(roomState?.voteOptions ?? defaultVoteOptions).map((option) => (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 1,
+                  gridTemplateColumns: { md: 'repeat(8, minmax(0, 1fr))', sm: 'repeat(6, minmax(0, 1fr))', xs: 'repeat(4, minmax(0, 1fr))' },
+                }}
+              >
+                {(roomState?.voteOptions ?? defaultVoteOptions).map((option, index) => (
                   <Button
                     color={option === currentUser?.vote ? 'success' : 'primary'}
-                    key={option}
+                    key={`${option}-${index}`}
                     onClick={() => {
                       void callHub(async (client) => {
                         await client.submitVote(option)
                       })
                     }}
-                    sx={{ height: 70, m: 0.5, minWidth: 70, px: 2.5 }}
+                    sx={{ fontSize: { sm: '1rem', xs: '0.95rem' }, height: { sm: 66, xs: 56 }, minWidth: 0 }}
                     variant="contained"
                   >
                     {option}
@@ -569,53 +626,76 @@ export function RoomPage() {
         ) : null}
 
         {isRole(currentUser, roles.facilitator) ? (
-          <Stack direction={{ md: 'row', xs: 'column' }} spacing={2}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={votesShown}
-                  color="success"
-                  onChange={(event) => {
-                    const checked = event.target.checked
-                    setVotesShown(checked)
-                    void requestRoomUpdate({ votesShown: checked })
-                  }}
+          <Stack spacing={1.5}>
+            <Stack direction={{ md: 'row', xs: 'column' }} spacing={2}>
+              <Button
+                color={votesShown ? 'success' : 'primary'}
+                onClick={() => {
+                  const checked = !votesShown
+                  setVotesShown(checked)
+                  void requestRoomUpdate({ votesShown: checked })
+                }}
+                sx={{ width: { md: 'auto', xs: '100%' } }}
+                variant={votesShown ? 'contained' : 'outlined'}
+              >
+                {votesShown ? 'Hide Votes' : 'Show Votes'}
+              </Button>
+              <Button
+                color="warning"
+                onClick={() => void handleResetVotes()}
+                sx={{ width: { md: 'auto', xs: '100%' } }}
+                variant="contained"
+              >
+                Reset Votes
+              </Button>
+              <Button
+                endIcon={showAdvancedFacilitatorControls ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                onClick={() => setShowAdvancedFacilitatorControls((current) => !current)}
+                sx={{ width: { md: 'auto', xs: '100%' } }}
+                variant="text"
+              >
+                Advanced
+              </Button>
+            </Stack>
+
+            <Collapse in={showAdvancedFacilitatorControls} unmountOnExit>
+              <Stack direction={{ md: 'row', xs: 'column' }} spacing={2}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={autoShowVotes}
+                      color="info"
+                      onChange={(event) => {
+                        const checked = event.target.checked
+                        setAutoShowVotes(checked)
+                        void requestRoomUpdate({ autoShowVotes: checked })
+                      }}
+                    />
+                  }
+                  label="Automatically reveal votes"
                 />
-              }
-              label="Show votes"
-            />
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={autoShowVotes}
-                  color="info"
-                  onChange={(event) => {
-                    const checked = event.target.checked
-                    setAutoShowVotes(checked)
-                    void requestRoomUpdate({ autoShowVotes: checked })
-                  }}
-                />
-              }
-              label="Automatically reveal votes"
-            />
-            {!facilitatorCanVote ? (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={previewVotes}
-                    color="info"
-                    onChange={(event) => setPreviewVotes(event.target.checked)}
+                {!facilitatorCanVote ? (
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={previewVotes}
+                        color="info"
+                        onChange={(event) => setPreviewVotes(event.target.checked)}
+                      />
+                    }
+                    label="Preview votes"
                   />
-                }
-                label="Preview votes"
-              />
-            ) : null}
-            <Button color="warning" onClick={() => void handleResetVotes()} variant="contained">
-              Reset Votes
-            </Button>
-            <Button onClick={() => setShowVotingOptionsDialog(true)} startIcon={<SettingsIcon />} variant="outlined">
-              Configure Options
-            </Button>
+                ) : null}
+                <Button
+                  onClick={() => setShowVotingOptionsDialog(true)}
+                  startIcon={<SettingsIcon />}
+                  sx={{ width: { md: 'auto', xs: '100%' } }}
+                  variant="outlined"
+                >
+                  Configure Options
+                </Button>
+              </Stack>
+            </Collapse>
           </Stack>
         ) : null}
 

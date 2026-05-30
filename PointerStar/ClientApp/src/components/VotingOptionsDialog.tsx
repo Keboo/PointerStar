@@ -123,8 +123,13 @@ export function VotingOptionsDialog({
                 <Typography variant="body2">Or customize your options:</Typography>
                 <Stack spacing={1}>
                   {voteOptions.map((option, index) => (
-                    <Stack direction="row" key={`${option}-${index}`} spacing={1} sx={{ alignItems: 'center' }}>
-                      <Stack spacing={0}>
+                    <Stack
+                      direction={{ sm: 'row', xs: 'column' }}
+                      key={`${option}-${index}`}
+                      spacing={1}
+                      sx={{ alignItems: { sm: 'center', xs: 'stretch' } }}
+                    >
+                      <Stack direction="row" spacing={0.5}>
                         <IconButton
                           disabled={index === 0}
                           onClick={() =>
@@ -151,6 +156,16 @@ export function VotingOptionsDialog({
                         >
                           <ArrowDownwardIcon fontSize="small" />
                         </IconButton>
+                        <IconButton
+                          color="error"
+                          disabled={voteOptions.length <= 1}
+                          onClick={() =>
+                            setVoteOptions((current) => current.filter((_, currentIndex) => currentIndex !== index))
+                          }
+                          size="small"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
                       </Stack>
                       <TextField
                         fullWidth
@@ -166,16 +181,6 @@ export function VotingOptionsDialog({
                         value={option}
                         variant="outlined"
                       />
-                      <IconButton
-                        color="error"
-                        disabled={voteOptions.length <= 1}
-                        onClick={() =>
-                          setVoteOptions((current) => current.filter((_, currentIndex) => currentIndex !== index))
-                        }
-                        size="small"
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
                     </Stack>
                   ))}
                 </Stack>

@@ -10,6 +10,8 @@ import {
   Stack,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 
 import { getNewUserRole } from '../services/roomApi'
@@ -32,6 +34,9 @@ export function UserDialog({
   open,
   roomId,
 }: UserDialogProps) {
+  const theme = useTheme()
+  const useConnectedRoleButtons = useMediaQuery(theme.breakpoints.up('sm'))
+
   const [name, setName] = useState(defaultName ?? '')
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(defaultRoleId ?? null)
   const [isLoading, setIsLoading] = useState(false)
@@ -91,31 +96,69 @@ export function UserDialog({
               value={name}
               variant="standard"
             />
-            <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-              <Typography>I want to...</Typography>
-              <ButtonGroup>
-                <Button
-                  disabled={isLoading}
-                  onClick={() => setSelectedRoleId(roles.teamMember.id)}
-                  variant={selectedRoleId === roles.teamMember.id ? 'contained' : 'outlined'}
-                >
-                  Vote
-                </Button>
-                <Button
-                  disabled={isLoading}
-                  onClick={() => setSelectedRoleId(roles.facilitator.id)}
-                  variant={selectedRoleId === roles.facilitator.id ? 'contained' : 'outlined'}
-                >
-                  Facilitate
-                </Button>
-                <Button
-                  disabled={isLoading}
-                  onClick={() => setSelectedRoleId(roles.observer.id)}
-                  variant={selectedRoleId === roles.observer.id ? 'contained' : 'outlined'}
-                >
-                  Observe
-                </Button>
-              </ButtonGroup>
+            <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ alignItems: { sm: 'center', xs: 'stretch' } }}>
+              <Typography sx={{ minWidth: 84 }}>I want to...</Typography>
+              {useConnectedRoleButtons ? (
+                <ButtonGroup>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.teamMember.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.teamMember.id ? 'contained' : 'outlined'}
+                  >
+                    Vote
+                  </Button>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.facilitator.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.facilitator.id ? 'contained' : 'outlined'}
+                  >
+                    Facilitate
+                  </Button>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.observer.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.observer.id ? 'contained' : 'outlined'}
+                  >
+                    Observe
+                  </Button>
+                </ButtonGroup>
+              ) : (
+                <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1} sx={{ flexGrow: 1 }}>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.teamMember.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.teamMember.id ? 'contained' : 'outlined'}
+                  >
+                    Vote
+                  </Button>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.facilitator.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.facilitator.id ? 'contained' : 'outlined'}
+                  >
+                    Facilitate
+                  </Button>
+                  <Button
+                    disabled={isLoading}
+                    onClick={() => setSelectedRoleId(roles.observer.id)}
+                    sx={{ minHeight: 44 }}
+                    type="button"
+                    variant={selectedRoleId === roles.observer.id ? 'contained' : 'outlined'}
+                  >
+                    Observe
+                  </Button>
+                </Stack>
+              )}
               {isLoading ? <CircularProgress size={18} /> : null}
             </Stack>
           </Stack>
