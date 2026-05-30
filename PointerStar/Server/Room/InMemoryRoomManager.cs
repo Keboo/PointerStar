@@ -169,6 +169,11 @@ public class InMemoryRoomManager : IRoomManager
                     room = room with { AutoShowVotes = autoShowVotes };
                 }
 
+                if (roomOptions.FacilitatorCanVote is { } facilitatorCanVote)
+                {
+                    room = room with { FacilitatorCanVote = facilitatorCanVote };
+                }
+
                 if (roomOptions.VotesShown is { } votesShown)
                 {
                     room = room with { VotesShown = votesShown };
@@ -358,6 +363,11 @@ public class InMemoryRoomManager : IRoomManager
             {
                 return room;
             }
+            // Facilitators cannot be demoted to observer
+            if (room.Users.SingleOrDefault(u => u.Id == userId)?.Role == Role.Facilitator)
+            {
+                return room;
+            }
             return room with
             {
                 Users = [.. room.Users.Select(u => u.Id == userId ? u with
@@ -451,8 +461,10 @@ public class InMemoryRoomManager : IRoomManager
     {
         if (roomState.AutoShowVotes)
         {
-            var teamMembers = roomState.TeamMembers;
-            if (teamMembers.Any() && teamMembers.All(x => x.Vote is not null))
+            IReadOnlyList<User> votingMembers = roomState.FacilitatorCanVote
+                ? [.. roomState.TeamMembers, .. roomState.Facilitators]
+                : roomState.TeamMembers;
+            if (votingMembers.Any() && votingMembers.All(x => x.Vote is not null))
             {
                 return true;
             }
