@@ -7,15 +7,15 @@ export function createAppTheme(mode: PaletteMode) {
     palette: {
       mode,
       primary: {
-        dark: isDark ? '#5d4fcb' : '#4b3ec2',
-        light: isDark ? '#9185ff' : '#7e72e8',
-        main: isDark ? '#7568f2' : '#5b48d6',
+        dark: isDark ? '#2f7f9d' : '#1d5c74',
+        light: isDark ? '#7fc3d8' : '#66afc8',
+        main: isDark ? '#4fa0be' : '#2f7f9d',
       },
       secondary: {
-        main: isDark ? '#8f82ff' : '#6d5be0',
+        main: isDark ? '#8dc6d8' : '#174a58',
       },
       info: {
-        main: isDark ? '#5da9ff' : '#0dcaf0',
+        main: isDark ? '#5db8d2' : '#2f7f9d',
       },
       success: {
         main: isDark ? '#62bb72' : '#2e7d32',
@@ -31,33 +31,33 @@ export function createAppTheme(mode: PaletteMode) {
       },
       background: isDark
         ? {
-            default: '#353746',
-            paper: '#3d3f4e',
+            default: '#0b1e24',
+            paper: '#102a32',
           }
         : {
-            default: '#ffffff',
+            default: '#f3f8fa',
             paper: '#ffffff',
           },
-      divider: isDark ? alpha('#ffffff', 0.14) : alpha('#2e3040', 0.14),
+      divider: isDark ? alpha('#eaf4f7', 0.16) : alpha('#15262d', 0.14),
       text: isDark
         ? {
-            primary: '#f4efe7',
-            secondary: alpha('#f4efe7', 0.72),
+            primary: '#eaf4f7',
+            secondary: '#a8bdc6',
           }
         : {
-            primary: '#2e3040',
-            secondary: alpha('#2e3040', 0.72),
+            primary: '#15262d',
+            secondary: '#4c626b',
           },
       action: isDark
         ? {
-            active: '#f4efe7',
-            hover: alpha('#ffffff', 0.08),
-            selected: alpha('#ffffff', 0.14),
+            active: '#eaf4f7',
+            hover: alpha('#eaf4f7', 0.08),
+            selected: alpha('#eaf4f7', 0.16),
           }
         : {
-            active: '#2e3040',
-            hover: alpha('#2e3040', 0.04),
-            selected: alpha('#2e3040', 0.08),
+            active: '#15262d',
+            hover: alpha('#15262d', 0.04),
+            selected: alpha('#15262d', 0.08),
           },
     },
     shape: {
@@ -73,7 +73,7 @@ export function createAppTheme(mode: PaletteMode) {
       MuiAppBar: {
         styleOverrides: {
           root: ({ theme }) => ({
-            backgroundColor: theme.palette.mode === 'dark' ? '#2d2f3a' : theme.palette.primary.main,
+            backgroundColor: theme.palette.mode === 'dark' ? '#0d252d' : theme.palette.primary.main,
             backgroundImage: 'none',
             boxShadow: 'none',
             color: theme.palette.mode === 'dark' ? theme.palette.text.primary : '#ffffff',
