@@ -6,11 +6,11 @@ import { getStoredThemePreferenceValue, setStoredThemePreferenceValue } from '..
 export type ThemePreference = 'system' | 'light' | 'dark'
 
 function parseThemePreference(value: string): ThemePreference {
-  if (value === 'light' || value === 'dark') {
+  if (value === 'light' || value === 'dark' || value === 'system') {
     return value
   }
 
-  return 'system'
+  return 'dark'
 }
 
 export function useThemePreference() {
