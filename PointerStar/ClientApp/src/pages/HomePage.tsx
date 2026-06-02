@@ -116,7 +116,12 @@ export function HomePage({ notFound = false }: HomePageProps) {
                         })
                     }}
                     size="large"
-                    sx={{ minHeight: 56, width: { md: 'fit-content', xs: '100%' } }}
+                    sx={{
+                      alignSelf: { md: 'center', xs: 'stretch' },
+                      justifyContent: 'center',
+                      minHeight: 56,
+                      width: { md: 'fit-content', xs: '100%' },
+                    }}
                     variant="contained"
                   >
                     Create New Room
