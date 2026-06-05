@@ -23,6 +23,8 @@ interface GiphyVoteDisplayProps {
 export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showVotes }) => {
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
   const [selectedGif, setSelectedGif] = useState<{ name: string; url: string } | null>(null)
+  const voteCardWidth = { xs: 132, sm: 150, md: 184, lg: 216 }
+  const voteCardHeight = { xs: 108, sm: 120, md: 136, lg: 152 }
 
   // Filter users who have voted with Giphy IDs
   const votedUsers = users.filter((user) => user.vote && showVotes)
@@ -52,7 +54,7 @@ export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showV
 
   return (
     <Paper sx={{ padding: 2 }}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 1.5, md: 2 } }}>
         {votedUsers.map((user) => {
           const giphyId = user.vote || ''
           const isErrored = imageErrors.has(giphyId)
@@ -65,7 +67,7 @@ export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showV
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                width: 180,
+                width: voteCardWidth,
               }}
             >
               {isErrored ? (
@@ -76,7 +78,7 @@ export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showV
                     borderRadius: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    height: 120,
+                    height: voteCardHeight,
                     justifyContent: 'center',
                     width: '100%',
                   }}
@@ -100,7 +102,7 @@ export const GiphyVoteDisplay: React.FC<GiphyVoteDisplayProps> = ({ users, showV
                     color: 'inherit',
                     cursor: 'pointer',
                     display: 'flex',
-                    height: 120,
+                    height: voteCardHeight,
                     justifyContent: 'center',
                     overflow: 'hidden',
                     p: 0,
