@@ -26,6 +26,7 @@ import {
 } from '@mui/material'
 import {
   ContentCopy as CopyIcon,
+  Delete as DeleteIcon,
   Edit as EditIcon,
   ExpandLess as ExpandLessIcon,
   ExpandMore as ExpandMoreIcon,
@@ -223,6 +224,11 @@ export function RoomPage() {
   const handleRecentGifSearchClick = useCallback((query: string) => {
     setSelectedGifSearchQuery(query)
     setSelectedGifSearchRequestId((requestId) => requestId + 1)
+  }, [])
+
+  const handleClearRecentGifSearches = useCallback(() => {
+    setRecentGifSearches([])
+    setSelectedGifSearchQuery(null)
   }, [])
 
   const callHub = useCallback(
@@ -608,17 +614,24 @@ export function RoomPage() {
                 <Typography color="text.secondary" sx={{ whiteSpace: 'nowrap' }} variant="body2">
                   Recent GIF searches:
                 </Typography>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: { sm: 'flex-end', xs: 'flex-start' } }}>
-                  {recentGifSearches.map((query) => (
-                    <Chip
-                      color={selectedGifSearchQuery === query ? 'primary' : 'default'}
-                      key={query}
-                      label={query}
-                      onClick={() => handleRecentGifSearchClick(query)}
-                      size="small"
-                      variant={selectedGifSearchQuery === query ? 'filled' : 'outlined'}
-                    />
-                  ))}
+                <Box sx={{ alignItems: 'center', display: 'flex', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: { sm: 'flex-end', xs: 'flex-start' } }}>
+                    {recentGifSearches.map((query) => (
+                      <Chip
+                        color={selectedGifSearchQuery === query ? 'primary' : 'default'}
+                        key={query}
+                        label={query}
+                        onClick={() => handleRecentGifSearchClick(query)}
+                        size="small"
+                        variant={selectedGifSearchQuery === query ? 'filled' : 'outlined'}
+                      />
+                    ))}
+                  </Box>
+                  <Tooltip title="clear searches">
+                    <IconButton aria-label="Clear searches" onClick={handleClearRecentGifSearches} size="small">
+                      <DeleteIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 </Box>
               </Box>
             ) : null}
