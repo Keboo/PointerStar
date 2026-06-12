@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   acceptCookies,
   getStoredName,
+  getStoredRecentGifSearches,
   hasCookieConsent,
   hasUserRespondedToConsent,
   rejectCookies,
   setStoredName,
+  setStoredRecentGifSearches,
 } from './cookies'
 
 function clearCookies() {
@@ -44,5 +46,30 @@ describe('cookies', () => {
 
     expect(hasCookieConsent()).toBe(false)
     expect(hasUserRespondedToConsent()).toBe(true)
+  })
+
+  it('returns an empty array for recent GIF searches when nothing is stored', () => {
+    expect(getStoredRecentGifSearches()).toEqual([])
+  })
+
+  it('blocks recent GIF search writes until consent is accepted', () => {
+    setStoredRecentGifSearches(['cat'])
+
+    expect(getStoredRecentGifSearches()).toEqual([])
+  })
+
+  it('persists and restores recent GIF searches after consent is accepted', () => {
+    acceptCookies()
+    setStoredRecentGifSearches(['cat', 'dog', 'bird'])
+
+    expect(getStoredRecentGifSearches()).toEqual(['cat', 'dog', 'bird'])
+  })
+
+  it('clears recent GIF searches when an empty array is stored', () => {
+    acceptCookies()
+    setStoredRecentGifSearches(['cat'])
+    setStoredRecentGifSearches([])
+
+    expect(getStoredRecentGifSearches()).toEqual([])
   })
 })
