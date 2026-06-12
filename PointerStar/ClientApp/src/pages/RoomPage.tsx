@@ -4,6 +4,7 @@ import {
   Alert,
   Box,
   Button,
+  ButtonGroup,
   Card,
   CardContent,
   CardHeader,
@@ -25,6 +26,7 @@ import {
   type AlertColor,
 } from '@mui/material'
 import {
+  ArrowDropDown as ArrowDropDownIcon,
   ContentCopy as CopyIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
@@ -95,6 +97,7 @@ export function RoomPage() {
   const [resetVotesRequestedBy, setResetVotesRequestedBy] = useState<string | null>(null)
   const [serverClockOffsetMs, setServerClockOffsetMs] = useState(0)
   const [showQrCode, setShowQrCode] = useState(false)
+  const [inviteActionsAnchorEl, setInviteActionsAnchorEl] = useState<HTMLElement | null>(null)
   const [showAdvancedFacilitatorControls, setShowAdvancedFacilitatorControls] = useState(false)
   const [mobileActionsAnchorEl, setMobileActionsAnchorEl] = useState<HTMLElement | null>(null)
   const [showUserDialog, setShowUserDialog] = useState(false)
@@ -194,6 +197,7 @@ export function RoomPage() {
     () => groupedVotes.reduce((max, entry) => Math.max(max, entry.count), 0),
     [groupedVotes],
   )
+  const isInviteActionsOpen = Boolean(inviteActionsAnchorEl)
   const isMobileActionsOpen = Boolean(mobileActionsAnchorEl)
 
   const showSnackbar = useCallback((message: string, severity: AlertColor = 'success') => {
@@ -230,6 +234,16 @@ export function RoomPage() {
     setRecentGifSearches([])
     setSelectedGifSearchQuery(null)
   }, [])
+
+  const handleCopyInvitationUrl = useCallback(() => {
+    void navigator.clipboard
+      .writeText(window.location.href)
+      .then(() => showSnackbar('Link Copied'))
+      .catch((error) => {
+        console.error('Unable to copy the invitation link.', error)
+        showSnackbar('Unable to copy the invitation link.', 'error')
+      })
+  }, [showSnackbar])
 
   const callHub = useCallback(
     async <T,>(operation: (client: RoomHubClient) => Promise<T>) => {
@@ -487,23 +501,30 @@ export function RoomPage() {
             spacing={1}
             sx={{ alignItems: 'center', flexGrow: { md: 0, xs: 1 }, width: { md: 'auto', xs: '100%' } }}
           >
-            <Button
-              color="primary"
-              onClick={() => {
-                void navigator.clipboard
-                  .writeText(window.location.href)
-                  .then(() => showSnackbar('Link Copied'))
-                  .catch((error) => {
-                    console.error('Unable to copy the invitation link.', error)
-                    showSnackbar('Unable to copy the invitation link.', 'error')
-                  })
+            <ButtonGroup
+              sx={{
+                '& .MuiButton-root': {
+                  minHeight: 48,
+                },
+                flexGrow: { md: 0, xs: 1 },
               }}
-              startIcon={<CopyIcon />}
-              sx={{ flexGrow: { md: 0, xs: 1 }, minHeight: 48 }}
               variant="contained"
             >
-              Copy Invitation URL
-            </Button>
+              <Button color="primary" onClick={handleCopyInvitationUrl} startIcon={<CopyIcon />} sx={{ flexGrow: { md: 0, xs: 1 } }}>
+                Copy Invitation URL
+              </Button>
+              <Button
+                aria-controls={isInviteActionsOpen ? 'room-invite-actions-menu' : undefined}
+                aria-expanded={isInviteActionsOpen ? 'true' : undefined}
+                aria-haspopup="menu"
+                aria-label="Open invitation actions"
+                color="primary"
+                onClick={(event) => setInviteActionsAnchorEl(event.currentTarget)}
+                sx={{ minWidth: 48 }}
+              >
+                <ArrowDropDownIcon />
+              </Button>
+            </ButtonGroup>
             <IconButton
               aria-controls={isMobileActionsOpen ? 'room-mobile-actions-menu' : undefined}
               aria-expanded={isMobileActionsOpen ? 'true' : undefined}
@@ -517,18 +538,28 @@ export function RoomPage() {
           </Stack>
 
           <Box sx={{ display: { md: 'inline-flex', xs: 'none' }, gap: 1 }}>
-            <Button
-              color="inherit"
-              onClick={() => setShowQrCode((current) => !current)}
-              startIcon={showQrCode ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-              variant="text"
-            >
-              {showQrCode ? 'Hide' : 'Show'} QR Code
-            </Button>
             <Button color="inherit" onClick={() => setShowUserDialog(true)} startIcon={<EditIcon />} variant="outlined">
               {name || currentUser?.name || 'Edit user'}
             </Button>
           </Box>
+
+          <Menu
+            anchorEl={inviteActionsAnchorEl}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+            id="room-invite-actions-menu"
+            onClose={() => setInviteActionsAnchorEl(null)}
+            open={isInviteActionsOpen}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          >
+            <MenuItem
+              onClick={() => {
+                setShowQrCode((current) => !current)
+                setInviteActionsAnchorEl(null)
+              }}
+            >
+              <ListItemText>{showQrCode ? 'Hide' : 'Show'} QR Code</ListItemText>
+            </MenuItem>
+          </Menu>
 
           <Menu
             anchorEl={mobileActionsAnchorEl}
@@ -536,15 +567,6 @@ export function RoomPage() {
             onClose={() => setMobileActionsAnchorEl(null)}
             open={isMobileActionsOpen}
           >
-            <MenuItem
-              onClick={() => {
-                setShowQrCode((current) => !current)
-                setMobileActionsAnchorEl(null)
-              }}
-            >
-              <ListItemIcon>{showQrCode ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}</ListItemIcon>
-              <ListItemText>{showQrCode ? 'Hide' : 'Show'} QR Code</ListItemText>
-            </MenuItem>
             <MenuItem
               onClick={() => {
                 setShowUserDialog(true)
