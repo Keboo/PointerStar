@@ -7,6 +7,7 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Chip,
   Collapse,
   Container,
   FormControlLabel,
@@ -41,10 +42,12 @@ import { GiphyVotingPanel } from '../components/GiphyVotingPanel'
 import { GiphyVoteDisplay } from '../components/GiphyVoteDisplay'
 import {
   getStoredName,
+  getStoredRecentGifSearches,
   getStoredRoleId,
   getStoredRoomId,
   getStoredVoteOptions,
   setStoredName,
+  setStoredRecentGifSearches,
   setStoredRoleId,
   setStoredRoomId,
   setStoredVoteOptions,
@@ -96,6 +99,9 @@ export function RoomPage() {
   const [showUserDialog, setShowUserDialog] = useState(false)
   const [showVotingOptionsDialog, setShowVotingOptionsDialog] = useState(false)
   const [timerTick, setTimerTick] = useState(0)
+  const [recentGifSearches, setRecentGifSearches] = useState<string[]>(() => getStoredRecentGifSearches())
+  const [selectedGifSearchQuery, setSelectedGifSearchQuery] = useState<string | null>(null)
+  const [selectedGifSearchRequestId, setSelectedGifSearchRequestId] = useState(0)
   const [snackbar, setSnackbar] = useState<{
     message: string
     open: boolean
@@ -120,6 +126,10 @@ export function RoomPage() {
   useEffect(() => {
     selectedRoleIdRef.current = selectedRoleId
   }, [selectedRoleId])
+
+  useEffect(() => {
+    setStoredRecentGifSearches(recentGifSearches)
+  }, [recentGifSearches])
 
   const currentUser = useMemo(
     () => roomState?.users.find((user) => user.id === currentUserId) ?? null,
@@ -191,6 +201,28 @@ export function RoomPage() {
       open: true,
       severity,
     })
+  }, [])
+
+  const handleGifSearch = useCallback((query: string) => {
+    const trimmedQuery = query.trim()
+    if (!trimmedQuery) {
+      return
+    }
+
+    setSelectedGifSearchQuery(trimmedQuery)
+    setRecentGifSearches((currentSearches) => {
+      // Only add to the list if it's not already present (no reordering)
+      if (currentSearches.includes(trimmedQuery)) {
+        return currentSearches
+      }
+      const nextSearches = [trimmedQuery, ...currentSearches]
+      return nextSearches.slice(0, 6)
+    })
+  }, [])
+
+  const handleRecentGifSearchClick = useCallback((query: string) => {
+    setSelectedGifSearchQuery(query)
+    setSelectedGifSearchRequestId((requestId) => requestId + 1)
   }, [])
 
   const callHub = useCallback(
@@ -538,23 +570,59 @@ export function RoomPage() {
         </Collapse>
 
         {voteStartTime ? (
-          <Typography>
-            Vote Time: {getElapsedTimeLabel(voteStartTime, serverClockOffsetMs)}
-            {!resetVotesRequestedAt && isRole(currentUser, roles.teamMember) ? (
-              <Button
-                color="warning"
-                onClick={() => {
-                  void callHub(async (client) => {
-                    await client.requestResetVotes()
-                  })
+          <Box
+            sx={{
+              alignItems: { sm: 'center', xs: 'flex-start' },
+              display: 'flex',
+              flexDirection: { sm: 'row', xs: 'column' },
+              gap: 1,
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box sx={{ alignItems: 'center', display: 'flex', gap: 1 }}>
+              <Typography>Vote Time: {getElapsedTimeLabel(voteStartTime, serverClockOffsetMs)}</Typography>
+              {!resetVotesRequestedAt && isRole(currentUser, roles.teamMember) ? (
+                <Button
+                  color="warning"
+                  onClick={() => {
+                    void callHub(async (client) => {
+                      await client.requestResetVotes()
+                    })
+                  }}
+                  variant="text"
+                >
+                  <RefreshIcon fontSize="small" />
+                </Button>
+              ) : null}
+            </Box>
+            {roomState?.votingMode === VotingMode.Giphy && recentGifSearches.length > 0 ? (
+              <Box
+                sx={{
+                  alignItems: { sm: 'center', xs: 'flex-start' },
+                  display: 'flex',
+                  flexDirection: { sm: 'row', xs: 'column' },
+                  gap: 1,
+                  width: { sm: 'auto', xs: '100%' },
                 }}
-                sx={{ ml: 1 }}
-                variant="text"
               >
-                <RefreshIcon fontSize="small" />
-              </Button>
+                <Typography color="text.secondary" sx={{ whiteSpace: 'nowrap' }} variant="body2">
+                  Recent GIF searches:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: { sm: 'flex-end', xs: 'flex-start' } }}>
+                  {recentGifSearches.map((query) => (
+                    <Chip
+                      color={selectedGifSearchQuery === query ? 'primary' : 'default'}
+                      key={query}
+                      label={query}
+                      onClick={() => handleRecentGifSearchClick(query)}
+                      size="small"
+                      variant={selectedGifSearchQuery === query ? 'filled' : 'outlined'}
+                    />
+                  ))}
+                </Box>
+              </Box>
             ) : null}
-          </Typography>
+          </Box>
         ) : null}
 
         {resetVotesRequestedAt ? (
@@ -591,11 +659,14 @@ export function RoomPage() {
             {roomState?.votingMode === VotingMode.Giphy ? (
               <GiphyVotingPanel
                 currentVote={currentUser?.vote}
+                onSearch={handleGifSearch}
                 onVoteSubmit={(giphyId) => {
                   void callHub(async (client) => {
                     await client.submitVote(giphyId)
                   })
                 }}
+                searchShortcutQuery={selectedGifSearchQuery}
+                searchShortcutRequestId={selectedGifSearchRequestId}
               />
             ) : (
               <Box

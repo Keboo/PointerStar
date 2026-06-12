@@ -21,7 +21,10 @@ import { GIPHY_PAGE_SIZE, searchGiphy } from '../services/giphyApi'
 
 interface GiphyVotingPanelProps {
   currentVote?: string | null
+  onSearch?: (query: string) => void
   onVoteSubmit: (giphyId: string) => void
+  searchShortcutQuery?: string | null
+  searchShortcutRequestId?: number
 }
 
 /**
@@ -29,7 +32,13 @@ interface GiphyVotingPanelProps {
  * Displays search results as a grid of clickable images.
  * Searches are debounced to avoid API calls on every keystroke.
  */
-export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote, onVoteSubmit }) => {
+export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
+  currentVote,
+  onSearch,
+  onVoteSubmit,
+  searchShortcutQuery,
+  searchShortcutRequestId,
+}) => {
   const theme = useTheme()
   const isSmUp = useMediaQuery(theme.breakpoints.up('sm'))
   const isMdUp = useMediaQuery(theme.breakpoints.up('md'))
@@ -61,6 +70,7 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
       if (append) {
         setLoadingMore(true)
       } else {
+        onSearch?.(trimmedQuery)
         setLoading(true)
         setResults([])
         setNextOffset(0)
@@ -114,7 +124,7 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
         setLoadingMore(false)
       }
     },
-    []
+    [onSearch]
   )
 
   const clearSearch = useCallback(() => {
@@ -154,6 +164,17 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({ currentVote,
     setIsSearchExpanded(true)
     clearSearch()
   }, [clearSearch, currentVote])
+
+  useEffect(() => {
+    const trimmedShortcutQuery = searchShortcutQuery?.trim()
+    if (!trimmedShortcutQuery || !searchShortcutRequestId) {
+      return
+    }
+
+    setIsSearchExpanded(true)
+    setSearchQuery(trimmedShortcutQuery)
+    setError(null)
+  }, [searchShortcutQuery, searchShortcutRequestId])
 
   const handleSelectGif = (giphyId: string) => {
     setSelectedId(giphyId)

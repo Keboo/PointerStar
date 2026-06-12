@@ -21,6 +21,53 @@ describe('GiphyVotingPanel', () => {
     searchGiphyMock.mockReset()
   })
 
+  it('tracks the searched GIF query for recent chips', async () => {
+    const onSearch = vi.fn()
+    searchGiphyMock.mockResolvedValue({
+      data: [createGif(1)],
+      pagination: {
+        count: 1,
+        offset: 0,
+        totalCount: 1,
+      },
+    })
+
+    render(<GiphyVotingPanel onSearch={onSearch} onVoteSubmit={vi.fn()} />)
+
+    fireEvent.change(screen.getByPlaceholderText('Search for a GIF...'), {
+      target: { value: '  cat  ' },
+    })
+
+    await waitFor(() => {
+      expect(searchGiphyMock).toHaveBeenCalledWith({
+        query: 'cat',
+        offset: 0,
+      })
+    }, { timeout: 3000 })
+
+    expect(onSearch).toHaveBeenCalledWith('cat')
+  })
+
+  it('runs a search when a recent-search shortcut is selected', async () => {
+    searchGiphyMock.mockResolvedValue({
+      data: [createGif(1)],
+      pagination: {
+        count: 1,
+        offset: 0,
+        totalCount: 1,
+      },
+    })
+
+    render(<GiphyVotingPanel onVoteSubmit={vi.fn()} searchShortcutQuery="dog" searchShortcutRequestId={1} />)
+
+    await waitFor(() => {
+      expect(searchGiphyMock).toHaveBeenCalledWith({
+        query: 'dog',
+        offset: 0,
+      })
+    }, { timeout: 3000 })
+  })
+
   it('loads the next result page when show more is clicked', async () => {
     searchGiphyMock
       .mockResolvedValueOnce({
