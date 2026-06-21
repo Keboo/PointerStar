@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import {
   AppBar,
   Box,
+  Button,
   IconButton,
   Stack,
   Toolbar,
@@ -11,6 +12,7 @@ import {
 import {
   Brightness4 as SystemThemeIcon,
   DarkMode as DarkModeIcon,
+  GitHub as GitHubIcon,
   LightMode as LightModeIcon,
 } from '@mui/icons-material'
 import { Link as RouterLink } from 'react-router-dom'
@@ -54,6 +56,7 @@ export function AppLayout({
   onCycleTheme,
   themePreference,
 }: AppLayoutProps) {
+  const repositoryUrl = 'https://github.com/Keboo/PointerStar'
   const consent = useCookieConsent()
   const hasConsentBanner = !consent.hasUserResponded
 
@@ -101,6 +104,18 @@ export function AppLayout({
             </Stack>
           </RouterLink>
           <Box sx={{ flexGrow: 1 }} />
+          <Button
+            color="inherit"
+            href={repositoryUrl}
+            rel="noreferrer"
+            size="small"
+            startIcon={<GitHubIcon />}
+            sx={{ minWidth: 0 }}
+            target="_blank"
+            variant="text"
+          >
+            GitHub
+          </Button>
           <Tooltip title={getThemeTooltip(themePreference)}>
             <IconButton aria-label={getThemeTooltip(themePreference)} color="inherit" onClick={onCycleTheme}>
               {getThemeIcon(themePreference)}
