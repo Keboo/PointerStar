@@ -22,10 +22,10 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
 
@@ -100,7 +100,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: fastify/github-action-merge-dependabot@v3.14.0
+      - uses: fastify/github-action-merge-dependabot@v3.15.0
         with:
           use-github-auto-merge: true
           skip-verification: true
