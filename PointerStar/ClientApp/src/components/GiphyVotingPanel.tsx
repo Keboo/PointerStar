@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Box,
   Button,
+  Collapse,
   CircularProgress,
   IconButton,
   ImageList,
@@ -15,8 +16,13 @@ import {
   useTheme,
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
+import ExpandLessIcon from '@mui/icons-material/ExpandLess'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import FavoriteIcon from '@mui/icons-material/Favorite'
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import SearchIcon from '@mui/icons-material/Search'
 import type { GiphyItem } from '../types/contracts'
+import { getStoredFavoriteGifIds, setStoredFavoriteGifIds } from '../services/cookies'
 import { GIPHY_PAGE_SIZE, searchGiphy } from '../services/giphyApi'
 
 interface GiphyVotingPanelProps {
@@ -53,7 +59,22 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
   const [activeQuery, setActiveQuery] = useState('')
   const [nextOffset, setNextOffset] = useState(0)
   const [hasMoreResults, setHasMoreResults] = useState(false)
+  const [favoriteGifIds, setFavoriteGifIds] = useState<string[]>(() => getStoredFavoriteGifIds())
+  const [areFavoritesExpanded, setAreFavoritesExpanded] = useState(true)
   const requestIdRef = useRef(0)
+  const favoriteGifSet = useMemo(() => new Set(favoriteGifIds), [favoriteGifIds])
+  const favoriteGifs = useMemo(
+    () => favoriteGifIds.map((gifId) => ({
+      id: gifId,
+      title: `Favorite GIF ${gifId}`,
+      imageUrl: `https://media.giphy.com/media/${gifId}/giphy.gif`,
+    })),
+    [favoriteGifIds],
+  )
+
+  useEffect(() => {
+    setStoredFavoriteGifIds(favoriteGifIds)
+  }, [favoriteGifIds])
 
   const handleSearch = useCallback(
     async (query: string, offset = 0, append = false) => {
@@ -190,6 +211,14 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
     void handleSearch(activeQuery, nextOffset, true)
   }, [activeQuery, handleSearch, hasMoreResults, loading, loadingMore, nextOffset])
 
+  const handleToggleFavoriteGif = useCallback((gifId: string) => {
+    setFavoriteGifIds((currentIds) => (
+      currentIds.includes(gifId)
+        ? currentIds.filter((currentId) => currentId !== gifId)
+        : [gifId, ...currentIds]
+    ))
+  }, [])
+
   const giphyColumns = isMdUp ? 4 : isSmUp ? 3 : 2
 
   return (
@@ -208,6 +237,93 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
         </Alert>
       ) : (
         <>
+          <Paper sx={{ marginBottom: 2, padding: 1.5 }} variant="outlined">
+            <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="subtitle2">Favorite GIFs ({favoriteGifIds.length})</Typography>
+              <Button
+                endIcon={areFavoritesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                onClick={() => setAreFavoritesExpanded((expanded) => !expanded)}
+                size="small"
+                variant="text"
+              >
+                {areFavoritesExpanded ? 'Hide' : 'Show'}
+              </Button>
+            </Box>
+            <Collapse in={areFavoritesExpanded}>
+              {favoriteGifs.length > 0 ? (
+                <ImageList cols={giphyColumns} gap={8} sx={{ marginTop: 1 }} variant="masonry">
+                  {favoriteGifs.map((gif) => (
+                    <ImageListItem
+                      aria-label={`Select GIF: ${gif.title}`}
+                      aria-pressed={selectedId === gif.id}
+                      key={`favorite-${gif.id}`}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          handleSelectGif(gif.id)
+                        }
+                      }}
+                      sx={{
+                        '&:focus-visible': {
+                          outline: '2px solid',
+                          outlineColor: 'primary.main',
+                          outlineOffset: 2,
+                        },
+                        border: selectedId === gif.id ? '3px solid' : '1px solid',
+                        borderColor: selectedId === gif.id ? 'primary.main' : 'divider',
+                        cursor: 'pointer',
+                        opacity: selectedId === gif.id ? 1 : 0.9,
+                        position: 'relative',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          border: '3px solid',
+                          borderColor: 'primary.main',
+                          opacity: 1,
+                        },
+                      }}
+                      onClick={() => handleSelectGif(gif.id)}
+                      role="button"
+                      tabIndex={0}
+                    >
+                      <IconButton
+                        aria-label={`Remove ${gif.title} from favorites`}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          handleToggleFavoriteGif(gif.id)
+                        }}
+                        size="small"
+                        sx={{
+                          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                          color: 'common.white',
+                          position: 'absolute',
+                          right: 4,
+                          top: 4,
+                          zIndex: 1,
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                          },
+                        }}
+                      >
+                        <FavoriteIcon fontSize="small" />
+                      </IconButton>
+                      <img
+                        src={gif.imageUrl}
+                        alt={gif.title}
+                        loading="lazy"
+                        style={{ cursor: 'pointer', display: 'block', width: '100%' }}
+                      />
+                    </ImageListItem>
+                  ))}
+                </ImageList>
+              ) : (
+                <Typography color="text.secondary" sx={{ marginTop: 1 }} variant="body2">
+                  No favorite GIFs yet.
+                </Typography>
+              )}
+            </Collapse>
+          </Paper>
+
           <Box sx={{ marginBottom: 2 }}>
             <TextField
               autoFocus
@@ -273,6 +389,7 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
                       opacity: selectedId === gif.id ? 1 : 0.8,
                       border: selectedId === gif.id ? '3px solid' : '1px solid',
                       borderColor: selectedId === gif.id ? 'primary.main' : 'divider',
+                      position: 'relative',
                       transition: 'all 0.2s ease',
                       '&:hover': {
                         opacity: 1,
@@ -284,6 +401,28 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
                     role="button"
                     tabIndex={0}
                   >
+                    <IconButton
+                      aria-label={`${favoriteGifSet.has(gif.id) ? 'Remove' : 'Add'} ${gif.title} ${favoriteGifSet.has(gif.id) ? 'from' : 'to'} favorites`}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        handleToggleFavoriteGif(gif.id)
+                      }}
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                        color: favoriteGifSet.has(gif.id) ? 'error.light' : 'common.white',
+                        position: 'absolute',
+                        right: 4,
+                        top: 4,
+                        zIndex: 1,
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        },
+                      }}
+                    >
+                      {favoriteGifSet.has(gif.id) ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+                    </IconButton>
                     <img
                       src={gif.imageUrl}
                       alt={gif.title}
