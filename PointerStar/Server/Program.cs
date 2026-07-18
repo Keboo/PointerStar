@@ -51,7 +51,7 @@ builder.Services.AddSignalR(hubOptions => hubOptions.EnableDetailedErrors = true
                         options.ClientTimeoutInterval = TimeSpan.FromMinutes(3);
                     });
 
-builder.Services.AddScoped(_ => new Hashids("TODO: Environment Salt"));
+builder.Services.AddScoped(_ => new Hashids("Pointer*"));
 builder.Services.AddSingleton<IRoomManager, InMemoryRoomManager>();
 
 var app = builder.Build();

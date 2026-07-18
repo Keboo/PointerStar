@@ -1,6 +1,7 @@
 const acceptedValue = 'accepted'
 const consentCookieKey = 'CookieConsent'
 const defaultExpirationDays = 30
+const favoriteGifIdsKey = 'FavoriteGifIds'
 const nameKey = 'Name'
 const recentGifSearchesKey = 'RecentGifSearches'
 const rejectedValue = 'rejected'
@@ -136,4 +137,26 @@ export function getStoredRecentGifSearches(): string[] {
 
 export function setStoredRecentGifSearches(value: string[]) {
   setCookieValue(recentGifSearchesKey, value.length > 0 ? JSON.stringify(value) : '')
+}
+
+export function getStoredFavoriteGifIds(): string[] {
+  const value = getCookieValue(favoriteGifIdsKey)
+  if (!value) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed) && parsed.every((entry) => typeof entry === 'string')) {
+      return parsed
+    }
+  } catch (error) {
+    console.warn('Unable to parse stored favorite GIF IDs.', error)
+  }
+
+  return []
+}
+
+export function setStoredFavoriteGifIds(value: string[]) {
+  setCookieValue(favoriteGifIdsKey, value.length > 0 ? JSON.stringify(value) : '')
 }

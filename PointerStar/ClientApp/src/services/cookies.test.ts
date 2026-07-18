@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
   acceptCookies,
+  getStoredFavoriteGifIds,
   getStoredName,
   getStoredRecentGifSearches,
   hasCookieConsent,
   hasUserRespondedToConsent,
   rejectCookies,
+  setStoredFavoriteGifIds,
   setStoredName,
   setStoredRecentGifSearches,
 } from './cookies'
@@ -71,5 +73,30 @@ describe('cookies', () => {
     setStoredRecentGifSearches([])
 
     expect(getStoredRecentGifSearches()).toEqual([])
+  })
+
+  it('returns an empty array for favorite GIF IDs when nothing is stored', () => {
+    expect(getStoredFavoriteGifIds()).toEqual([])
+  })
+
+  it('blocks favorite GIF ID writes until consent is accepted', () => {
+    setStoredFavoriteGifIds(['gif-1'])
+
+    expect(getStoredFavoriteGifIds()).toEqual([])
+  })
+
+  it('persists and restores favorite GIF IDs after consent is accepted', () => {
+    acceptCookies()
+    setStoredFavoriteGifIds(['gif-1', 'gif-2'])
+
+    expect(getStoredFavoriteGifIds()).toEqual(['gif-1', 'gif-2'])
+  })
+
+  it('clears favorite GIF IDs when an empty array is stored', () => {
+    acceptCookies()
+    setStoredFavoriteGifIds(['gif-1'])
+    setStoredFavoriteGifIds([])
+
+    expect(getStoredFavoriteGifIds()).toEqual([])
   })
 })
