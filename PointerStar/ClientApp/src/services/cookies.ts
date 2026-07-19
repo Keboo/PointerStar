@@ -1,6 +1,7 @@
 const acceptedValue = 'accepted'
 const consentCookieKey = 'CookieConsent'
 const defaultExpirationDays = 30
+const favoriteGifsExpandedKey = 'FavoriteGifsExpanded'
 const favoriteGifIdsKey = 'FavoriteGifIds'
 const nameKey = 'Name'
 const recentGifSearchesKey = 'RecentGifSearches'
@@ -159,4 +160,17 @@ export function getStoredFavoriteGifIds(): string[] {
 
 export function setStoredFavoriteGifIds(value: string[]) {
   setCookieValue(favoriteGifIdsKey, value.length > 0 ? JSON.stringify(value) : '')
+}
+
+export function getStoredFavoriteGifsExpanded() {
+  const value = getCookieValue(favoriteGifsExpandedKey)
+  if (!value) {
+    return true
+  }
+
+  return value !== 'false'
+}
+
+export function setStoredFavoriteGifsExpanded(value: boolean) {
+  setCookieValue(favoriteGifsExpandedKey, String(value))
 }

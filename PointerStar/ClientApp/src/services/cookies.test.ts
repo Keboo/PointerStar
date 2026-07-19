@@ -3,12 +3,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   acceptCookies,
   getStoredFavoriteGifIds,
+  getStoredFavoriteGifsExpanded,
   getStoredName,
   getStoredRecentGifSearches,
   hasCookieConsent,
   hasUserRespondedToConsent,
   rejectCookies,
   setStoredFavoriteGifIds,
+  setStoredFavoriteGifsExpanded,
   setStoredName,
   setStoredRecentGifSearches,
 } from './cookies'
@@ -98,5 +100,24 @@ describe('cookies', () => {
     setStoredFavoriteGifIds([])
 
     expect(getStoredFavoriteGifIds()).toEqual([])
+  })
+
+  it('defaults favorite GIF section expansion to true when nothing is stored', () => {
+    expect(getStoredFavoriteGifsExpanded()).toBe(true)
+  })
+
+  it('blocks favorite GIF section expansion writes until consent is accepted', () => {
+    setStoredFavoriteGifsExpanded(false)
+
+    expect(getStoredFavoriteGifsExpanded()).toBe(true)
+  })
+
+  it('persists and restores favorite GIF section expansion after consent is accepted', () => {
+    acceptCookies()
+    setStoredFavoriteGifsExpanded(false)
+    expect(getStoredFavoriteGifsExpanded()).toBe(false)
+
+    setStoredFavoriteGifsExpanded(true)
+    expect(getStoredFavoriteGifsExpanded()).toBe(true)
   })
 })
