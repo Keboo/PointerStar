@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  ButtonBase,
   Collapse,
   CircularProgress,
   IconButton,
@@ -22,7 +23,12 @@ import FavoriteIcon from '@mui/icons-material/Favorite'
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import SearchIcon from '@mui/icons-material/Search'
 import type { GiphyItem } from '../types/contracts'
-import { getStoredFavoriteGifIds, setStoredFavoriteGifIds } from '../services/cookies'
+import {
+  getStoredFavoriteGifIds,
+  getStoredFavoriteGifsExpanded,
+  setStoredFavoriteGifIds,
+  setStoredFavoriteGifsExpanded,
+} from '../services/cookies'
 import { GIPHY_PAGE_SIZE, searchGiphy } from '../services/giphyApi'
 
 interface GiphyVotingPanelProps {
@@ -60,7 +66,7 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
   const [nextOffset, setNextOffset] = useState(0)
   const [hasMoreResults, setHasMoreResults] = useState(false)
   const [favoriteGifIds, setFavoriteGifIds] = useState<string[]>(() => getStoredFavoriteGifIds())
-  const [areFavoritesExpanded, setAreFavoritesExpanded] = useState(true)
+  const [areFavoritesExpanded, setAreFavoritesExpanded] = useState(() => getStoredFavoriteGifsExpanded())
   const requestIdRef = useRef(0)
   const favoriteGifSet = useMemo(() => new Set(favoriteGifIds), [favoriteGifIds])
   const favoriteGifs = useMemo(
@@ -75,6 +81,10 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
   useEffect(() => {
     setStoredFavoriteGifIds(favoriteGifIds)
   }, [favoriteGifIds])
+
+  useEffect(() => {
+    setStoredFavoriteGifsExpanded(areFavoritesExpanded)
+  }, [areFavoritesExpanded])
 
   const handleSearch = useCallback(
     async (query: string, offset = 0, append = false) => {
@@ -238,17 +248,29 @@ export const GiphyVotingPanel: React.FC<GiphyVotingPanelProps> = ({
       ) : (
         <>
           <Paper sx={{ marginBottom: 2, padding: 1.5 }} variant="outlined">
-            <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between' }}>
+            <ButtonBase
+              aria-expanded={areFavoritesExpanded}
+              aria-label="Toggle favorite GIFs"
+              onClick={() => setAreFavoritesExpanded((expanded) => !expanded)}
+              sx={{
+                alignItems: 'center',
+                borderRadius: 1,
+                display: 'flex',
+                justifyContent: 'space-between',
+                px: 0.5,
+                py: 0.25,
+                textAlign: 'left',
+                width: '100%',
+              }}
+            >
               <Typography variant="subtitle2">Favorite GIFs ({favoriteGifIds.length})</Typography>
-              <Button
-                endIcon={areFavoritesExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                onClick={() => setAreFavoritesExpanded((expanded) => !expanded)}
-                size="small"
-                variant="text"
-              >
-                {areFavoritesExpanded ? 'Hide' : 'Show'}
-              </Button>
-            </Box>
+              <Box sx={{ alignItems: 'center', display: 'flex', gap: 0.5 }}>
+                <Typography color="text.secondary" variant="body2">
+                  {areFavoritesExpanded ? 'Hide' : 'Show'}
+                </Typography>
+                {areFavoritesExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+              </Box>
+            </ButtonBase>
             <Collapse in={areFavoritesExpanded}>
               {favoriteGifs.length > 0 ? (
                 <ImageList cols={giphyColumns} gap={8} sx={{ marginTop: 1 }} variant="masonry">

@@ -2,7 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GiphyVotingPanel } from './GiphyVotingPanel'
 import { GIPHY_PAGE_SIZE, searchGiphy } from '../services/giphyApi'
-import { getStoredFavoriteGifIds, setStoredFavoriteGifIds } from '../services/cookies'
+import {
+  getStoredFavoriteGifIds,
+  getStoredFavoriteGifsExpanded,
+  setStoredFavoriteGifIds,
+  setStoredFavoriteGifsExpanded,
+} from '../services/cookies'
 
 vi.mock('../services/giphyApi', () => ({
   GIPHY_PAGE_SIZE: 20,
@@ -11,12 +16,16 @@ vi.mock('../services/giphyApi', () => ({
 
 vi.mock('../services/cookies', () => ({
   getStoredFavoriteGifIds: vi.fn(() => []),
+  getStoredFavoriteGifsExpanded: vi.fn(() => true),
   setStoredFavoriteGifIds: vi.fn(),
+  setStoredFavoriteGifsExpanded: vi.fn(),
 }))
 
 const searchGiphyMock = vi.mocked(searchGiphy)
 const getStoredFavoriteGifIdsMock = vi.mocked(getStoredFavoriteGifIds)
+const getStoredFavoriteGifsExpandedMock = vi.mocked(getStoredFavoriteGifsExpanded)
 const setStoredFavoriteGifIdsMock = vi.mocked(setStoredFavoriteGifIds)
+const setStoredFavoriteGifsExpandedMock = vi.mocked(setStoredFavoriteGifsExpanded)
 
 const createGif = (index: number) => ({
   id: `gif-${index}`,
@@ -29,7 +38,10 @@ describe('GiphyVotingPanel', () => {
     searchGiphyMock.mockReset()
     getStoredFavoriteGifIdsMock.mockReset()
     getStoredFavoriteGifIdsMock.mockReturnValue([])
+    getStoredFavoriteGifsExpandedMock.mockReset()
+    getStoredFavoriteGifsExpandedMock.mockReturnValue(true)
     setStoredFavoriteGifIdsMock.mockReset()
+    setStoredFavoriteGifsExpandedMock.mockReset()
   })
 
   it('tracks the searched GIF query for recent chips', async () => {
@@ -161,12 +173,35 @@ describe('GiphyVotingPanel', () => {
     getStoredFavoriteGifIdsMock.mockReturnValue(['favorite-1'])
 
     render(<GiphyVotingPanel onVoteSubmit={vi.fn()} />)
+    const favoritesToggle = screen.getByRole('button', { name: 'Toggle favorite GIFs' })
 
     expect(screen.getByAltText('Favorite GIF favorite-1')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Hide' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Hide' }))
-    expect(screen.getByRole('button', { name: 'Show' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Show' }))
-    expect(screen.getByRole('button', { name: 'Hide' })).toBeInTheDocument()
+    expect(favoritesToggle).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(favoritesToggle)
+    expect(favoritesToggle).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(favoritesToggle)
+    expect(favoritesToggle).toHaveAttribute('aria-expanded', 'true')
+  })
+
+  it('starts collapsed when favorite GIF section expansion is stored as false', () => {
+    getStoredFavoriteGifIdsMock.mockReturnValue(['favorite-1'])
+    getStoredFavoriteGifsExpandedMock.mockReturnValue(false)
+
+    render(<GiphyVotingPanel onVoteSubmit={vi.fn()} />)
+
+    expect(screen.getByRole('button', { name: 'Toggle favorite GIFs' })).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('persists favorite GIF section expansion changes', () => {
+    getStoredFavoriteGifIdsMock.mockReturnValue(['favorite-1'])
+
+    render(<GiphyVotingPanel onVoteSubmit={vi.fn()} />)
+    const favoritesToggle = screen.getByRole('button', { name: 'Toggle favorite GIFs' })
+
+    fireEvent.click(favoritesToggle)
+    expect(setStoredFavoriteGifsExpandedMock).toHaveBeenLastCalledWith(false)
+
+    fireEvent.click(favoritesToggle)
+    expect(setStoredFavoriteGifsExpandedMock).toHaveBeenLastCalledWith(true)
   })
 })
