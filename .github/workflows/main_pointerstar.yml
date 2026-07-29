@@ -60,7 +60,7 @@ jobs:
         timeout-minutes: 5
 
       - name: ReportGenerator
-        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.10
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.5.11
         with:
           reports: coverage/**/coverage.cobertura.xml
           targetdir: coveragereport
