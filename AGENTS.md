@@ -14,7 +14,7 @@ The ASP.NET Core server still hosts the built frontend assets and the backend en
 ## Development setup
 
 ### Prerequisites
-- .NET SDK 11
+- .NET SDK 10
 - Node.js
 
 ### Build

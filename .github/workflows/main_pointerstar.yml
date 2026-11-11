@@ -43,10 +43,10 @@ jobs:
         working-directory: PointerStar/ClientApp
         timeout-minutes: 5
 
-      - name: Set up .NET
+      - name: Set up .NET Core
         uses: actions/setup-dotnet@v6
         with:
-          dotnet-version: '11.x'
+          dotnet-version: '10.x'
 
       - name: dotnet build
         run: dotnet build --configuration Release -p:Version="${{ env.version }}"
